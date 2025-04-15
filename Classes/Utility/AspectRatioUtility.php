@@ -9,19 +9,20 @@ use Zeroseven\Picturerino\Entity\AspectRatio;
 
 
 class AspectRatioUtility {
+    protected SettingsUtility $settingsUtility;
     protected array $aspectRatio;
     protected array $breakpointMap;
 
     public function __construct() {
         $this->aspectRatio = [0 => null];
-        $this->breakpointMap = [
-            'xs' => 0,
-            'sm' => 576,
-            'md' => 768,
-            'lg' => 992,
-            'xl' => 1200,
-            'xxl' => 1400
-        ];
+
+        if ($breakpoints = GeneralUtility::makeInstance(SettingsUtility::class)->get('breakpoints')) {
+            foreach ($breakpoints as $setup) {
+                if (preg_match('/(.+)\s*:\s*(\d+)/', $setup, $matches)) {
+                    $this->breakpointMap[$matches[1]] = (int)$matches[2];
+                }
+            }
+        }
     }
 
     /** @throws Exception */
