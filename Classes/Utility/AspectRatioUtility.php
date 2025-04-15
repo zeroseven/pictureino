@@ -1,121 +1,105 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 namespace Zeroseven\Picturerino\Utility;
 
+use Exception;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Core\Utility\MathUtility;
+use Zeroseven\Picturerino\Entity\AspectRatio;
 
-class AspectRatioUtility
-{
-    protected const BREAKPOINTS = [
-        'xs' => 0,
-        'sm' => 576,
-        'md' => 768,
-        'lg' => 992,
-        'xl' => 1200,
-        'xxl' => 1400
-    ];
 
-    /**
-     * Validiert das Format eines Seitenverhältnisses (z.B. "16:9")
-     */
-    public static function isValidRatio(string $ratio): bool
-    {
-        return (bool)preg_match('/^\d+:\d+$/', $ratio);
+class AspectRatioUtility {
+    protected array $aspectRatio;
+    protected array $breakpointMap;
+
+    public function __construct() {
+        $this->aspectRatio = [0 => null];
+        $this->breakpointMap = [
+            'xs' => 0,
+            'sm' => 576,
+            'md' => 768,
+            'lg' => 992,
+            'xl' => 1200,
+            'xxl' => 1400
+        ];
     }
 
-    /**
-     * Konvertiert ein Seitenverhältnis-String in ein Array [x, y]
-     */
-    public static function splitRatio(string $ratio): ?array
+    /** @throws Exception */
+    protected function mapBreakpoint(mixed $view): int
     {
-        if (self::isValidRatio($ratio)) {
-            return array_slice(GeneralUtility::intExplode(':', $ratio, false), 0, 2);
+        if (MathUtility::canBeInterpretedAsInteger($view)) {
+            return (int)$view;
         }
 
-        return null;
+        if (is_string($view) && isset($this->breakpointMap[$view])) {
+            return $this->breakpointMap[$view];
+        }
+
+        throw new Exception('Invalid breakpoint: ' . $view . '. Must be an integer or a string.');
     }
 
-    /**
-     * Verarbeitet Seitenverhältnisse und gibt ein Array mit Breakpoints zurück
-     *
-     * @param string|array $ratios Entweder ein String "16:9" oder ein Array ['xs' => '2:1', 'md' => '1:1']
-     * @return array Array mit Breakpoints und x/y Werten
-     */
-    public static function processRatios($ratios): array
+    public function getAspectRatios(): array
     {
-        $result = [];
+        return $this->aspectRatio;
+    }
 
-        // Initialisiere mit Null-Werten bei 0
-        $result[0] = ['x' => null, 'y' => null];
+    public function getFirstAspectRatio(): ?AspectRatio
+    {
+        return $this->aspectRatio[0] ?? null;
+    }
 
-        // Wenn ein einfacher String übergeben wurde
-        if (is_string($ratios)) {
-            if ($ratio = self::splitRatio($ratios)) {
-                $result[0] = [
-                    'x' => $ratio[0],
-                    'y' => $ratio[1]
-                ];
-            }
-            return $result;
-        }
-
-        // Wenn ein Array mit Breakpoints übergeben wurde
-        if (is_array($ratios)) {
-            $lastRatio = null;
-
-            // Sortiere die Breakpoints
-            $breakpoints = array_keys($ratios);
-            usort($breakpoints, function($a, $b) {
-                return (self::BREAKPOINTS[$a] ?? 0) <=> (self::BREAKPOINTS[$b] ?? 0);
-            });
-
-            foreach ($breakpoints as $breakpoint) {
-                $pixelValue = self::BREAKPOINTS[$breakpoint] ?? 0;
-
-                if (isset($ratios[$breakpoint]) && $ratio = self::splitRatio($ratios[$breakpoint])) {
-                    $result[$pixelValue] = [
-                        'x' => $ratio[0],
-                        'y' => $ratio[1]
-                    ];
-                    $lastRatio = $ratio;
-                }
+    /** @throws Exception */
+    public function setAspectRatios(mixed $input): self
+    {
+        if (is_array($input) && count($input) > 0) {
+            foreach ($input as $view => $ratio) {
+                $this->addAspectRatio($ratio, $view);
             }
 
-            // Wenn der erste Breakpoint nicht bei 0 startet, füge Null-Werte ein
-            if (!isset($result[0])) {
-                $result[0] = ['x' => null, 'y' => null];
+            return $this;
+        }
+
+        $this->addAspectRatio($input, 0);
+
+        return $this;
+    }
+
+    /** @throws Exception */
+    public function addAspectRatio(mixed $asepectRatio, mixed $view = null): self
+    {
+        if (!empty($asepectRatio)) {
+            $breakpoint =  $this->mapBreakpoint($view ?? 0);
+
+            $this->aspectRatio[$breakpoint] = GeneralUtility::makeInstance(AspectRatio::class)->set($asepectRatio);
+
+            if (count($this->aspectRatio) > 1) {
+                ksort($this->aspectRatio);
             }
-
-            // Sortiere nach Breakpoint-Werten
-            ksort($result);
         }
 
-        return $result;
+        return $this;
     }
 
-    /**
-     * Berechnet die Höhe basierend auf der Breite und dem Seitenverhältnis
-     */
-    public static function calculateHeight(int $width, array $ratio): ?int
+    /** @throws Exception */
+    public function removeAspectRatio(mixed $view): self
     {
-        if (isset($ratio['x'], $ratio['y']) && $ratio['x'] !== null && $ratio['y'] !== null) {
-            return (int)floor($width / $ratio['x'] * $ratio['y']);
+        $breakpoint = $this->mapBreakpoint($view);
+
+        if ($breakpoint === 0) {
+            $this->aspectRatio[0] = null;
+
+            return $this;
         }
 
-        return null;
+        if (isset($this->aspectRatio[$breakpoint])) {
+            unset($this->aspectRatio[$breakpoint]);
+        }
+
+        return $this;
     }
 
-    /**
-     * Berechnet die Breite basierend auf der Höhe und dem Seitenverhältnis
-     */
-    public static function calculateWidth(int $height, array $ratio): ?int
+    public function isEmpty(): bool
     {
-        if (isset($ratio['x'], $ratio['y']) && $ratio['x'] !== null && $ratio['y'] !== null) {
-            return (int)floor($height * $ratio['x'] / $ratio['y']);
-        }
-
-        return null;
+        return count($this->aspectRatio) <= 1 && $this->aspectRatio[0] === null;
     }
 }

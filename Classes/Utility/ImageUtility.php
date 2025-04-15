@@ -2,6 +2,7 @@
 
 namespace Zeroseven\Picturerino\Utility;
 
+use Exception;
 use TYPO3\CMS\Core\Resource\FileInterface;
 use TYPO3\CMS\Core\Resource\ProcessedFile;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -11,38 +12,78 @@ use TYPO3\CMS\Extbase\Service\ImageService;
 class ImageUtility
 {
     protected ImageService $imageService;
+    protected FileInterface $file;
+    protected ?ProcessedFile $lastProcessedFile = null;
 
     public function __construct()
     {
         $this->imageService = GeneralUtility::makeInstance(ImageService::class);
     }
 
-    public function getImage(string $src = null, mixed $image = null, bool $treatIdAsReference = null): FileInterface
+    public function getFile(): FileInterface
     {
-        if (($src === null && $image === null) || ($src !== null && $image !== null)) {
-            throw new \Exception('You must either specify a string src or a File object.', 1382284106);
-        }
-
-        return $this->imageService->getImage($src, $image, $treatIdAsReference);
+        return $this->file;
     }
 
-    public function processImage(FileInterface $image, int|string $width = null, int|string $height = null, array $processingInstructions = null): ProcessedFile
+    public function hasFile(): bool
     {
-        return $this->imageService->applyProcessingInstructions($image, array_merge($processingInstructions ?? [], [
-            'width' => $width,
-            'height' => $height,
+        return $this->file !== null;
+    }
+
+    /** @throws Exception */
+    public function setFile(string $src = null, mixed $image = null, bool $treatIdAsReference = null): self
+    {
+        if (($src === null && $image === null) || ($src !== null && $image !== null)) {
+            throw new Exception('You must either specify a string src or a File object.', 1382284104);
+        }
+
+        if(($file = $this->imageService->getImage($src, $image, $treatIdAsReference)) instanceof FileInterface) {
+            $this->file = $file;
+
+            return $this;
+        }
+
+        throw new Exception('Either file could not be found or the file is not an instance of FileInterface', 1382284103);
+    }
+
+    /** @throws Exception */
+    public function processImage(int|string $width = null, int|string $height = null, bool $keepAspectRatio = null, array $processingInstructions = null): ProcessedFile
+    {
+        if ($this->file === null) {
+            throw new Exception('No image. Please call "setFile" method, to set an image file', 1382284105);
+        }
+
+        $mode = $keepAspectRatio && $width && $height ? 'c' : 'm';
+
+        return $this->lastProcessedFile = $this->imageService->applyProcessingInstructions($this->file, array_merge($processingInstructions ?? [], [
+            'width' => $width . $mode,
+            'height' => $height . $mode
         ]));
     }
 
-    public function getUrl(ProcessedFile $image): string
+    /** @throws Exception */
+    public function getUrl(ProcessedFile $processedFile = null): string
     {
-        return $this->imageService->getImageUri($image, true);
+        $processedFile ??= $this->lastProcessedFile;
+
+        if ($processedFile === null) {
+            throw new Exception('No processed file. Please call "processImage" method, to process an image file', 1382284106);
+        }
+
+        return $this->imageService->getImageUri($processedFile ?? $this->lastProcessedFile, true);
     }
 
-    public function getProptery(ProcessedFile $image, string $property): ?string
+    /** @throws Exception */
+    public function getProperty(string $property, ProcessedFile $processedFile = null): ?string
     {
-        return $image->hasProperty($property)
-            ? $image->getProperty($property)
+        $processedFile ??= $this->lastProcessedFile;
+
+        if ($processedFile === null) {
+            throw new Exception('No processed file. Please call "processImage" method, to process an image file', 1382284107);
+        }
+
+        return $processedFile && $processedFile->hasProperty($property)
+            ? $processedFile->getProperty($property)
             : null;
     }
 }
