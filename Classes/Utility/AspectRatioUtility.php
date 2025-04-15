@@ -36,7 +36,7 @@ class AspectRatioUtility {
             return $this->breakpointMap[$view];
         }
 
-        throw new Exception('Invalid breakpoint: ' . $view . '. Must be an integer or a string.');
+        throw new Exception('Invalid breakpoint: "' . $view . '". Must be an integer or one of the registered strings (' . implode(', ', array_map(static fn($s) => '"'. $s .'"', array_keys($this->breakpointMap))) . ')');
     }
 
     public function sortAspectRatios(): self
