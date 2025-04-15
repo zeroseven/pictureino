@@ -33,7 +33,7 @@ class ImageUtility
     /** @throws Exception */
     public function setFile(string $src = null, mixed $image = null, bool $treatIdAsReference = null): self
     {
-        if (($src === null && $image === null) || ($src !== null && $image !== null)) {
+        if (($src === '' && $image === null) || ($src !== '' && $image !== null)) {
             throw new Exception('You must either specify a string src or a File object.', 1382284104);
         }
 
@@ -53,11 +53,11 @@ class ImageUtility
             throw new Exception('No image. Please call "setFile" method, to set an image file', 1382284105);
         }
 
-        $mode = $keepAspectRatio && $width && $height ? 'c' : 'm';
+        $mode = !$keepAspectRatio && $width && $height ? 'c' : 'm';
 
         return $this->lastProcessedFile = $this->imageService->applyProcessingInstructions($this->file, array_merge($processingInstructions ?? [], [
-            'width' => $width . $mode,
-            'height' => $height . $mode
+            'width' => $width ? ($width . $mode) : null,
+            'height' => $height ? ($height . $mode) : null
         ]));
     }
 
@@ -83,7 +83,7 @@ class ImageUtility
         }
 
         return $processedFile && $processedFile->hasProperty($property)
-            ? $processedFile->getProperty($property)
+            ? (string)$processedFile->getProperty($property)
             : null;
     }
 }

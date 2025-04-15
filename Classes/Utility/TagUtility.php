@@ -4,6 +4,7 @@ namespace Zeroseven\Picturerino\Utility;
 
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3Fluid\Fluid\Core\ViewHelper\TagBuilder;
+use Zeroseven\Picturerino\Entity\AspectRatio;
 use Zeroseven\Picturerino\Utility\ImageUtility;
 use Zeroseven\Picturerino\Utility\AspectRatioUtility;
 
@@ -42,16 +43,17 @@ class TagUtility {
         return $this;
     }
 
-    protected function renderSource(int $breakpoint, array $ratio): string
+    protected function renderSource(int $breakpoint, AspectRatio $ratio, int $width): string
     {
-        $width = static::FALLBACK_WIDTH;
-        $height = ($firstAspect = $this->aspectRatioUtility->getFirstAspectRatio()) ? $firstAspect->getHeight($width) : null;
+        $height = $width ? $ratio->getHeight($width) : null;
 
         $this->imageUtility->processImage($width, $height);
 
         $source = GeneralUtility::makeInstance(TagBuilder::class, 'source');
         $source->addAttribute('media', '(min-width: ' . $breakpoint . 'px)');
         $source->addAttribute('srcset', $this->imageUtility->getUrl());
+        $source->addAttribute('width', $this->imageUtility->getProperty('width'));
+        $source->addAttribute('height', $this->imageUtility->getProperty('height'));
 
         if ($mimetype = $this->imageUtility->getProperty('mimetype')) {
             $source->addAttribute('type', $mimetype);
@@ -60,42 +62,40 @@ class TagUtility {
         return $source->render();
     }
 
-    public function renderImg(): string
+    public function renderImg(int $width = null): string
     {
-        $width = static::FALLBACK_WIDTH;
-        $height = ($firstAspect = $this->aspectRatioUtility->getFirstAspectRatio()) ? $firstAspect->getHeight($width) : null;
-        $alt = $this->alt ?: $this->imageUtility->getProptery('alternative') ?: '';
-
+        $height = $width && ($firstAspect = $this->aspectRatioUtility->getFirstAspectRatio()) ? $firstAspect->getHeight($width) : null;
         $this->imageUtility->processImage($width, $height);
+        $alt = $this->alt ?: $this->imageUtility->getProperty('alternative') ?: '';
 
-        $tag = GeneralUtility::makeInstance(TagBuilder::class, 'img');
-        $tag->addAttribute('src', $this->imageUtility->getUrl());
-        $tag->addAttribute('width', $this->imageUtility->getProperty('width'));
-        $tag->addAttribute('height', $this->imageUtility->getProperty('height'));
-        $tag->addAttribute('srcset', $this->imageUtility->getUrl($this->imageUtility->processImage($width * 3, $height * 3)). ' 3x');
-        $tag->addAttribute('alt', $alt);
+        $img = GeneralUtility::makeInstance(TagBuilder::class, 'img');
+        $img->addAttribute('src', $this->imageUtility->getUrl());
+        $img->addAttribute('width', $this->imageUtility->getProperty('width'));
+        $img->addAttribute('height', $this->imageUtility->getProperty('height'));
+        $img->addAttribute('srcset', $this->imageUtility->getUrl($this->imageUtility->processImage($width * 3, $height * 3)). ' 3x');
+        $img->addAttribute('alt', $alt);
 
-        if ($title = $this->title ?: $this->imageUtility->getProptery('title')) {
-            $tag->addAttribute('title', $title);
+        if ($title = $this->title ?: $this->imageUtility->getProperty('title')) {
+            $img->addAttribute('title', $title);
         }
 
         if ($this->class) {
-            $tag->addAttribute('class', $this->class);
+            $img->addAttribute('class', $this->class);
         }
 
-        return $tag->render();
+        return $img->render();
     }
 
-    public function renderPicture(): string
+    public function renderPicture(int $width = null): string
     {
         $tag = GeneralUtility::makeInstance(TagBuilder::class, 'picture');
         $children = [];
 
         foreach ($this->aspectRatioUtility->getAspectRatios() as $breakpoint => $ratio) {
-            $breakpoint > 0 && ($children[] = $this->renderSource($breakpoint, $ratio));
+            $breakpoint > 0 && ($children[] = $this->renderSource($breakpoint, $ratio, $width));
         }
 
-        $children[] = $this->renderImg();
+        $children[] = $this->renderImg($width);
 
         $tag->setContent(implode('', $children));
 

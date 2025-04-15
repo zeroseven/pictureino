@@ -14,6 +14,7 @@ use Zeroseven\Picturerino\Utility\TagUtility;
 
 class ImageViewHelper extends AbstractViewHelper
 {
+    protected $escapeOutput = false;
     protected ImageUtility $imageUtiltiy;
     protected AspectRatioUtility $aspectRatioUtiltiy;
 
@@ -69,7 +70,7 @@ class ImageViewHelper extends AbstractViewHelper
             ->setClass($this->arguments['class']);
 
         return $this->aspectRatioUtiltiy->isEmpty()
-            ? $tagUtility->renderImg()
-            : $tagUtility->renderPicture();
+            ? $tagUtility->renderImg(static::FALLBACK_WIDTH)
+            : $tagUtility->renderPicture(static::FALLBACK_WIDTH);
     }
 }
