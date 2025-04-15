@@ -11,6 +11,7 @@ use Zeroseven\Picturerino\Utility\AspectRatioUtility;
 class TagUtility {
     protected ImageUtility $imageUtility;
     protected AspectRatioUtility $aspectRatioUtility;
+    protected bool $debugMode;
 
     protected ?string $title = null;
     protected ?string $alt = null;
@@ -20,6 +21,7 @@ class TagUtility {
     {
         $this->imageUtility = $imageUtility;
         $this->aspectRatioUtility = $aspectRatioUtility;
+        $this->debugMode = (bool)GeneralUtility::makeInstance(SettingsUtility::class)->get('debug');
     }
 
     public function setTitle(string $title = null): self
@@ -55,7 +57,7 @@ class TagUtility {
         $source->addAttribute('width', $this->imageUtility->getProperty('width'));
         $source->addAttribute('height', $this->imageUtility->getProperty('height'));
 
-        if (true) {
+        if ($this->debugMode) {
             $source->addAttribute('data-aspact-ratio', (string)$ratio);
         }
 
@@ -80,7 +82,7 @@ class TagUtility {
         $img->addAttribute('srcset', $this->imageUtility->getUrl($this->imageUtility->processImage($width * 3, $height * 3)). ' 3x');
         $img->addAttribute('alt',  $this->alt ?: ($this->imageUtility->getProperty('alternative') ?? ''));
 
-        if (true) {
+        if ($this->debugMode) {
             $img->addAttribute('data-aspact-ratio', (string)$firstAspect);
         }
 
