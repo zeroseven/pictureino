@@ -8,6 +8,7 @@ use Exception;
 
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractViewHelper;
+use Zeroseven\Picturerino\Utility\EncryptionUtility;
 use Zeroseven\Picturerino\Utility\ImageUtility;
 use Zeroseven\Picturerino\Utility\AspectRatioUtility;
 use Zeroseven\Picturerino\Utility\TagUtility;
@@ -49,6 +50,14 @@ class ImageViewHelper extends AbstractViewHelper
         $this->registerArgument('style', 'string', 'Inline styles');
     }
 
+    protected function createEncryptionHash(): string
+    {
+        return EncryptionUtility::encryptConfig([
+            'file' => $this->imageUtiltiy->getFile()->getIdentifier(),
+            'aspectRatio' => $this->aspectRatioUtiltiy->getAspectRatios(),
+        ]);
+    }
+
     /** @throws Exception */
     public function render(): string
     {
@@ -67,6 +76,7 @@ class ImageViewHelper extends AbstractViewHelper
         }
 
         $tagUtility = GeneralUtility::makeInstance(TagUtility::class, $this->imageUtiltiy, $this->aspectRatioUtiltiy)
+            ->addDataAttribute('config', $this->createEncryptionHash())
             ->setTitle($this->arguments['title'])
             ->setAlt($this->arguments['alt'])
             ->setClass($this->arguments['class']);

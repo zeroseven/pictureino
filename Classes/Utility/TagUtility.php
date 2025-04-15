@@ -12,7 +12,7 @@ class TagUtility {
     protected ImageUtility $imageUtility;
     protected AspectRatioUtility $aspectRatioUtility;
     protected bool $debugMode;
-
+    protected array $dataAttributes = [];
     protected ?string $title = null;
     protected ?string $alt = null;
     protected ?string $class = null;
@@ -22,6 +22,13 @@ class TagUtility {
         $this->imageUtility = $imageUtility;
         $this->aspectRatioUtility = $aspectRatioUtility;
         $this->debugMode = (bool)GeneralUtility::makeInstance(SettingsUtility::class)->get('debug');
+    }
+
+    public function addDataAttribute(string $attribute, string $value): self
+    {
+        $this->dataAttributes[$attribute] = $value;
+
+        return $this;
     }
 
     public function setTitle(string $title = null): self
@@ -92,6 +99,12 @@ class TagUtility {
 
         if ($this->class) {
             $img->addAttribute('class', $this->class);
+        }
+
+        if ($this->dataAttributes) {
+            foreach ($this->dataAttributes as $key => $value) {
+                $img->addAttribute('data-' . $key, $value);
+            }
         }
 
         return $img->render();
