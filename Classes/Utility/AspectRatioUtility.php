@@ -10,11 +10,11 @@ use Zeroseven\Picturerino\Entity\AspectRatio;
 
 class AspectRatioUtility {
     protected SettingsUtility $settingsUtility;
-    protected array $aspectRatio;
+    protected array $aspectRatios;
     protected array $breakpointMap;
 
     public function __construct() {
-        $this->aspectRatio = [0 => null];
+        $this->aspectRatios = [0 => null];
 
         if ($breakpoints = GeneralUtility::makeInstance(SettingsUtility::class)->get('breakpoints')) {
             foreach ($breakpoints as $setup) {
@@ -39,14 +39,32 @@ class AspectRatioUtility {
         throw new Exception('Invalid breakpoint: ' . $view . '. Must be an integer or a string.');
     }
 
+    public function sortAspectRatios(): self
+    {
+        if (count($this->aspectRatios) > 1) {
+            ksort($this->aspectRatios);
+        }
+
+        $lastAspectRatio = '';
+        foreach ($this->aspectRatios as $breakpoint => $aspectRatio) {
+            if ($lastAspectRatio === (string)$aspectRatio) {
+                unset($this->aspectRatios[$breakpoint]);
+            }
+
+            $lastAspectRatio = (string)$aspectRatio;
+        }
+
+        return $this;
+    }
+
     public function getAspectRatios(): array
     {
-        return $this->aspectRatio;
+        return $this->aspectRatios;
     }
 
     public function getFirstAspectRatio(): ?AspectRatio
     {
-        return $this->aspectRatio[0] ?? null;
+        return $this->aspectRatios[0] ?? null;
     }
 
     /** @throws Exception */
@@ -54,10 +72,10 @@ class AspectRatioUtility {
     {
         if (is_array($input) && count($input) > 0) {
             foreach ($input as $view => $ratio) {
-                $this->addAspectRatio($ratio, $view);
+                $this->addAspectRatio($ratio, $view, false);
             }
 
-            return $this;
+            return $this->sortAspectRatios();
         }
 
         $this->addAspectRatio($input, 0);
@@ -66,19 +84,15 @@ class AspectRatioUtility {
     }
 
     /** @throws Exception */
-    public function addAspectRatio(mixed $asepectRatio, mixed $view = null): self
+    public function addAspectRatio(mixed $asepectRatio, mixed $view = null, bool $sortAspectRatios = true): self
     {
         if (!empty($asepectRatio)) {
             $breakpoint =  $this->mapBreakpoint($view ?? 0);
 
-            $this->aspectRatio[$breakpoint] = GeneralUtility::makeInstance(AspectRatio::class)->set($asepectRatio);
-
-            if (count($this->aspectRatio) > 1) {
-                ksort($this->aspectRatio);
-            }
+            $this->aspectRatios[$breakpoint] = GeneralUtility::makeInstance(AspectRatio::class)->set($asepectRatio);
         }
 
-        return $this;
+        return $sortAspectRatios === false ? $this : $this->sortAspectRatios();
     }
 
     /** @throws Exception */
@@ -87,13 +101,13 @@ class AspectRatioUtility {
         $breakpoint = $this->mapBreakpoint($view);
 
         if ($breakpoint === 0) {
-            $this->aspectRatio[0] = null;
+            $this->aspectRatios[0] = null;
 
             return $this;
         }
 
-        if (isset($this->aspectRatio[$breakpoint])) {
-            unset($this->aspectRatio[$breakpoint]);
+        if (isset($this->aspectRatios[$breakpoint])) {
+            unset($this->aspectRatios[$breakpoint]);
         }
 
         return $this;
@@ -101,6 +115,11 @@ class AspectRatioUtility {
 
     public function isEmpty(): bool
     {
-        return count($this->aspectRatio) <= 1 && $this->aspectRatio[0] === null;
+        return count($this->aspectRatios) <= 1 && $this->aspectRatios[0] === null;
+    }
+
+    public function count(): int
+    {
+        return count($this->aspectRatios);
     }
 }

@@ -58,10 +58,12 @@ class ImageViewHelper extends AbstractViewHelper
             $this->arguments['treatIdAsReference'] ?? false
         );
 
+        if (($width = $this->arguments['width']) && $height = $this->arguments['height']) {
+            $this->aspectRatioUtiltiy->addAspectRatio([$width, $height], 0);
+        }
+
         if ($aspectRatio = $this->arguments['aspectRatio']) {
             $this->aspectRatioUtiltiy->setAspectRatios($aspectRatio);
-        } elseif ($width = $this->arguments['width'] && $height = $this->arguments['height']) {
-            $this->aspectRatioUtiltiy->addAspectRatio([$width, $height], 0);
         }
 
         $tagUtility = GeneralUtility::makeInstance(TagUtility::class, $this->imageUtiltiy, $this->aspectRatioUtiltiy)
@@ -69,7 +71,7 @@ class ImageViewHelper extends AbstractViewHelper
             ->setAlt($this->arguments['alt'])
             ->setClass($this->arguments['class']);
 
-        return $this->aspectRatioUtiltiy->isEmpty()
+        return $this->aspectRatioUtiltiy->count() === 1
             ? $tagUtility->renderImg(static::FALLBACK_WIDTH)
             : $tagUtility->renderPicture(static::FALLBACK_WIDTH);
     }

@@ -55,6 +55,10 @@ class TagUtility {
         $source->addAttribute('width', $this->imageUtility->getProperty('width'));
         $source->addAttribute('height', $this->imageUtility->getProperty('height'));
 
+        if (true) {
+            $source->addAttribute('data-aspact-ratio', (string)$ratio);
+        }
+
         if ($mimetype = $this->imageUtility->getProperty('mimetype')) {
             $source->addAttribute('type', $mimetype);
         }
@@ -64,16 +68,21 @@ class TagUtility {
 
     public function renderImg(int $width = null): string
     {
-        $height = $width && ($firstAspect = $this->aspectRatioUtility->getFirstAspectRatio()) ? $firstAspect->getHeight($width) : null;
+        $firstAspect = $this->aspectRatioUtility->getFirstAspectRatio();
+        $height = $width && $firstAspect ? $firstAspect->getHeight($width) : null;
+
         $this->imageUtility->processImage($width, $height);
-        $alt = $this->alt ?: $this->imageUtility->getProperty('alternative') ?: '';
 
         $img = GeneralUtility::makeInstance(TagBuilder::class, 'img');
         $img->addAttribute('src', $this->imageUtility->getUrl());
         $img->addAttribute('width', $this->imageUtility->getProperty('width'));
         $img->addAttribute('height', $this->imageUtility->getProperty('height'));
         $img->addAttribute('srcset', $this->imageUtility->getUrl($this->imageUtility->processImage($width * 3, $height * 3)). ' 3x');
-        $img->addAttribute('alt', $alt);
+        $img->addAttribute('alt',  $this->alt ?: ($this->imageUtility->getProperty('alternative') ?? ''));
+
+        if (true) {
+            $img->addAttribute('data-aspact-ratio', (string)$firstAspect);
+        }
 
         if ($title = $this->title ?: $this->imageUtility->getProperty('title')) {
             $img->addAttribute('title', $title);
@@ -89,15 +98,18 @@ class TagUtility {
     public function renderPicture(int $width = null): string
     {
         $tag = GeneralUtility::makeInstance(TagBuilder::class, 'picture');
+        $aspectRatios = $this->aspectRatioUtility->getAspectRatios();
         $children = [];
 
-        foreach ($this->aspectRatioUtility->getAspectRatios() as $breakpoint => $ratio) {
+        krsort($aspectRatios);
+
+        foreach ($aspectRatios as $breakpoint => $ratio) {
             $breakpoint > 0 && ($children[] = $this->renderSource($breakpoint, $ratio, $width));
         }
 
         $children[] = $this->renderImg($width);
 
-        $tag->setContent(implode('', $children));
+        $tag->setContent(implode("\n", $children));
 
         return $tag->render();
     }

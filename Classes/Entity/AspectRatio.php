@@ -63,8 +63,14 @@ class AspectRatio {
 
     public function set(...$input): self
     {
-        if (count($input) === 1 && is_string($input[0]) && $aspectRatio = self::splitString($input[0])) {
-            return $this->setX($aspectRatio[0])->setY($aspectRatio[1])->reduce();
+        if (count($input) === 1) {
+            if (is_string($input[0]) && $aspectRatio = self::splitString($input[0])) {
+                return $this->setX($aspectRatio[0])->setY($aspectRatio[1])->reduce();
+            }
+
+            if (is_array($input[0])) {
+                return $this->set(...$input[0]);
+            }
         }
 
         if (count($input) === 2 && MathUtility::canBeInterpretedAsInteger($input[0]) && MathUtility::canBeInterpretedAsInteger($input[1])) {
