@@ -88,7 +88,7 @@ class TagUtility {
         $img->addAttribute('height', $this->imageUtility->getProperty('height'));
         $img->addAttribute('srcset', $this->imageUtility->getUrl($this->imageUtility->processImage($width * 3, $height * 3)). ' 3x');
         $img->addAttribute('alt',  $this->alt ?: ($this->imageUtility->getProperty('alternative') ?? ''));
-        $img->addAttribute('onload', 'Picturerino.handle');
+        $img->addAttribute('onload', 'Picturerino.handle(this)');
 
         if ($this->debugMode) {
             $img->addAttribute('data-aspact-ratio', (string)$firstAspect);

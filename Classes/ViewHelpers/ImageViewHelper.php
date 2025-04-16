@@ -79,7 +79,7 @@ class ImageViewHelper extends AbstractViewHelper
             ->addDataAttribute('config', $this->createEncryptionHash())
             ->setTitle($this->arguments['title'])
             ->setAlt($this->arguments['alt'])
-            ->setClass($this->arguments['class']);
+            ->setClass($this->arguments['class']); // TODO: addAttribute()
 
         return $this->aspectRatioUtiltiy->count() === 1
             ? $tagUtility->renderImg(static::FALLBACK_WIDTH)
