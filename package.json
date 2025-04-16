@@ -1,0 +1,26 @@
+{
+	"name": "Picturerino 🦏",
+	"private": true,
+	"version": "0.0.0",
+	"type": "module",
+	"engines": {
+		"node": "^22"
+	},
+	"scripts": {
+		"dev": "vite",
+		"build-dev": "tsc && vite build",
+		"build": "tsc && vite build && npm run uglify",
+		"watch": "vite build --watch --mode development",
+		"preview": "vite preview",
+		"format": "npx prettier Resources/Private/JavaScript/**/**/*.ts --no-semi --single-quote --write",
+		"uglify": "npx uglify-js Resources/Public/JavaScript/main.js --compress --mangle --output Resources/Public/JavaScript/main.js"
+	},
+	"devDependencies": {
+		"@types/node": "~22.14.1",
+		"prettier": "~3.5.3",
+		"sass": "~1.86.3",
+		"typescript": "~5.8.3",
+		"uglify-js": "~3.19.3",
+		"vite": "~6.2.6"
+	}
+}
