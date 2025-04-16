@@ -6,6 +6,7 @@ namespace Zeroseven\Picturerino\ViewHelpers;
 
 use Exception;
 
+use TYPO3\CMS\Core\Resource\FileReference;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractViewHelper;
 use Zeroseven\Picturerino\Utility\EncryptionUtility;
@@ -52,10 +53,26 @@ class ImageViewHelper extends AbstractViewHelper
 
     protected function createEncryptionHash(): string
     {
-        return EncryptionUtility::encryptConfig([
-            'file' => $this->imageUtiltiy->getFile()->getIdentifier(),
-            'aspectRatio' => $this->aspectRatioUtiltiy->getAspectRatios(),
-        ]);
+        $config = [];
+        $file = $this->imageUtiltiy->getFile();
+
+        if ($file instanceof FileReference) {
+            $config['file'] = [
+                'src' => $file->getReferenceProperty('uid'),
+                'treatIdAsReference' => true,
+            ];
+        } elseif ($file instanceof File) {
+            $config['file'] = [
+                'image' => $file->getPublicUrl(),
+                'treatIdAsReference' => true,
+            ];
+        }
+
+        if (!$this->aspectRatioUtiltiy->isEmpty()) {
+            $config['aspectRatio'] = $this->aspectRatioUtiltiy->toArray();
+        }
+
+        return EncryptionUtility::encryptConfig($config);
     }
 
     /** @throws Exception */

@@ -9,10 +9,9 @@ export class ApiService {
         return response.json();
     }
 
-    static async getOptimizedImageUrl(config: string, width: number, height: number): Promise<string> {
+    static async getOptimizedImage(config: string, width: number, height: number): Promise<ImageResponse> {
         try {
-            const data = await this.fetchImageUrl(config, width, height);
-            return data.src;
+            return await this.fetchImageUrl(config, width, height);
         } catch (error) {
             console.error('Failed to fetch optimized image:', error);
             throw error;

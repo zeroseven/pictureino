@@ -44,6 +44,9 @@ class Picturerino {
      * @param element Das zu verarbeitende Bildelement
      */
     public static handle(element: HTMLImageElement): void {
+        element.removeAttribute('onload'); // Entferne onload Attribut um Rekursion zu vermeiden
+        element.removeAttribute('srcset');
+
         if (!this.isInitialized) {
             this.init();
         }

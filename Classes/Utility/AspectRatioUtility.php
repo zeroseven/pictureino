@@ -67,6 +67,21 @@ class AspectRatioUtility {
         return $this->aspectRatios[0] ?? null;
     }
 
+    public function getAspectForWidth(int $width): ?AspectRatio
+    {
+        if (count($this->aspectRatios) === 1) {
+            return $this->getFirstAspectRatio();
+        }
+
+        foreach ($this->aspectRatios as $breakpoint => $aspectRatio) {
+            if ($breakpoint >= $width) {
+                return $aspectRatio;
+            }
+        }
+
+        return null;
+    }
+
     /** @throws Exception */
     public function setAspectRatios(mixed $input): self
     {
@@ -121,5 +136,16 @@ class AspectRatioUtility {
     public function count(): int
     {
         return count($this->aspectRatios);
+    }
+
+    public function toArray(): array
+    {
+        $result = [];
+
+        foreach ($this->aspectRatios as $breakpoint => $aspectRatio) {
+            $result[$breakpoint] = $aspectRatio ? $aspectRatio->toArray() : null;
+        }
+
+        return $result;
     }
 }

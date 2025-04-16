@@ -1,5 +1,9 @@
 export interface ImageResponse {
-    src: string;
+    attributes: {
+      src: string,
+      width: number,
+      height: number
+    }
 }
 
 export interface ImageConfig {

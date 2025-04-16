@@ -90,6 +90,11 @@ class AspectRatio {
         return (int)floor($height / $this->getY() * $this->getX());
     }
 
+    public function toArray(): array
+    {
+        return [$this->getX(), $this->getY()];
+    }
+
     public function __tostring(): string
     {
         return $this->x . ':' . $this->y;
