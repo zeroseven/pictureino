@@ -12,7 +12,7 @@ class TagUtility {
     protected ImageUtility $imageUtility;
     protected AspectRatioUtility $aspectRatioUtility;
     protected bool $debugMode;
-    protected array $dataAttributes = [];
+    protected array $attributes = [];
     protected ?string $title = null;
     protected ?string $alt = null;
     protected ?string $class = null;
@@ -24,32 +24,21 @@ class TagUtility {
         $this->debugMode = (bool)GeneralUtility::makeInstance(SettingsUtility::class)->get('debug');
     }
 
-    public function addDataAttribute(string $attribute, string $value): self
+    public function addAttribute(string $attribute, string $value = null): self
     {
-        $this->dataAttributes[$attribute] = $value;
+        $value === null || $this->attributes[$attribute] = $value;
 
         return $this;
     }
 
-    public function setTitle(string $title = null): self
+    public function getAttribute(string $attribute): ?string
     {
-        $this->title = $title;
-
-        return $this;
+        return $this->attributes[$attribute] ?? null;
     }
 
-    public function setAlt(string $alt = null): self
+    public function getDataAttributes(): array
     {
-        $this->alt = $alt;
-
-        return $this;
-    }
-
-    public function setClass(string $class = null): self
-    {
-        $this->class = $class;
-
-        return $this;
+        return array_filter($this->attributes, fn($key)  =>  str_starts_with($key, 'data-'), ARRAY_FILTER_USE_KEY);
     }
 
     protected function renderSource(int $breakpoint, AspectRatio $ratio, int $width): string
@@ -87,24 +76,14 @@ class TagUtility {
         $img->addAttribute('width', $this->imageUtility->getProperty('width'));
         $img->addAttribute('height', $this->imageUtility->getProperty('height'));
         $img->addAttribute('srcset', $this->imageUtility->getUrl($this->imageUtility->processImage($width * 3, $height * 3)). ' 3x');
-        $img->addAttribute('alt',  $this->alt ?: ($this->imageUtility->getProperty('alternative') ?? ''));
 
-        if ($this->debugMode) {
-            $img->addAttribute('data-aspact-ratio', (string)$firstAspect);
-        }
+        $this->getAttribute('title') || $this->addAttribute('title', $this->imageUtility->getProperty('title'));
+        $this->getAttribute('alt') || $this->addAttribute('alt', $this->imageUtility->getProperty('alternative') ?? '');
 
-        if ($title = $this->title ?: $this->imageUtility->getProperty('title')) {
-            $img->addAttribute('title', $title);
-        }
+        $this->debugMode && $this->addAttribute('data-aspect-ratio', (string)$firstAspect);
 
-        if ($this->class) {
-            $img->addAttribute('class', $this->class);
-        }
-
-        if ($this->dataAttributes) {
-            foreach ($this->dataAttributes as $key => $value) {
-                $img->addAttribute('data-' . $key, $value);
-            }
+        foreach ($this->attributes as $key => $value) {
+            $value === null || $img->addAttribute($key, $value);
         }
 
         return $img->render();

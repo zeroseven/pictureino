@@ -76,10 +76,10 @@ class ImageViewHelper extends AbstractViewHelper
         }
 
         $tagUtility = GeneralUtility::makeInstance(TagUtility::class, $this->imageUtiltiy, $this->aspectRatioUtiltiy)
-            ->addDataAttribute('config', $this->createEncryptionHash())
-            ->setTitle($this->arguments['title'])
-            ->setAlt($this->arguments['alt'])
-            ->setClass($this->arguments['class']);
+            ->addAttribute('data-config', $this->createEncryptionHash())
+            ->addAttribute('title', $this->arguments['title'])
+            ->addAttribute('alt', $this->arguments['alt'])
+            ->addAttribute('class', $this->arguments['class']);
 
         return $this->aspectRatioUtiltiy->count() === 1
             ? $tagUtility->renderImg(static::FALLBACK_WIDTH)
