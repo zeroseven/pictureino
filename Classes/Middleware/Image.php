@@ -11,45 +11,38 @@ use Psr\Http\Server\RequestHandlerInterface;
 use TYPO3\CMS\Core\Http\JsonResponse;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use Zeroseven\Picturerino\Entity\AspectRatio;
+use Zeroseven\Picturerino\Entity\ConfigRequest;
 use Zeroseven\Picturerino\Utility\AspectRatioUtility;
-use Zeroseven\Picturerino\Utility\EncryptionUtility;
 use Zeroseven\Picturerino\Utility\ImageUtility;
-use Zeroseven\Picturerino\Utility\LogUtility;
+use Zeroseven\Picturerino\Utility\MetricsUtility;
 
 class Image implements MiddlewareInterface
 {
+    protected ?ConfigRequest $configRequest = null;
     protected ?ImageUtility $imageUtiltiy = null;
     protected ?AspectRatioUtility $aspectRatioUtiltiy = null;
-    protected ?int $width = null;
-    protected ?int $height = null;
-    protected ?int $viewport = null;
+    protected ?MetricsUtility $metricsUtility = null;
     protected ?AspectRatio $aspectRatio = null;
 
     protected function initializeConfig(ServerRequestInterface $request): bool
     {
-        $path = $request->getUri()->getPath();
+        $this->configRequest = GeneralUtility::makeInstance(ConfigRequest::class, $request);
 
-        if (
-            // Path like "/-/img/200x100/1024/cHVvWmMzWDVERzFnVkRQSW==" to "200", "100" and "cHVvWmMzWDVERzFnVkRQSW=="
-            preg_match('/\/-\/img\/(\d+)x(\d+)\/(\d+)\/([A-Za-z0-9+=]+)\/?$/', $path, $matches)
-            && $config = EncryptionUtility::decryptConfig($matches[4])
-        ) {
+        if ($this->configRequest->isValid()) {
+            $config = $this->configRequest->getConfig();
+
             $this->imageUtiltiy = GeneralUtility::makeInstance(ImageUtility::class)->setFile(
                 (string)($config['file']['src'] ?? ''),
                 $config['file']['image'] ?? null,
                 (bool)($config['file']['treatIdAsReference'] ?? false)
             );
 
-            $requestedWidth = (int)$matches[1];
-            $requestedHeight = (int)$matches[2];
-            $requestedViewport = (int)$matches[3];
-
             $this->aspectRatio = GeneralUtility::makeInstance(AspectRatioUtility::class)
-                ->setAspectRatios($config['aspectRatio'] ?? null)
-                ->getAspectForWidth($requestedViewport);
+                    ->setAspectRatios($config['aspectRatio'] ?? null)
+                    ->getAspectForWidth($this->configRequest->getViewport());
 
-            $this->width = LogUtility::evaluate($requestedWidth, $requestedHeight, $this->aspectRatio, $requestedViewport);
-            $this->height = $this->aspectRatio?->getHeight($this->width);
+            $this->metricsUtility = GeneralUtility::makeInstance(MetricsUtility::class, $this->configRequest, $this->imageUtiltiy, $this->aspectRatio);
+            $this->metricsUtility->log();
 
             return true;
         }
@@ -57,18 +50,9 @@ class Image implements MiddlewareInterface
         return false;
     }
 
-    public function processFile(): array
+    public function getAttributes(): array
     {
-        $processedHeight = $this->aspectRatio?->getHeight($this->width);
-        $this->imageUtiltiy->processImage($this->width, $processedHeight);
-
-        // Log der tatsächlich verarbeiteten Bildgröße
-        LogUtility::log(
-            $this->width,
-            $processedHeight ?? $this->height,
-            $this->aspectRatio,
-            $this->viewport
-        );
+        $this->imageUtiltiy->processImage($this->metricsUtility->getWidth(), $this->metricsUtility->getHeight());
 
         return [
             'src' => $this->imageUtiltiy->getUrl(),
@@ -81,12 +65,9 @@ class Image implements MiddlewareInterface
     {
         if ($this->initializeConfig($request)) {
             return new JsonResponse([
-                    'attributes' => $this->processFile(),
+                    'attributes' => $this->getAttributes(),
                     'aspectRatio' => $this->aspectRatio->toArray(),
-                    'request' => [
-                        'width' => $this->width,
-                        'height' => $this->height
-                    ]
+                    'request' => $this->configRequest->toArray(),
                 ],
                 200,
                 ['cache-control' => 'no-store, no-cache, must-revalidate, max-age=0'],
