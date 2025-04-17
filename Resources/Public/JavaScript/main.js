@@ -1,123 +1,110 @@
 var __defProp = Object.defineProperty;
 var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
 var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
-class ApiService {
-  static getOptimizedImage(config, width, height) {
-    const viewWidth = Math.round(window.innerWidth);
-    return fetch(`/-/img/${width}x${height}/${viewWidth}/${config}/`).then((response) => {
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      return response.json();
+class Observer {
+  constructor(element) {
+    __publicField(this, "element");
+    __publicField(this, "resizeObserver", null);
+    __publicField(this, "intersectionObserver", null);
+    __publicField(this, "resizeTimeout", null);
+    __publicField(this, "throttleTime", 150);
+    __publicField(this, "observerOptions", {
+      threshold: 0.1,
+      rootMargin: "0px"
     });
+    this.element = element;
   }
-}
-class ViewportService {
-  static isInViewport(element) {
-    const rect = element.getBoundingClientRect();
-    const windowHeight = window.innerHeight || document.documentElement.clientHeight;
-    const windowWidth = window.innerWidth || document.documentElement.clientWidth;
-    return rect.top <= windowHeight + 100 && rect.bottom >= -100 && rect.left <= windowWidth + 100 && rect.right >= -100;
-  }
-  static whenInViewport(element) {
+  inView() {
     return new Promise((resolve) => {
-      if (this.isInViewport(element)) {
-        resolve();
-        return;
-      }
-      const observer = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting) {
-          observer.disconnect();
-          resolve();
+      var _a;
+      (_a = this.intersectionObserver) == null ? void 0 : _a.disconnect();
+      this.intersectionObserver = new IntersectionObserver((entries) => {
+        const entry = entries[0];
+        if (entry.isIntersecting) {
+          resolve(entry);
+          this.observeIntersection();
         }
-      }, {
-        rootMargin: "100px"
-        // Lädt Bilder 100px bevor sie sichtbar werden
-      });
-      observer.observe(element);
+      }, this.observerOptions);
+      this.intersectionObserver.observe(this.element);
     });
   }
-}
-const _ImageHandler = class _ImageHandler {
-  constructor() {
-  }
-  static getInstance() {
-    if (!_ImageHandler.instance) {
-      _ImageHandler.instance = new _ImageHandler();
-    }
-    return _ImageHandler.instance;
-  }
-  preloadImage(src) {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.onload = () => resolve();
-      img.onerror = () => reject(new Error(`Failed to load image: ${src}`));
-      img.src = src;
-    });
-  }
-  removePictureTag(element) {
-    const picture = element.closest("picture");
-    if (picture && picture.parentNode) {
-      picture.parentNode.insertBefore(element, picture);
-      picture.remove();
-    }
-  }
-  processImage(element, config, firstLoad) {
-    return ViewportService.whenInViewport(element).then(() => {
-      const width = Math.round(element.offsetWidth);
-      const height = Math.round(element.offsetHeight);
-      if (!width || !height) return;
-      return ApiService.getOptimizedImage(config, width, height).then((data) => {
-        if (!document.body.contains(element)) return;
-        element.width = data.attributes.width;
-        element.height = data.attributes.height;
-        element.style.aspectRatio = (data.aspectRatio[0] || data.attributes.width) + "/" + (data.aspectRatio[1] || data.attributes.height);
-        return this.preloadImage(data.attributes.src).then(() => {
-          if (document.body.contains(element)) {
-            element.style.removeProperty("aspect-ratio");
-            if (firstLoad) {
-              this.removePictureTag(element);
-              firstLoad = false;
-            }
-            element.src = data.attributes.src;
-          }
+  resize() {
+    return new Promise((resolve) => {
+      var _a;
+      (_a = this.resizeObserver) == null ? void 0 : _a.disconnect();
+      this.resizeObserver = new ResizeObserver((entries) => {
+        this.throttle(() => {
+          resolve(entries[0]);
+          this.observeResize();
         });
       });
-    }).catch((error) => console.error("Failed to process image:", error));
+      this.resizeObserver.observe(this.element);
+    });
   }
-};
-__publicField(_ImageHandler, "instance");
-let ImageHandler = _ImageHandler;
-class Picturerino {
-  constructor(element) {
-    __publicField(this, "resizeDebounceTimeout", null);
-    __publicField(this, "imageHandler");
-    __publicField(this, "element");
-    __publicField(this, "config", "");
-    this.element = element;
-    this.imageHandler = ImageHandler.getInstance();
-    this.init();
-  }
-  handleResize(element, config) {
-    if (this.resizeDebounceTimeout) {
-      window.clearTimeout(this.resizeDebounceTimeout);
+  throttle(callback) {
+    if (this.resizeTimeout) {
+      window.clearTimeout(this.resizeTimeout);
     }
-    this.resizeDebounceTimeout = window.setTimeout(() => this.imageHandler.processImage(element, config, false), 250);
+    this.resizeTimeout = window.setTimeout(() => {
+      callback();
+      this.resizeTimeout = null;
+    }, this.throttleTime);
   }
-  init() {
-    this.config = this.element.getAttribute("data-config");
-    if (this.config) {
-      this.element.removeAttribute("data-config");
-      this.element.removeAttribute("onload");
-      this.element.removeAttribute("srcset");
-      window.addEventListener("resize", () => this.handleResize(this.element, this.config));
+  observeIntersection() {
+    this.intersectionObserver = new IntersectionObserver(
+      (entries) => entries[0].isIntersecting && this.inView().catch(console.error),
+      this.observerOptions
+    );
+    this.intersectionObserver.observe(this.element);
+  }
+  observeResize() {
+    this.resizeObserver = new ResizeObserver(() => {
+      this.throttle(() => this.resize().catch(console.error));
+    });
+    this.resizeObserver.observe(this.element);
+  }
+  disconnect() {
+    var _a, _b;
+    if (this.resizeTimeout) {
+      window.clearTimeout(this.resizeTimeout);
+      this.resizeTimeout = null;
     }
-    this.imageHandler.processImage(this.element, this.config, true);
-  }
-  static handle(element) {
-    new Picturerino(element);
+    (_a = this.resizeObserver) == null ? void 0 : _a.disconnect();
+    (_b = this.intersectionObserver) == null ? void 0 : _b.disconnect();
   }
 }
-window.Pictureino = {
+class Image {
+  constructor(element, config) {
+    __publicField(this, "element");
+    __publicField(this, "config");
+    __publicField(this, "picture");
+    __publicField(this, "loaded");
+    __publicField(this, "observer");
+    this.element = element;
+    this.config = config;
+    this.picture = this.element.closest("picture");
+    this.loaded = false;
+    this.observer = new Observer(this.element);
+    this.init();
+  }
+  async init() {
+    this.observer.inView().then(() => {
+      console.log("Image is in view");
+    });
+    this.observer.resize().then(() => {
+      console.log("Image resized", this.config, this.picture, this.loaded);
+    });
+  }
+}
+class Picturerino {
+  static getConfig(element) {
+    return element.getAttribute("data-config");
+  }
+  static handle(element) {
+    const config = Picturerino.getConfig(element);
+    new Image(element, config);
+  }
+}
+window.Picturerino = {
   handle: (element) => Picturerino.handle(element)
 };
