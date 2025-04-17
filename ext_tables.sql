@@ -1,5 +1,6 @@
 CREATE TABLE tx_picturerino_metrics (
     uid int(11) unsigned NOT NULL auto_increment,
+    identifier varchar(255) DEFAULT '' NOT NULL,
     width int(11) DEFAULT '0' NOT NULL,
     height int(11) DEFAULT '0' NOT NULL,
     viewport int(11) DEFAULT '0' NOT NULL,

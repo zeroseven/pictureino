@@ -30,6 +30,7 @@ class Image implements MiddlewareInterface
 
         if ($this->configRequest->isValid()) {
             $config = $this->configRequest->getConfig();
+            $identifier = md5($request->getAttribute('site')?->getIdentifier() . json_encode($config['file'] ?? []));
 
             $this->imageUtiltiy = GeneralUtility::makeInstance(ImageUtility::class)->setFile(
                 (string)($config['file']['src'] ?? ''),
@@ -41,7 +42,7 @@ class Image implements MiddlewareInterface
                     ->setAspectRatios($config['aspectRatio'] ?? null)
                     ->getAspectForWidth($this->configRequest->getViewport());
 
-            $this->metricsUtility = GeneralUtility::makeInstance(MetricsUtility::class, $this->configRequest, $this->imageUtiltiy, $this->aspectRatio);
+            $this->metricsUtility = GeneralUtility::makeInstance(MetricsUtility::class, $identifier, $this->configRequest, $this->imageUtiltiy, $this->aspectRatio);
             $this->metricsUtility->log();
 
             return true;

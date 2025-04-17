@@ -16,6 +16,7 @@ class MetricsUtility
     protected const int SIMILAR_SIZE_RANGE = 20;
     protected const int STEP_SIZE = 50;
 
+    protected string $identifier;
     protected ConfigRequest $configRequest;
     protected ImageUtility $imageUtility;
     protected ?AspectRatio $aspectRatio = null;
@@ -23,7 +24,8 @@ class MetricsUtility
     protected ?int $width = null;
     protected ?int $height = null;
 
-    public function __construct(ConfigRequest $configRequest, ImageUtility $imageUtility, ?AspectRatio $aspectRatio = null) {
+    public function __construct(string $identifier, ConfigRequest $configRequest, ImageUtility $imageUtility, ?AspectRatio $aspectRatio = null) {
+        $this->identifier = $identifier;
         $this->configRequest = $configRequest;
         $this->imageUtility = $imageUtility;
         $this->aspectRatio = $aspectRatio;
@@ -36,6 +38,7 @@ class MetricsUtility
         $this->connection->insert(
             self::TABLE_NAME,
             [
+                'identifier' => $this->identifier,
                 'width' => $this->configRequest->getWidth(),
                 'height' => $this->configRequest->getHeight(),
                 'viewport' => $this->configRequest->getViewport(),
