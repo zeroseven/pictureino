@@ -1,41 +1,50 @@
 import { ImageHandler } from './imageHandler';
 
-class Picturerino {
-    private static list: HTMLImageElement[] = [];
-    private static resizeDebounceTimeout: number | null = null;
+const list: Picturerino[] = [];
 
-    private static handleResize(element: HTMLImageElement, config: string): void {
+class Picturerino {
+    private resizeDebounceTimeout: number | null = null;
+    private imageHandler: ImageHandler;
+    private element: HTMLImageElement;
+    private config: string = '';
+
+    private constructor(element: HTMLImageElement) {
+        this.element = element;
+        this.imageHandler = ImageHandler.getInstance();
+
+        this.init();
+    }
+
+    private handleResize(element: HTMLImageElement, config: string): void {
         if (this.resizeDebounceTimeout) {
             window.clearTimeout(this.resizeDebounceTimeout);
         }
 
-        this.resizeDebounceTimeout = window.setTimeout(() => ImageHandler.processImage(element, config, false), 250);
+        this.resizeDebounceTimeout = window.setTimeout(() =>
+            this.imageHandler.processImage(element, config, false), 250);
     }
 
-    public static init(element: HTMLImageElement): string|null {
-        const config = element.getAttribute('data-config');
+    public init(): void {
+        this.config = this.element.getAttribute('data-config') as string;
 
-        if(config) {
-          element.removeAttribute('data-config');
-          element.removeAttribute('onload');
-          element.removeAttribute('srcset');
+        if (this.config) {
+          this.element.removeAttribute('data-config');
+          this.element.removeAttribute('onload');
+          this.element.removeAttribute('srcset');
 
-          window.addEventListener('resize', () => this.handleResize(element, config));
-
-          return config;
+          window.addEventListener('resize', () => this.handleResize(this.element, this.config));
         }
 
-        return null;
+        this.imageHandler.processImage(this.element, this.config, true);
+
+        list.push(this);
     }
 
     public static handle(element: HTMLImageElement): void {
-        const config = this.init(element);
-
-        if (config) {
-          this.list.push(element);
-          ImageHandler.processImage(element, config, true);
-        }
+        new Picturerino(element);
     }
 }
 
-(window as any).Picturerino = Picturerino;
+(window as any).Pictureino = {
+  handle: (element: HTMLImageElement) => Picturerino.handle(element)
+};

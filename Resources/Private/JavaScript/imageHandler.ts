@@ -2,7 +2,18 @@ import { ApiService } from './apiService';
 import { ViewportService } from './viewportService';
 
 export class ImageHandler {
-    private static preloadImage(src: string): Promise<void> {
+    private static instance: ImageHandler;
+
+    private constructor() {}
+
+    public static getInstance(): ImageHandler {
+        if (!ImageHandler.instance) {
+            ImageHandler.instance = new ImageHandler();
+        }
+        return ImageHandler.instance;
+    }
+
+    private preloadImage(src: string): Promise<void> {
         return new Promise((resolve, reject) => {
             const img = new Image();
             img.onload = () => resolve();
@@ -11,7 +22,7 @@ export class ImageHandler {
         });
     }
 
-    public static removePictureTag(element: HTMLImageElement): void {
+    public removePictureTag(element: HTMLImageElement): void {
         const picture = element.closest('picture');
 
         if (picture && picture.parentNode) {
@@ -20,7 +31,7 @@ export class ImageHandler {
         }
     }
 
-    static processImage(element: HTMLImageElement, config: string, firstLoad?: boolean): Promise<void> {
+    public processImage(picturerino: Picturerino, firstLoad?: boolean): Promise<void> {
         return ViewportService.whenInViewport(element)
             .then(() => {
                 const width = Math.round(element.offsetWidth);

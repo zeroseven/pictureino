@@ -38,8 +38,16 @@ class ViewportService {
     });
   }
 }
-class ImageHandler {
-  static preloadImage(src) {
+const _ImageHandler = class _ImageHandler {
+  constructor() {
+  }
+  static getInstance() {
+    if (!_ImageHandler.instance) {
+      _ImageHandler.instance = new _ImageHandler();
+    }
+    return _ImageHandler.instance;
+  }
+  preloadImage(src) {
     return new Promise((resolve, reject) => {
       const img = new Image();
       img.onload = () => resolve();
@@ -47,14 +55,14 @@ class ImageHandler {
       img.src = src;
     });
   }
-  static removePictureTag(element) {
+  removePictureTag(element) {
     const picture = element.closest("picture");
     if (picture && picture.parentNode) {
       picture.parentNode.insertBefore(element, picture);
       picture.remove();
     }
   }
-  static processImage(element, config, firstLoad) {
+  processImage(element, config, firstLoad) {
     return ViewportService.whenInViewport(element).then(() => {
       const width = Math.round(element.offsetWidth);
       const height = Math.round(element.offsetHeight);
@@ -77,33 +85,39 @@ class ImageHandler {
       });
     }).catch((error) => console.error("Failed to process image:", error));
   }
-}
+};
+__publicField(_ImageHandler, "instance");
+let ImageHandler = _ImageHandler;
 class Picturerino {
-  static handleResize(element, config) {
+  constructor(element) {
+    __publicField(this, "resizeDebounceTimeout", null);
+    __publicField(this, "imageHandler");
+    __publicField(this, "element");
+    __publicField(this, "config", "");
+    this.element = element;
+    this.imageHandler = ImageHandler.getInstance();
+    this.init();
+  }
+  handleResize(element, config) {
     if (this.resizeDebounceTimeout) {
       window.clearTimeout(this.resizeDebounceTimeout);
     }
-    this.resizeDebounceTimeout = window.setTimeout(() => ImageHandler.processImage(element, config, false), 250);
+    this.resizeDebounceTimeout = window.setTimeout(() => this.imageHandler.processImage(element, config, false), 250);
   }
-  static init(element) {
-    const config = element.getAttribute("data-config");
-    if (config) {
-      element.removeAttribute("data-config");
-      element.removeAttribute("onload");
-      element.removeAttribute("srcset");
-      window.addEventListener("resize", () => this.handleResize(element, config));
-      return config;
+  init() {
+    this.config = this.element.getAttribute("data-config");
+    if (this.config) {
+      this.element.removeAttribute("data-config");
+      this.element.removeAttribute("onload");
+      this.element.removeAttribute("srcset");
+      window.addEventListener("resize", () => this.handleResize(this.element, this.config));
     }
-    return null;
+    this.imageHandler.processImage(this.element, this.config, true);
   }
   static handle(element) {
-    const config = this.init(element);
-    if (config) {
-      this.list.push(element);
-      ImageHandler.processImage(element, config, true);
-    }
+    new Picturerino(element);
   }
 }
-__publicField(Picturerino, "list", []);
-__publicField(Picturerino, "resizeDebounceTimeout", null);
-window.Picturerino = Picturerino;
+window.Pictureino = {
+  handle: (element) => Picturerino.handle(element)
+};

@@ -96,6 +96,7 @@ class ImageViewHelper extends AbstractViewHelper
             ->addAttribute('data-config', $this->createEncryptionHash())
             ->addAttribute('title', $this->arguments['title'])
             ->addAttribute('alt', $this->arguments['alt'])
+            ->addAttribute('onload', 'Pictureino.handle(this)')
             ->addAttribute('class', $this->arguments['class']);
 
         return $this->aspectRatioUtiltiy->count() === 1

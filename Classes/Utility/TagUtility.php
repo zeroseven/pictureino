@@ -76,7 +76,6 @@ class TagUtility {
         $img->addAttribute('width', $this->imageUtility->getProperty('width'));
         $img->addAttribute('height', $this->imageUtility->getProperty('height'));
         $img->addAttribute('srcset', $this->imageUtility->getUrl($this->imageUtility->processImage($width * 3, $height * 3)). ' 3x');
-        $img->addAttribute('onload', 'Picturerino.handle(this)');
 
         $this->getAttribute('title') || $this->addAttribute('title', $this->imageUtility->getProperty('title'));
         $this->getAttribute('alt') || $this->addAttribute('alt', $this->imageUtility->getProperty('alternative') ?? '');
