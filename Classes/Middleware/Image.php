@@ -15,6 +15,7 @@ use Zeroseven\Picturerino\Entity\ConfigRequest;
 use Zeroseven\Picturerino\Utility\AspectRatioUtility;
 use Zeroseven\Picturerino\Utility\ImageUtility;
 use Zeroseven\Picturerino\Utility\MetricsUtility;
+use Zeroseven\Picturerino\Utility\SettingsUtility;
 
 class Image implements MiddlewareInterface
 {
@@ -23,6 +24,24 @@ class Image implements MiddlewareInterface
     protected ?AspectRatioUtility $aspectRatioUtiltiy = null;
     protected ?MetricsUtility $metricsUtility = null;
     protected ?AspectRatio $aspectRatio = null;
+
+    protected function isValid(ServerRequestInterface $request): bool
+    {
+        $maxWidth = (int)($this->configRequest->getConfig()['image_max_width'] ?? GeneralUtility::makeInstance(SettingsUtility::class, $request)->get('image_max_width'));
+        if ($maxWidth === 0 || $this->configRequest->getWidth() > $maxWidth) {
+            throw new \InvalidArgumentException('Width exceeds maximum allowed width of ' . $maxWidth, 1627881234);
+        }
+
+        if (
+            $this->aspectRatio
+            && ($expectedHeight = $this->aspectRatio->getHeight($this->configRequest->getWidth()))
+            && ($expectedHeight * 0.95 > $this->configRequest->getHeight() || $expectedHeight * 1.05 < $this->configRequest->getHeight())
+        ) {
+            throw new \InvalidArgumentException('Properties are out of the acceptable range of the given aspect ratio.', 1627881235);
+        }
+
+        return true;
+    }
 
     protected function initializeConfig(ServerRequestInterface $request): bool
     {
@@ -42,10 +61,12 @@ class Image implements MiddlewareInterface
                     ->setAspectRatios($config['aspectRatio'] ?? null)
                     ->getAspectForWidth($this->configRequest->getViewport());
 
-            $this->metricsUtility = GeneralUtility::makeInstance(MetricsUtility::class, $identifier, $this->configRequest, $this->imageUtiltiy, $this->aspectRatio);
-            $this->metricsUtility->log();
+            if ($this->isValid($request)) {
+                $this->metricsUtility = GeneralUtility::makeInstance(MetricsUtility::class, $identifier, $this->configRequest, $this->imageUtiltiy, $this->aspectRatio);
+                $this->metricsUtility->log();
 
-            return true;
+                return true;
+            }
         }
 
         return false;
