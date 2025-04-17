@@ -14,6 +14,7 @@ use Zeroseven\Picturerino\Entity\AspectRatio;
 use Zeroseven\Picturerino\Utility\AspectRatioUtility;
 use Zeroseven\Picturerino\Utility\EncryptionUtility;
 use Zeroseven\Picturerino\Utility\ImageUtility;
+use Zeroseven\Picturerino\Utility\LogUtility;
 
 class Image implements MiddlewareInterface
 {
@@ -21,6 +22,7 @@ class Image implements MiddlewareInterface
     protected ?AspectRatioUtility $aspectRatioUtiltiy = null;
     protected ?int $width = null;
     protected ?int $height = null;
+    protected ?int $viewport = null;
     protected ?AspectRatio $aspectRatio = null;
 
     protected function initializeConfig(ServerRequestInterface $request): bool
@@ -38,12 +40,16 @@ class Image implements MiddlewareInterface
                 (bool)($config['file']['treatIdAsReference'] ?? false)
             );
 
-            $this->width = (int)$matches[1];
-            $this->height = (int)$matches[2];
+            $requestedWidth = (int)$matches[1];
+            $requestedHeight = (int)$matches[2];
+            $requestedViewport = (int)$matches[3];
 
             $this->aspectRatio = GeneralUtility::makeInstance(AspectRatioUtility::class)
                 ->setAspectRatios($config['aspectRatio'] ?? null)
-                ->getAspectForWidth((int)$matches[3]);
+                ->getAspectForWidth($requestedViewport);
+
+            $this->width = LogUtility::evaluate($requestedWidth, $requestedHeight, $this->aspectRatio, $requestedViewport);
+            $this->height = $this->aspectRatio?->getHeight($this->width);
 
             return true;
         }
@@ -53,7 +59,16 @@ class Image implements MiddlewareInterface
 
     public function processFile(): array
     {
-        $this->imageUtiltiy->processImage($this->width, $this->aspectRatio?->getHeight($this->width));
+        $processedHeight = $this->aspectRatio?->getHeight($this->width);
+        $this->imageUtiltiy->processImage($this->width, $processedHeight);
+
+        // Log der tatsächlich verarbeiteten Bildgröße
+        LogUtility::log(
+            $this->width,
+            $processedHeight ?? $this->height,
+            $this->aspectRatio,
+            $this->viewport
+        );
 
         return [
             'src' => $this->imageUtiltiy->getUrl(),
