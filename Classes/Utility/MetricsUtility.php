@@ -13,7 +13,7 @@ use Zeroseven\Picturerino\Entity\ConfigRequest;
 class MetricsUtility
 {
     protected const string TABLE_NAME = 'tx_picturerino_metrics';
-    protected const int SIMILAR_SIZE_RANGE = 20;
+    protected const int SIMILAR_SIZE_RANGE = [-5 + 20];
     protected const int STEP_SIZE = 50;
 
     protected string $identifier;
@@ -56,41 +56,46 @@ class MetricsUtility
     protected function evaluate(): void {
         $queryBuilder = $this->connection->createQueryBuilder();
 
-        // Basis-Query für häufig verwendete Bildgrößen
-        $queryBuilder
+        // 1. Hole die 10 am häufigsten verwendeten Metriken für diesen identifier
+        $commonMetrics = $queryBuilder
             ->select('width', 'height')
             ->addSelectLiteral('COUNT(*) as frequency')
             ->from(self::TABLE_NAME)
             ->where(
-                $queryBuilder->expr()->and(
-                    $queryBuilder->expr()->gte('width', $queryBuilder->createNamedParameter($this->configRequest->getWidth() - self::SIMILAR_SIZE_RANGE)),
-                    $queryBuilder->expr()->lte('width', $queryBuilder->createNamedParameter($this->configRequest->getWidth() + self::SIMILAR_SIZE_RANGE)),
-                    $queryBuilder->expr()->eq('ratio', $queryBuilder->createNamedParameter($this->aspectRatio ? (string)$this->aspectRatio : '')),
-                    $queryBuilder->expr()->eq('height', $queryBuilder->createNamedParameter($this->configRequest->getHeight()))
-                )
-            );
+                $queryBuilder->expr()->eq('identifier', $queryBuilder->createNamedParameter($this->identifier))
+            )
+            ->groupBy('width', 'height')
+            ->orderBy('frequency', 'DESC')
+            ->setMaxResults(10)
+            ->executeQuery()
+            ->fetchAllAssociative();
 
-        // Viewport-Einschränkung hinzufügen wenn vorhanden
-        if ($this->configRequest->getViewport() > 0) {
-            $queryBuilder->andWhere(
-                $queryBuilder->expr()->eq('viewport', $queryBuilder->createNamedParameter($this->configRequest->getViewport()))
-            );
+        // 2. Prüfe auf ähnliche Größen
+        $requestedWidth = $this->configRequest->getWidth();
+        $similarSize = null;
+        $highestFrequency = 0;
+
+        foreach ($commonMetrics as $metric) {
+            $widthDiff = abs($metric['width'] - $requestedWidth);
+
+            // Prüfe ob die Größe im erlaubten Bereich liegt
+            if ($widthDiff <= self::SIMILAR_SIZE_RANGE) {
+                // Wenn mehrere Größen gefunden werden, nimm die häufigste
+                if ($metric['frequency'] > $highestFrequency) {
+                    $similarSize = $metric;
+                    $highestFrequency = $metric['frequency'];
+                }
+            }
         }
 
-        $result = $queryBuilder
-            ->groupBy('width', 'height', 'ratio')
-            ->orderBy('frequency', 'DESC')
-            ->setMaxResults(1)
-            ->executeQuery()
-            ->fetchAssociative();
-
-        if ($result && isset($result['frequency']) && $result['frequency'] > 0) {
-            $this->width = (int)$result['width'];
-            $this->height = (int)$result['height'];
+        // 3. Wenn ähnliche Größe gefunden wurde, verwende diese
+        if ($similarSize !== null) {
+            $this->width = (int)$similarSize['width'];
+            $this->height = (int)$similarSize['height'];
         } else {
-            $this->width = (int)(ceil($this->configRequest->getWidth() / self::STEP_SIZE) * self::STEP_SIZE);
-            $this->height = ($this->aspectRatio ?? GeneralUtility::makeInstance(AspectRatio::class, $this->configRequest->getWidth(), $this->configRequest->getHeight()))
-                ->getHeight($this->width);
+            // 4. Sonst runde auf nächste STEP_SIZE
+            $this->width = (int)(ceil($requestedWidth / self::STEP_SIZE) * self::STEP_SIZE);
+            $this->height = $this->configRequest->getHeight();
         }
     }
 
