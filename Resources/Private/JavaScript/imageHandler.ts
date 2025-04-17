@@ -12,25 +12,28 @@ export class ImageHandler {
         });
     }
 
-    private static updateImageSource(image: HTMLImageElement | HTMLSourceElement, imageData: ImageResponse): void {
-        if (image instanceof HTMLSourceElement) {
-            image.srcset = imageData.attributes.src;
-        } else {
-            image.src = imageData.attributes.src;
-          }
-
-          image.width = imageData.attributes.width;
-          image.height = imageData.attributes.height;
+    private static updateImageSource(image: HTMLImageElement, imageData: ImageResponse): void {
+        image.src = imageData.attributes.src;
+        image.width = imageData.attributes.width;
+        image.height = imageData.attributes.height;
     }
 
-    private static findTargetElement(element: HTMLImageElement): HTMLImageElement | HTMLSourceElement {
-        // Wenn das Element in einem picture Tag ist, finde das passende source Element
+    private static removePictureTag(element: HTMLImageElement): void {
         const picture = element.closest('picture');
-        if (picture) {
-            const sources = Array.from(picture.getElementsByTagName('source'));
-            // Nimm das erste source Element oder das img selbst wenn kein source existiert
-            return sources[0] || element;
+        if (picture && picture.parentNode) {
+            // Kopiere die Attribute vom source-Element zum img-Element, falls vorhanden
+            const source = picture.querySelector('source');
+            if (source && source.srcset) {
+                element.src = source.srcset;
+            }
+            // Ersetze das picture-Tag mit dem img-Element
+            picture.parentNode.replaceChild(element, picture);
         }
+    }
+
+    private static findTargetElement(element: HTMLImageElement): HTMLImageElement {
+        // Wenn das Element in einem picture Tag ist, entferne das picture Tag
+        this.removePictureTag(element);
         return element;
     }
 

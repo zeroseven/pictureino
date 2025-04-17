@@ -66,8 +66,9 @@ class Image implements MiddlewareInterface
     {
         if ($this->initializeConfig($request)) {
             return new JsonResponse([
-                'attributes' => $this->processFile()
-            ],
+                    'attributes' => $this->processFile(),
+                    'aspectRatio' => (string)$this->aspectRatio,
+                ],
                 200,
                 ['cache-control' => 'no-store, no-cache, must-revalidate, max-age=0'],
             );

@@ -73,13 +73,15 @@ class AspectRatioUtility {
             return $this->getFirstAspectRatio();
         }
 
+        $lastAspectRatio = null;
         foreach ($this->aspectRatios as $breakpoint => $aspectRatio) {
-            if ($breakpoint >= $width) {
-                return $aspectRatio;
+            if ($breakpoint > $width) {
+                return $lastAspectRatio;
             }
+            $lastAspectRatio = $aspectRatio;
         }
 
-        return null;
+        return $lastAspectRatio;
     }
 
     /** @throws Exception */
