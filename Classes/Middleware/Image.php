@@ -28,9 +28,9 @@ class Image implements MiddlewareInterface
         $path = $request->getUri()->getPath();
 
         if (
-            // Path like "/-/img/200x100/cHVvWmMzWDVERzFnVkRQSW==" to "200", "100" and "cHVvWmMzWDVERzFnVkRQSW=="
-            preg_match('/\/-\/img\/(\d+)x(\d+)\/([A-Za-z0-9+=]+)\/?$/', $path, $matches)
-            && $config = EncryptionUtility::decryptConfig($matches[3])
+            // Path like "/-/img/200x100/1024/cHVvWmMzWDVERzFnVkRQSW==" to "200", "100" and "cHVvWmMzWDVERzFnVkRQSW=="
+            preg_match('/\/-\/img\/(\d+)x(\d+)\/(\d+)\/([A-Za-z0-9+=]+)\/?$/', $path, $matches)
+            && $config = EncryptionUtility::decryptConfig($matches[4])
         ) {
             $this->imageUtiltiy = GeneralUtility::makeInstance(ImageUtility::class)->setFile(
                 (string)($config['file']['src'] ?? ''),
@@ -43,7 +43,7 @@ class Image implements MiddlewareInterface
 
             $this->aspectRatio = GeneralUtility::makeInstance(AspectRatioUtility::class)
                 ->setAspectRatios($config['aspectRatio'] ?? null)
-                ->getAspectForWidth($this->width);
+                ->getAspectForWidth((int)$matches[3]);
 
             return true;
         }
@@ -67,7 +67,11 @@ class Image implements MiddlewareInterface
         if ($this->initializeConfig($request)) {
             return new JsonResponse([
                     'attributes' => $this->processFile(),
-                    'aspectRatio' => (string)$this->aspectRatio,
+                    'aspectRatio' => $this->aspectRatio->toArray(),
+                    'request' => [
+                        'width' => $this->width,
+                        'height' => $this->height
+                    ]
                 ],
                 200,
                 ['cache-control' => 'no-store, no-cache, must-revalidate, max-age=0'],

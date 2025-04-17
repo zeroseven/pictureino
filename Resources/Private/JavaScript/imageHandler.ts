@@ -1,9 +1,8 @@
-import { ImageConfig, ImageResponse } from './types';
 import { ApiService } from './apiService';
 import { ViewportService } from './viewportService';
 
 export class ImageHandler {
-    private static async preloadImage(src: string): Promise<void> {
+    private static preloadImage(src: string): Promise<void> {
         return new Promise((resolve, reject) => {
             const img = new Image();
             img.onload = () => resolve();
@@ -12,53 +11,46 @@ export class ImageHandler {
         });
     }
 
-    private static updateImageSource(image: HTMLImageElement, imageData: ImageResponse): void {
-        image.src = imageData.attributes.src;
-        image.width = imageData.attributes.width;
-        image.height = imageData.attributes.height;
-    }
-
-    private static removePictureTag(element: HTMLImageElement): void {
+    public static removePictureTag(element: HTMLImageElement): void {
         const picture = element.closest('picture');
+
         if (picture && picture.parentNode) {
-            // Kopiere die Attribute vom source-Element zum img-Element, falls vorhanden
-            const source = picture.querySelector('source');
-            if (source && source.srcset) {
-                element.src = source.srcset;
-            }
-            // Ersetze das picture-Tag mit dem img-Element
-            picture.parentNode.replaceChild(element, picture);
+            picture.parentNode.insertBefore(element, picture);
+            picture.remove();
         }
     }
 
-    private static findTargetElement(element: HTMLImageElement): HTMLImageElement {
-        // Wenn das Element in einem picture Tag ist, entferne das picture Tag
-        this.removePictureTag(element);
-        return element;
-    }
+    static processImage(element: HTMLImageElement, config: string, firstLoad?: boolean): Promise<void> {
+        return ViewportService.whenInViewport(element)
+            .then(() => {
+                const width = Math.round(element.offsetWidth);
+                const height = Math.round(element.offsetHeight);
 
-    static async processImage(image: ImageConfig): Promise<void> {
-        try {
-            await ViewportService.whenInViewport(image.element);
+                if (!width || !height) return;
 
-            const width = Math.round(image.element.offsetWidth);
-            const height = Math.round(image.element.offsetHeight);
+                return ApiService.getOptimizedImage(config, width, height)
+                    .then(data => {
+                        if (!document.body.contains(element)) return;
 
-            // Skip if dimensions are 0
-            if (width === 0 || height === 0) {
-                return;
-            }
+                        element.width = data.attributes.width;
+                        element.height = data.attributes.height;
+                        element.style.aspectRatio = (data.aspectRatio[0] || data.attributes.width) + '/' + (data.aspectRatio[1] || data.attributes.height);
 
-            const imageData = await ApiService.getOptimizedImage(image.config, width, height);
-            await this.preloadImage(imageData.attributes.src);
+                        return this.preloadImage(data.attributes.src).then(() => {
+                              if (document.body.contains(element)) {
+                                  element.style.removeProperty('aspect-ratio');
 
-            // Check if image still exists in DOM before updating
-            if (document.body.contains(image.element)) {
-                const targetElement = this.findTargetElement(image.element);
-                this.updateImageSource(targetElement, imageData);
-            }
-        } catch (error) {
-            console.error('Failed to process image:', error);
-        }
+                                  if (firstLoad) {
+                                    this.removePictureTag(element);
+                                    firstLoad = false;
+                                  }
+
+                                  element.src = data.attributes.src;
+                              }
+                          });
+                    });
+            })
+            .catch(error => console.error('Failed to process image:', error));
     }
 }
+
