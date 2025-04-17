@@ -1,3 +1,5 @@
+import { ElementSize } from './types';
+
 export class Observer {
   private element: Element;
   private resizeObserver: ResizeObserver | null = null;
@@ -28,13 +30,17 @@ export class Observer {
     });
   }
 
-  public resize(): Promise<ResizeObserverEntry> {
+  public resize(): Promise<ElementSize> {
     return new Promise((resolve) => {
       this.resizeObserver?.disconnect();
 
       this.resizeObserver = new ResizeObserver((entries) => {
         this.throttle(() => {
-          resolve(entries[0]);
+          const entry = entries[0];
+          resolve({
+            width: entry.contentRect.width,
+            height: entry.contentRect.height
+          });
           this.observeResize();
         });
       });

@@ -1,3 +1,4 @@
+import { ElementSize } from './types';
 import { Observer } from './observer';
 
 export class Image {
@@ -6,8 +7,7 @@ export class Image {
   private picture: HTMLPictureElement | null;
   private loaded: boolean;
   private observer: Observer;
-  private width: number;
-  private height: number;
+  private size: ElementSize;
 
   constructor(element: HTMLImageElement, config: string) {
     this.element = element;
@@ -15,10 +15,12 @@ export class Image {
     this.picture = this.element.closest('picture') as HTMLPictureElement;
     this.loaded = false;
     this.observer = new Observer(this.element);
-    this.width = 0;
-    this.height = 0;
+    this.size = {
+      width: this.element.offsetWidth,
+      height: this.element.offsetHeight
+    };
 
-    this,this.loadImage = this.loadImage.bind(this);
+    this.loadImage = this.loadImage.bind(this);
 
     this.init();
   }
@@ -33,16 +35,19 @@ export class Image {
   private loadImage(): void {
     if(this.loaded) return;
 
+
   }
 
 
   private async init(): Promise<void> {
-    this.observer.inView().then(this.loadImage);
+    this.element.removeAttribute('data-config');
+    this.element.removeAttribute('onload');
+    this.element.removeAttribute('srcset');
 
-    this.observer.resize().then((width: number, height: number) => {
+    this.observer.inView().then(this.loadImage);
+    this.observer.resize().then((size: ElementSize) => {
       this.loaded = false;
-      this.width = width;
-      this.height = height;
+      this.size = size;
     });
   }
 }
