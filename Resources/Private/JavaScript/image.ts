@@ -36,12 +36,19 @@ export class Image {
         });
 
         this.element.style.aspectRatio = (config.aspectRatio[0] || config.attributes.width) + '/' + (config.aspectRatio[1] || config.attributes.height);
+        this.element.style.objectFit = 'cover';
 
         return this.loader.preloadImage(config.attributes.src)
           .then(() => {
             this.element.src = config.attributes.src;
             this.element.style.removeProperty('aspect-ratio');
+            this.element.style.removeProperty('object-fit');
             this.removePictureTag();
+
+            this.observer.onResize(size => {
+              this.size = size;
+              this.loadImage();
+            }, this.size);
           });
       })
       .catch(error => {
@@ -57,12 +64,7 @@ export class Image {
   }
 
   private observeElement(): void {
-    this.observer.inView(() => this.loadImage().then(() => {
-      this.observer.onResize(size => {
-        this.size = size;
-        this.observeElement();
-      }, this.size);
-    }))
+    this.observer.inView(() => this.loadImage())
   }
 
   private init(): void {

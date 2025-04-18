@@ -27,27 +27,24 @@ class Image implements MiddlewareInterface
 
     protected function isValid(ServerRequestInterface $request): bool
     {
-        $maxWidth = (int)($this->configRequest->getConfig()['image_max_width'] ?? GeneralUtility::makeInstance(SettingsUtility::class, $request)->get('image_max_width'));
-        if ($maxWidth === 0 || $this->configRequest->getWidth() > $maxWidth) {
-            throw new \InvalidArgumentException('Width exceeds maximum allowed width of ' . $maxWidth, 1627881234);
+        if ($this->configRequest->isValid()) {
+            $maxWidth = (int)($this->configRequest->getConfig()['image_max_width'] ?? GeneralUtility::makeInstance(SettingsUtility::class, $request)->get('image_max_width'));
+
+            if ($maxWidth === 0 || $this->configRequest->getWidth() > $maxWidth) {
+                throw new \InvalidArgumentException('Width exceeds maximum allowed width of ' . $maxWidth, 1627881234);
+            }
+
+            return true;
         }
 
-        if (
-            $this->aspectRatio
-            && ($expectedHeight = $this->aspectRatio->getHeight($this->configRequest->getWidth()))
-            && ($expectedHeight * 0.95 > $this->configRequest->getHeight() || $expectedHeight * 1.05 < $this->configRequest->getHeight())
-        ) {
-            throw new \InvalidArgumentException('Properties are out of the acceptable range of the given aspect ratio.', 1627881235);
-        }
-
-        return true;
+        return false;
     }
 
     protected function initializeConfig(ServerRequestInterface $request): bool
     {
         $this->configRequest = GeneralUtility::makeInstance(ConfigRequest::class, $request);
 
-        if ($this->configRequest->isValid()) {
+        if ($this->isValid(request: $request)) {
             $config = $this->configRequest->getConfig();
             $identifier = md5($request->getAttribute('site')?->getIdentifier() . json_encode($config['file'] ?? []));
 
@@ -61,12 +58,10 @@ class Image implements MiddlewareInterface
                     ->setAspectRatios($config['aspectRatio'] ?? null)
                     ->getAspectForWidth($this->configRequest->getViewport());
 
-            if ($this->isValid($request)) {
-                $this->metricsUtility = GeneralUtility::makeInstance(MetricsUtility::class, $identifier, $this->configRequest, $this->imageUtiltiy, $this->aspectRatio);
-                $this->metricsUtility->log();
+            $this->metricsUtility = GeneralUtility::makeInstance(MetricsUtility::class, $identifier, $this->configRequest, $this->imageUtiltiy, $this->aspectRatio);
+            $this->metricsUtility->log();
 
-                return true;
-            }
+            return true;
         }
 
         return false;

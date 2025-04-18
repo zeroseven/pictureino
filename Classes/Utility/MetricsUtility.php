@@ -13,7 +13,7 @@ use Zeroseven\Picturerino\Entity\ConfigRequest;
 class MetricsUtility
 {
     protected const string TABLE_NAME = 'tx_picturerino_metrics';
-    protected const int SIMILAR_SIZE_RANGE = [-5 + 20];
+    protected const array SIMILAR_SIZE_RANGE = [-5, 30];
     protected const int STEP_SIZE = 50;
 
     protected string $identifier;
@@ -42,7 +42,7 @@ class MetricsUtility
                 'width' => $this->configRequest->getWidth(),
                 'height' => $this->configRequest->getHeight(),
                 'viewport' => $this->configRequest->getViewport(),
-                'ratio' => $this->aspectRatio ? (string)$this->aspectRatio : '',
+                'ratio' => (string)($this->aspectRatio ?? ''),
                 'width_evaluated' => (int)$this->width,
                 'height_evaluated' => (int)$this->height,
                 'file' => $this->imageUtility->getFile()->getIdentifier(),
@@ -54,48 +54,42 @@ class MetricsUtility
     }
 
     protected function evaluate(): void {
-        $queryBuilder = $this->connection->createQueryBuilder();
-
-        // 1. Hole die 10 am häufigsten verwendeten Metriken für diesen identifier
-        $commonMetrics = $queryBuilder
-            ->select('width', 'height')
-            ->addSelectLiteral('COUNT(*) as frequency')
-            ->from(self::TABLE_NAME)
-            ->where(
-                $queryBuilder->expr()->eq('identifier', $queryBuilder->createNamedParameter($this->identifier))
-            )
-            ->groupBy('width', 'height')
-            ->orderBy('frequency', 'DESC')
-            ->setMaxResults(10)
-            ->executeQuery()
-            ->fetchAllAssociative();
-
-        // 2. Prüfe auf ähnliche Größen
+        /**
+         * Find similar size by:
+         * 1. Filter by identifier
+         * 2. Check width difference using MySQL ABS function
+         * 3. Get most frequent size within range
+         */
         $requestedWidth = $this->configRequest->getWidth();
-        $similarSize = null;
-        $highestFrequency = 0;
 
-        foreach ($commonMetrics as $metric) {
-            $widthDiff = abs($metric['width'] - $requestedWidth);
+        $sql = '
+            SELECT width, COUNT(*) as frequency
+            FROM ' . self::TABLE_NAME . '
+            WHERE identifier = ?
+            AND (width - ?) BETWEEN ? AND ?
+            GROUP BY width, height
+            ORDER BY frequency DESC, ABS(width - ?) ASC
+            LIMIT 1
+        ';
 
-            // Prüfe ob die Größe im erlaubten Bereich liegt
-            if ($widthDiff <= self::SIMILAR_SIZE_RANGE) {
-                // Wenn mehrere Größen gefunden werden, nimm die häufigste
-                if ($metric['frequency'] > $highestFrequency) {
-                    $similarSize = $metric;
-                    $highestFrequency = $metric['frequency'];
-                }
-            }
-        }
+        $stmt = $this->connection->executeQuery(
+            $sql,
+            [
+                $this->identifier,
+                $requestedWidth,
+                self::SIMILAR_SIZE_RANGE[0],
+                self::SIMILAR_SIZE_RANGE[1],
+                $requestedWidth
+            ]
+        );
 
-        // 3. Wenn ähnliche Größe gefunden wurde, verwende diese
-        if ($similarSize !== null) {
+        $similarSize = $stmt->fetchAssociative();
+
+        // Use found metrics or calculate new size
+        if ($similarSize && isset($similarSize['width'])) {
             $this->width = (int)$similarSize['width'];
-            $this->height = (int)$similarSize['height'];
         } else {
-            // 4. Sonst runde auf nächste STEP_SIZE
             $this->width = (int)(ceil($requestedWidth / self::STEP_SIZE) * self::STEP_SIZE);
-            $this->height = $this->configRequest->getHeight();
         }
     }
 
@@ -105,6 +99,6 @@ class MetricsUtility
     }
 
     public function getHeight(): ?int {
-        return $this->height;
+        return $this->aspectRatio?->getHeight($this->width);
     }
 }
