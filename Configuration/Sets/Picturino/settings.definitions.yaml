@@ -5,19 +5,25 @@ categories:
 settings:
   picturerino.breakpoints:
     type: stringlist
-    default:  ['xs: 0', 'sm: 576', 'md: 768', 'lg: 992', 'xl: 1200', 'xxl: 1400']
+    default: ['xs: 0', 'sm: 576', 'md: 768', 'lg: 992', 'xl: 1200', 'xxl: 1400']
     category: Picturerino.settings
     label: 'Breakpoints'
     description: 'Define as many breakpoints as you need. The default breakpoints are based on Bootstrap. You can use the following format: "alias: value".'
   picturerino.image_max_width:
     type: int
-    default:  '2000'
+    default: '2000'
     category: Picturerino.settings
     label: 'Max image width (px)'
     description: 'The maximum width of processed images. This is used to calculate the size of the image. The default value is 2000 (px).'
+  picturerino.retina:
+    type: bool
+    default: 0
+    category: Picturerino.settings
+    label: 'Retina'
+    description: 'Enable retina support. This will create images with double the resolution for retina displays. This is useful for high-resolution displays, but will increase the size of the images.'
   picturerino.debug:
     type: bool
-    default:  0
+    default: 0
     category: Picturerino.settings
     label: 'Debug'
     description: 'Enable debug mode. This will output additional information in data attributes and ajax requests. This is useful for debugging purposes, but should be disabled in production.'

@@ -41,8 +41,9 @@ class ImageViewHelper extends AbstractViewHelper
         $this->registerArgument('width', 'string', 'width of the image. This can be a numeric value representing the fixed width of the image in pixels. But you can also perform simple calculations by adding "m" or "c" to the value. See imgResource.width in the TypoScript Reference on https://docs.typo3.org/permalink/t3tsref:confval-imgresource-width for possible options.');
         $this->registerArgument('height', 'string', 'height of the image. This can be a numeric value representing the fixed height of the image in pixels. But you can also perform simple calculations by adding "m" or "c" to the value. See imgResource.height in the TypoScript Reference https://docs.typo3.org/permalink/t3tsref:confval-imgresource-height for possible options.');
 
-        // Ratio
+        // Image rendering settings
         $this->registerArgument('aspectRatio', 'string|array', 'Set the aspect ratio of the image, or create a array for different formats like "{xs:\'1:1\', sm:\'4:3\', lg:\'16:9\'}"');
+        $this->registerArgument('retina', 'bool', 'If set, the image will be rendered in retina mode. This means that the image will be rendered in double size and scaled down to the original size. This is useful for high-resolution displays.');
 
         // Some attributes for the image tag
         $this->registerArgument('alt', 'string', 'Specifies an alternate text for an image');
@@ -66,6 +67,10 @@ class ImageViewHelper extends AbstractViewHelper
                 'image' => $file->getPublicUrl(),
                 'treatIdAsReference' => true,
             ];
+        }
+
+        if ($this->arguments['retina'] !== null) {
+            $config['retina'] = (bool)$this->arguments['retina'];
         }
 
         if (!$this->aspectRatioUtiltiy->isEmpty()) {
