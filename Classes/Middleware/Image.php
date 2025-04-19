@@ -82,11 +82,18 @@ class Image implements MiddlewareInterface
     {
         $this->imageUtiltiy->processImage($this->metricsUtility->getWidth(), $this->metricsUtility->getHeight());
 
-        return [
+        $config = [
             'img' => $this->imageUtiltiy->getUrl(),
             'width' => $this->imageUtiltiy->getProperty('width'),
             'height' => $this->imageUtiltiy->getProperty('height')
         ];
+
+        if ($this->configRequest->isRetina()) {
+            $this->imageUtiltiy->processImage($this->metricsUtility->getWidth() * 2, $this->metricsUtility->getHeight() * 2);
+            $config['img2x'] = $this->imageUtiltiy->getUrl();
+        }
+
+        return $config;
     }
 
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
