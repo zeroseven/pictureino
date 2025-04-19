@@ -9,9 +9,9 @@ class SettingsUtility
 {
     protected array $settings = [];
 
-    public function __construct()
+    public function __construct(ServerRequestInterface $request = null)
     {
-        $this->loadSettings();
+        $this->loadSettings($request);
     }
 
     protected function getRequest(): ?ServerRequestInterface
@@ -19,10 +19,10 @@ class SettingsUtility
         return $GLOBALS['TYPO3_REQUEST'] ?? null;
     }
 
-    protected function loadSettings(): void
+    protected function loadSettings(ServerRequestInterface $request = null): void
     {
         try {
-            $siteSettings = $this->getRequest()?->getAttribute('site')?->getSettings('zeroseven/picturerino');
+            $siteSettings = ($request ?? $this->getRequest())?->getAttribute('site')?->getSettings('zeroseven/picturerino');
 
             if ($siteSettings instanceof SiteSettings) {
                 $this->settings = $siteSettings->get('picturerino') ?? [];

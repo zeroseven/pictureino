@@ -7,35 +7,34 @@ export class Loader {
     this.cache = new Map();
   }
 
-  public preloadImage(url: string): Promise<HTMLImageElement> {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-
-      img.onload = () => resolve(img);
-      img.onerror = () => reject(new Error('Fehler beim Laden des Bildes'));
-      img.src = url;
-    });
-  }
-
   public requestImage(url: string): Promise<ImageResponse> {
     if (this.cache.has(url)) {
       return Promise.resolve(this.cache.get(url)!);
     }
 
     return fetch(url)
-      .then(response => {
+      .then(async response => {
+        const data = await response.json();
+
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          if(data.error) {
+            return Promise.reject(data.error);
+          } else {
+            return Promise.reject({
+              error: {
+                message: response.statusText,
+                code: response.status,
+              }
+            });
+          }
         }
-        return response.json();
+
+        return data;
       })
       .then((config: ImageResponse) => {
         this.cache.set(url, config);
         return config;
       })
-      .catch(error => {
-        throw new Error(`Fehler beim Laden der Konfiguration: ${error}`);
-      });
   }
 
   public clearCache(): void {

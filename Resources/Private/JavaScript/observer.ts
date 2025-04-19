@@ -21,12 +21,14 @@ export class Observer {
         window.clearTimeout(this.resizeTimeout);
       }
 
+      const entry = entries[0];
+
       this.resizeTimeout = window.setTimeout(() => {
-        if (size && size.width === entries[0].contentRect.width && size.height === entries[0].contentRect.height) {
+        if (size && size.width === entry.contentRect.width && size.height === entry.contentRect.height) {
           return;
         }
 
-        const entry = entries[0];
+        console.log('ResizeObserver', entry.contentRect.width, entry.contentRect.height);
 
         callback({
           width: entry.contentRect.width,
