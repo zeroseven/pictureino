@@ -72,7 +72,7 @@ class Image implements MiddlewareInterface
         $this->imageUtiltiy->processImage($this->metricsUtility->getWidth(), $this->metricsUtility->getHeight());
 
         return [
-            'src' => $this->imageUtiltiy->getUrl(),
+            'img' => $this->imageUtiltiy->getUrl(),
             'width' => $this->imageUtiltiy->getProperty('width'),
             'height' => $this->imageUtiltiy->getProperty('height')
         ];
@@ -82,9 +82,9 @@ class Image implements MiddlewareInterface
     {
         if ($this->initializeConfig($request)) {
             return new JsonResponse([
-                    'attributes' => $this->getAttributes(),
+                    'processed' => $this->getAttributes(),
+                    'view' => $this->configRequest->getViewport(),
                     'aspectRatio' => $this->aspectRatio->toArray(),
-                    'request' => $this->configRequest->toArray(),
                 ],
                 200,
                 ['cache-control' => 'no-store, no-cache, must-revalidate, max-age=0'],
