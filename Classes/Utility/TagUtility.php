@@ -64,7 +64,7 @@ class TagUtility {
         return $source->render();
     }
 
-    public function renderImg(int $width = null): string
+    public function renderImg(int $width): string
     {
         $firstAspect = $this->aspectRatioUtility->getFirstAspectRatio();
         $height = $width && $firstAspect ? $firstAspect->getHeight($width) : null;
@@ -75,7 +75,6 @@ class TagUtility {
         $img->addAttribute('src', $this->imageUtility->getUrl());
         $img->addAttribute('width', $this->imageUtility->getProperty('width'));
         $img->addAttribute('height', $this->imageUtility->getProperty('height'));
-        $img->addAttribute('srcset', $this->imageUtility->getUrl($this->imageUtility->processImage($width * 3, $height * 3)). ' 3x');
 
         $this->getAttribute('title') || $this->addAttribute('title', $this->imageUtility->getProperty('title'));
         $this->getAttribute('alt') || $this->addAttribute('alt', $this->imageUtility->getProperty('alternative') ?? '');
@@ -89,7 +88,7 @@ class TagUtility {
         return $img->render();
     }
 
-    public function renderPicture(int $width = null): string
+    public function renderPicture(int $width): string
     {
         $tag = GeneralUtility::makeInstance(TagBuilder::class, 'picture');
         $aspectRatios = $this->aspectRatioUtility->getAspectRatios();
@@ -108,4 +107,19 @@ class TagUtility {
         return $tag->render();
     }
 
+    public function renderFallback(int $width): string
+    {
+        $this->imageUtility->processImage($width);
+
+
+        $link = GeneralUtility::makeInstance(TagBuilder::class, 'a');
+        $link->addAttribute('href', $this->imageUtility->getUrl());
+        $link->addAttribute('lang', 'en');
+        $link->setContent($this->imageUtility->getProperty('title') ?? 'Zoom');
+
+        $noscript = GeneralUtility::makeInstance(TagBuilder::class, 'noscript');
+        $noscript->setContent($link->render());
+
+        return $noscript->render();
+    }
 }
