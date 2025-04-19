@@ -4,6 +4,10 @@ export interface ElementSize {
 }
 
 export interface ImageResponse {
+  error?: {
+    message: string,
+    code: number,
+  };
   processed: {
     img: string,
     img2x?: string,

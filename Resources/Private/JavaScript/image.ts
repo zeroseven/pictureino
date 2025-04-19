@@ -21,6 +21,7 @@ export class Image {
       height: this.element.offsetHeight
     };
 
+    this.observeElement = this.observeElement.bind(this);
     this.init();
   }
 
@@ -65,26 +66,27 @@ export class Image {
     return 0
   }
 
-  private updateSource(): Promise<void> {
-    return this.loader.requestImage(this.getRequestUri())
+  private updateSource(): void {
+    this.loader.requestImage(this.getRequestUri())
       .then((result: ImageResponse) => {
-
         const sourceKey = this.getSourceKey(result.view);
         sourceKey ? this.updateSourceTag(sourceKey, result) : this.updateImage(result);
 
-        this.element.addEventListener('load', () => {
-          this.observer.onResize(size => {
-          this.size = size;
-          this.updateSource();
-        }, this.size)
-      }, { once: true })
+        this.element.addEventListener('load', this.observeElement, { once: true });
       }).catch(error => {
-        console.error('Fehler beim Laden des Bildes:', error);
+        if (error.code === 1745092982) {
+          this.observeElement();
+        } else {
+          console.warn(error)
+        }
       });
   }
 
   private observeElement(): void {
-    this.observer.inView(() => this.updateSource())
+      this.observer.onResize(size => {
+        this.size = size;
+        this.updateSource();
+      }, this.size)
   }
 
   private init(): void {
@@ -101,6 +103,6 @@ export class Image {
       })
     }
 
-    this.observeElement();
+    this.observer.inView(() => this.updateSource())
   }
 }

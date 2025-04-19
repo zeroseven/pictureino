@@ -16,12 +16,13 @@ class Observer {
       if (this.resizeTimeout) {
         window.clearTimeout(this.resizeTimeout);
       }
+      const entry = entries[0];
       this.resizeTimeout = window.setTimeout(() => {
         var _a2;
-        if (size && size.width === entries[0].contentRect.width && size.height === entries[0].contentRect.height) {
+        if (size && size.width === entry.contentRect.width && size.height === entry.contentRect.height) {
           return;
         }
-        const entry = entries[0];
+        console.log("ResizeObserver", entry.contentRect.width, entry.contentRect.height);
         callback({
           width: entry.contentRect.width,
           height: entry.contentRect.height
@@ -61,28 +62,28 @@ class Loader {
     __publicField(this, "cache");
     this.cache = /* @__PURE__ */ new Map();
   }
-  preloadImage(url) {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.onload = () => resolve(img);
-      img.onerror = () => reject(new Error("Fehler beim Laden des Bildes"));
-      img.src = url;
-    });
-  }
   requestImage(url) {
     if (this.cache.has(url)) {
       return Promise.resolve(this.cache.get(url));
     }
-    return fetch(url).then((response) => {
+    return fetch(url).then(async (response) => {
+      const data = await response.json();
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        if (data.error) {
+          return Promise.reject(data.error);
+        } else {
+          return Promise.reject({
+            error: {
+              message: response.statusText,
+              code: response.status
+            }
+          });
+        }
       }
-      return response.json();
+      return data;
     }).then((config) => {
       this.cache.set(url, config);
       return config;
-    }).catch((error) => {
-      throw new Error(`Fehler beim Laden der Konfiguration: ${error}`);
     });
   }
   clearCache() {
@@ -92,72 +93,97 @@ class Loader {
     this.cache.delete(url);
   }
 }
-let Image$1 = class Image2 {
+class Image {
   constructor(element, config) {
     __publicField(this, "element");
     __publicField(this, "config");
-    __publicField(this, "picture");
     __publicField(this, "observer");
     __publicField(this, "loader");
+    __publicField(this, "sources");
     __publicField(this, "size");
     this.element = element;
     this.config = config;
-    this.picture = this.element.closest("picture");
     this.observer = new Observer(this.element);
     this.loader = new Loader();
+    this.sources = {};
     this.size = {
       width: this.element.offsetWidth,
       height: this.element.offsetHeight
     };
+    this.observeElement = this.observeElement.bind(this);
     this.init();
   }
   getRequestUri() {
     return `/-/img/${this.size.width}x${this.size.height}/${Math.round(window.innerWidth)}/${this.config}/`;
   }
-  loadImage() {
-    return this.loader.requestImage(this.getRequestUri()).then((config) => {
-      Object.keys(config.attributes).forEach((key) => {
-        key === "src" || this.element.setAttribute(key, config.attributes[key]);
-      });
-      this.element.style.aspectRatio = (config.aspectRatio[0] || config.attributes.width) + "/" + (config.aspectRatio[1] || config.attributes.height);
-      return this.loader.preloadImage(config.attributes.src).then(() => {
-        this.element.src = config.attributes.src;
-        this.element.style.removeProperty("aspect-ratio");
-        this.removePictureTag();
-      });
-    }).catch((error) => {
-      console.error("Fehler beim Laden des Bildes:", error);
-    });
-  }
-  removePictureTag() {
-    var _a;
-    if ((_a = this.picture) == null ? void 0 : _a.parentNode) {
-      this.picture.parentNode.insertBefore(this.element, this.picture);
-      this.picture.remove();
+  updateImage(imageResponse) {
+    this.element.width = imageResponse.processed.width;
+    this.element.height = imageResponse.processed.height;
+    this.element.src = imageResponse.processed.img;
+    if (imageResponse.processed.img2x) {
+      this.element.srcset = imageResponse.processed.img2x + " 2x";
     }
   }
-  observeElement() {
-    this.observer.inView(() => this.loadImage().then(() => {
-      this.observer.onResize((size) => {
-        this.size = size;
+  updateSourceTag(view, imageResponse) {
+    const source = this.sources[view];
+    if (source) {
+      source.width = imageResponse.processed.width;
+      source.height = imageResponse.processed.height;
+      if (imageResponse.processed.img2x) {
+        source.srcset = imageResponse.processed.img + "," + imageResponse.processed.img2x + " 2x";
+      } else {
+        source.srcset = imageResponse.processed.img;
+      }
+    }
+  }
+  getSourceKey(view) {
+    const views = Object.keys(this.sources).map(Number);
+    if (views.length) {
+      const lowerViews = views.filter((value) => value <= view);
+      return lowerViews.length ? Math.max(...lowerViews) : 0;
+    }
+    return 0;
+  }
+  updateSource() {
+    this.loader.requestImage(this.getRequestUri()).then((result) => {
+      const sourceKey = this.getSourceKey(result.view);
+      sourceKey ? this.updateSourceTag(sourceKey, result) : this.updateImage(result);
+      this.element.addEventListener("load", this.observeElement, { once: true });
+    }).catch((error) => {
+      if (error.code === 1745092982) {
         this.observeElement();
-      }, this.size);
-    }));
+      } else {
+        console.warn(error);
+      }
+    });
+  }
+  observeElement() {
+    this.observer.onResize((size) => {
+      this.size = size;
+      this.updateSource();
+    }, this.size);
   }
   init() {
     ["data-config", "onload", "srcset"].forEach((attr) => {
       this.element.removeAttribute(attr);
     });
-    this.observeElement();
+    const picture = this.element.closest("picture");
+    if (picture) {
+      Array.prototype.slice.call(picture.getElementsByTagName("source")).forEach((source) => {
+        const view = parseInt(source.getAttribute("media").match(/\d+/)[0], 10);
+        view && (this.sources[view] = source);
+      });
+    }
+    this.observer.inView(() => this.updateSource());
   }
-};
+}
 class Picturerino {
   static getConfig(element) {
     return element.getAttribute("data-config");
   }
   static handle(element) {
     const config = Picturerino.getConfig(element);
-    new Image$1(element, config);
+    new Image(element, config);
   }
 }
 window.Picturerino = {
