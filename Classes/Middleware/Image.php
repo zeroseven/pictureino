@@ -26,15 +26,24 @@ class Image implements MiddlewareInterface
     protected ?MetricsUtility $metricsUtility = null;
     protected ?AspectRatio $aspectRatio = null;
 
+    /** @throws \InvalidArgumentException */
     protected function isValid(ServerRequestInterface $request): bool
     {
         if ($this->aspectRatio && abs($this->aspectRatio->getHeight($this->configRequest->getWidth()) - $this->configRequest->getHeight()) > $this->configRequest->getHeight() * 0.03) {
             throw new InvalidArgumentException('The aspect ratio is invalid.', 1745092982);
         }
 
+        if ($this->configRequest->getWidth() > $this->configRequest->getViewport()) {
+            throw new InvalidArgumentException('Width exceeds the viewport.', 1745092983);
+        }
+
+        if ($this->configRequest->getWidth() <= 0 || $this->configRequest->getHeight() <= 0) {
+            throw new InvalidArgumentException('Width or height must be greater than zero.', 1745092984);
+        }
+
         $maxWidth = (int)($this->configRequest->getConfig()['image_max_width'] ?? GeneralUtility::makeInstance(SettingsUtility::class, $request)->get('image_max_width'));
         if ($maxWidth === 0 || $this->configRequest->getWidth() > $maxWidth) {
-            throw new InvalidArgumentException('Width exceeds the maximum width.', 1745092983);
+            throw new InvalidArgumentException('Width exceeds the maximum width.', 1745092985);
         }
 
         return true;
