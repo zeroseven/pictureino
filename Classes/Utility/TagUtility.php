@@ -107,19 +107,23 @@ class TagUtility {
         return $tag->render();
     }
 
-    public function renderFallback(int $width): string
+    public function structuredData(int $width): string
     {
-        $this->imageUtility->processImage($width);
+        $processedFile = $this->imageUtility->processImage($width);
 
+        $script = GeneralUtility::makeInstance(TagBuilder::class, 'script');
+        $script->addAttribute('type', 'application/ld+json');
+        $script->setContent(json_encode(array_filter([
+            '@context' => 'https://schema.org',
+            '@type' => 'ImageObject',
+            'contentUrl' => $this->imageUtility->getUrl(),
+            'width' => $this->imageUtility->getProperty('width'),
+            'height' => $this->imageUtility->getProperty('height'),
+            'caption' => $this->getAttribute('title') ?? $this->imageUtility->getProperty('title'),
+            'alt' => $this->getAttribute('alt') ?? $this->imageUtility->getProperty('alternative'),
+            'encodingFormat' => $processedFile->getMimeType(),
+        ])));
 
-        $link = GeneralUtility::makeInstance(TagBuilder::class, 'a');
-        $link->addAttribute('href', $this->imageUtility->getUrl());
-        $link->addAttribute('lang', 'en');
-        $link->setContent($this->imageUtility->getProperty('title') ?? 'Zoom');
-
-        $noscript = GeneralUtility::makeInstance(TagBuilder::class, 'noscript');
-        $noscript->setContent($link->render());
-
-        return $noscript->render();
+        return $script->render();
     }
 }

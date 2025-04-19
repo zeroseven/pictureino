@@ -21,6 +21,7 @@ class ImageViewHelper extends AbstractViewHelper
     protected AspectRatioUtility $aspectRatioUtiltiy;
 
     protected const FALLBACK_WIDTH = 150;
+    protected const SEO_CONTENT_WIDTH = 1200;
 
     public function __construct()
     {
@@ -99,10 +100,9 @@ class ImageViewHelper extends AbstractViewHelper
             ->addAttribute('onload', 'Picturerino.handle(this)')
             ->addAttribute('class', $this->arguments['class']);
 
-        $image = $this->aspectRatioUtiltiy->count() === 1
+        return ($this->aspectRatioUtiltiy->count() === 1
             ? $tagUtility->renderImg(static::FALLBACK_WIDTH)
-            : $tagUtility->renderPicture(static::FALLBACK_WIDTH);
-
-        return $image . $tagUtility->renderFallback(800);
+            : $tagUtility->renderPicture(static::FALLBACK_WIDTH))
+            . "\n" . $tagUtility->structuredData(static::SEO_CONTENT_WIDTH);
     }
 }
