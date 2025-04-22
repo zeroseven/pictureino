@@ -26,7 +26,12 @@ export class Image {
   }
 
   private getRequestUri(): string {
-    return `/-/img/${this.size.width}x${this.size.height}/${Math.round(window.innerWidth)}/${this.config}/`;
+    const width = parseInt(this.size.width.toString(), 10);
+    const height = parseInt(this.size.height.toString(), 10);
+    const view = Math.round(window.innerWidth);
+    const retina = window.devicePixelRatio > 1 ? 2 : 1;
+
+    return `/-/img/${width}x${height}/${view}${retina}x${this.config}/`;
   }
 
   private updateImage(imageResponse: ImageResponse): void {
@@ -47,7 +52,7 @@ export class Image {
       source.height = imageResponse.processed.height;
 
       if (imageResponse.processed.img2x) {
-        source.srcset = imageResponse.processed.img + ',' + imageResponse.processed.img2x + ' 2x';
+        source.srcset = imageResponse.processed.img + ', ' + imageResponse.processed.img2x + ' 2x';
       } else {
         source.srcset = imageResponse.processed.img;
       }
