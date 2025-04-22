@@ -66,40 +66,36 @@ class MetricsUtility
 
 
     protected function evaluate(): void {
-        /**
-         * Find similar size by:
-         * 1. Filter by identifier
-         * 2. Check width difference using MySQL ABS function
-         * 3. Get most frequent size within range
-         */
         $requestedWidth = $this->configRequest->getWidth();
 
-        $sql = '
-            SELECT width, COUNT(*) as frequency
-            FROM ' . self::TABLE_NAME . '
-            WHERE identifier = ?
-            AND (width - ?) BETWEEN ? AND ?
-            GROUP BY width, height
-            ORDER BY frequency DESC, ABS(width - ?) ASC
-            LIMIT 1
-        ';
+        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
+            ->getQueryBuilderForTable(self::TABLE_NAME);
 
-        $stmt = $this->connection->executeQuery(
-            $sql,
-            [
-                $this->identifier,
-                $requestedWidth,
-                self::SIMILAR_SIZE_RANGE[0],
-                self::SIMILAR_SIZE_RANGE[1],
-                $requestedWidth
-            ]
-        );
-
-        $similarSize = $stmt->fetchAssociative();
+        $result = $queryBuilder
+            ->selectLiteral(
+                'width',
+                'COUNT(*) AS frequency',
+                'ABS(width - ' . $queryBuilder->createNamedParameter($requestedWidth) . ') AS width_diff'
+            )
+            ->from(self::TABLE_NAME)
+            ->where(
+                $queryBuilder->expr()->eq('identifier', $queryBuilder->createNamedParameter($this->identifier))
+            )
+            ->andWhere(
+                'width - ' . $queryBuilder->createNamedParameter($requestedWidth) . ' BETWEEN ' .
+                $queryBuilder->createNamedParameter(self::SIMILAR_SIZE_RANGE[0]) . ' AND ' .
+                $queryBuilder->createNamedParameter(self::SIMILAR_SIZE_RANGE[1])
+            )
+            ->groupBy('width', 'height', 'width_diff')
+            ->orderBy('frequency', 'DESC')
+            ->addOrderBy('width_diff', 'ASC')
+            ->setMaxResults(1)
+            ->executeQuery()
+            ->fetchAssociative();
 
         // Use found metrics or calculate new size
-        if ($similarSize && isset($similarSize['width'])) {
-            $this->width = (int)$similarSize['width'];
+        if ($result && isset($result['width'])) {
+            $this->width = (int)$result['width'];
         } else {
             $this->width = (int)(ceil($requestedWidth / self::STEP_SIZE) * self::STEP_SIZE);
         }
