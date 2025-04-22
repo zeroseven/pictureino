@@ -8,7 +8,6 @@ use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\Resource\ProcessedFile;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use Zeroseven\Picturerino\Entity\AspectRatio;
 use Zeroseven\Picturerino\Entity\ConfigRequest;
 
 class LogUtility
@@ -20,16 +19,14 @@ class LogUtility
     protected ConfigRequest $configRequest;
     protected ImageUtility $imageUtility;
     protected MetricsUtility $metricsUtility;
-    protected ?AspectRatio $aspectRatio;
     protected ConnectionPool $connectionPool;
 
-    public function __construct(string $identifier, ConfigRequest $configRequest, ImageUtility $imageUtility, MetricsUtility $metricsUtility, ?AspectRatio $aspectRatio = null)
+    public function __construct(string $identifier, ConfigRequest $configRequest, ImageUtility $imageUtility, MetricsUtility $metricsUtility)
     {
         $this->identifier = $identifier;
         $this->configRequest = $configRequest;
         $this->imageUtility = $imageUtility;
         $this->metricsUtility = $metricsUtility;
-        $this->aspectRatio = $aspectRatio;
         $this->connectionPool = GeneralUtility::makeInstance(ConnectionPool::class);
     }
 
@@ -48,7 +45,7 @@ class LogUtility
                 'width' => $this->configRequest->getWidth(),
                 'height' => $this->configRequest->getHeight(),
                 'viewport' => $this->configRequest->getViewport(),
-                'ratio' => $this->aspectRatio ? (string)$this->aspectRatio : '',
+                'ratio' => (string)$this->metricsUtility->getAspectRatio(),
                 'width_evaluated' => $this->metricsUtility->getWidth(),
                 'height_evaluated' => $this->metricsUtility->getHeight(),
                 'file' => $this->imageUtility->getFile()->getIdentifier(),
