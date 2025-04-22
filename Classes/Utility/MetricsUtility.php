@@ -13,7 +13,7 @@ use Zeroseven\Picturerino\Entity\ConfigRequest;
 
 class MetricsUtility
 {
-    protected const string TABLE_NAME = 'tx_picturerino_requests';
+    protected const string TABLE_NAME = 'tx_picturerino_request';
     protected const array SIMILAR_SIZE_RANGE = [-5, 30];
     protected const int STEP_SIZE = 50;
 

@@ -13,7 +13,7 @@ class ImageUtility
 {
     protected ImageService $imageService;
     protected FileInterface $file;
-    protected ?ProcessedFile $lastProcessedFile = null;
+    protected ?array $processedFiles = [];
 
     public function __construct()
     {
@@ -55,7 +55,7 @@ class ImageUtility
 
         $mode = !$keepAspectRatio && $width && $height ? 'c' : 'm';
 
-        return $this->lastProcessedFile = $this->imageService->applyProcessingInstructions($this->file, array_merge($processingInstructions ?? [], [
+        return $this->processedFiles[] = $this->imageService->applyProcessingInstructions($this->file, array_merge($processingInstructions ?? [], [
             'width' => $width ? ($width . $mode) : null,
             'height' => $height ? ($height . $mode) : null
         ]));
@@ -64,19 +64,19 @@ class ImageUtility
     /** @throws Exception */
     public function getUrl(ProcessedFile $processedFile = null): string
     {
-        $processedFile ??= $this->lastProcessedFile;
+        $processedFile ??= $this->getLastProcessedFile();
 
         if ($processedFile === null) {
             throw new Exception('No processed file. Please call "processImage" method, to process an image file', 1382284106);
         }
 
-        return $this->imageService->getImageUri($processedFile ?? $this->lastProcessedFile, true);
+        return $this->imageService->getImageUri($processedFile ?? $this->getLastProcessedFile(), true);
     }
 
     /** @throws Exception */
     public function getProperty(string $property, ProcessedFile $processedFile = null): ?string
     {
-        $processedFile ??= $this->lastProcessedFile;
+        $processedFile ??= $this->getLastProcessedFile();
 
         if ($processedFile === null) {
             throw new Exception('No processed file. Please call "processImage" method, to process an image file', 1382284107);
@@ -85,5 +85,10 @@ class ImageUtility
         return $processedFile && $processedFile->hasProperty($property)
             ? (string)$processedFile->getProperty($property)
             : null;
+    }
+
+    public function getLastProcessedFile(): ?ProcessedFile
+    {
+        return end($this->processedFiles) ?: null;
     }
 }
