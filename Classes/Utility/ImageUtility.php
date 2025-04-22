@@ -91,4 +91,9 @@ class ImageUtility
     {
         return end($this->processedFiles) ?: null;
     }
+
+    public function getProcessedFiles(): array
+    {
+        return $this->processedFiles;
+    }
 }

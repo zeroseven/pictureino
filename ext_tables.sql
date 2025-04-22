@@ -5,8 +5,8 @@ CREATE TABLE tx_picturerino_request (
     height int(11) DEFAULT '0' NOT NULL,
     viewport int(11) DEFAULT '0' NOT NULL,
     ratio varchar(255) DEFAULT '' NOT NULL,
-		width_processed int(11) DEFAULT '0' NOT NULL,
-		height_processed int(11) DEFAULT '0' NOT NULL,
+		width_evaluated int(11) DEFAULT '0' NOT NULL,
+		height_evaluated int(11) DEFAULT '0' NOT NULL,
 		file varchar(255) DEFAULT '' NOT NULL,
     ip varchar(255) DEFAULT '' NOT NULL,
     tstamp int(11) unsigned DEFAULT '0' NOT NULL,
@@ -19,8 +19,6 @@ CREATE TABLE tx_picturerino_request (
 CREATE TABLE tx_picturerino_request_processed (
 	uid_local       int(11) unsigned DEFAULT '0' NOT NULL,
 	uid_foreign     int(11) unsigned DEFAULT '0' NOT NULL,
-	sorting         int(11) unsigned DEFAULT '0' NOT NULL,
-	sorting_foreign int(11) unsigned DEFAULT '0' NOT NULL,
 
 	PRIMARY KEY (uid_local, uid_foreign),
 	KEY             uid_local (uid_local),

@@ -15,12 +15,14 @@ use Zeroseven\Picturerino\Entity\AspectRatio;
 use Zeroseven\Picturerino\Entity\ConfigRequest;
 use Zeroseven\Picturerino\Utility\AspectRatioUtility;
 use Zeroseven\Picturerino\Utility\ImageUtility;
+use Zeroseven\Picturerino\Utility\LogUtility;
 use Zeroseven\Picturerino\Utility\MetricsUtility;
 use Zeroseven\Picturerino\Utility\SettingsUtility;
 
 class ImageRequest implements MiddlewareInterface
 {
     protected ?ConfigRequest $configRequest = null;
+    protected ?string $identifier = null;
     protected ?ImageUtility $imageUtiltiy = null;
     protected ?AspectRatioUtility $aspectRatioUtiltiy = null;
     protected ?MetricsUtility $metricsUtility = null;
@@ -71,8 +73,9 @@ class ImageRequest implements MiddlewareInterface
         $this->configRequest = GeneralUtility::makeInstance(ConfigRequest::class, $request);
 
         if ($this->configRequest->isValid()) {
+            $this->identifier = md5($request->getAttribute('site')?->getIdentifier() . json_encode($config['file'] ?? []));
+
             $config = $this->configRequest->getConfig();
-            $identifier = md5($request->getAttribute('site')?->getIdentifier() . json_encode($config['file'] ?? []));
 
             $this->imageUtiltiy = GeneralUtility::makeInstance(ImageUtility::class)->setFile(
                 (string)($config['file']['src'] ?? ''),
@@ -85,7 +88,7 @@ class ImageRequest implements MiddlewareInterface
                     ->getAspectForWidth($this->configRequest->getViewport());
 
             if ($this->isValid($request)) {
-                $this->metricsUtility = GeneralUtility::makeInstance(MetricsUtility::class, $identifier, $this->configRequest, $this->imageUtiltiy, $this->aspectRatio);
+                $this->metricsUtility = GeneralUtility::makeInstance(MetricsUtility::class, $this->identifier, $this->configRequest, $this->imageUtiltiy, $this->aspectRatio);
 
                 return true;
             }
@@ -94,10 +97,21 @@ class ImageRequest implements MiddlewareInterface
         return false;
     }
 
+    protected function logRequest(): void
+    {
+        GeneralUtility::makeInstance(
+            LogUtility::class,
+            $this->metricsUtility->getIdentifier(),
+            $this->configRequest,
+            $this->imageUtiltiy,
+            $this->metricsUtility,
+            $this->aspectRatio
+        )?->log();
+    }
+
     public function getAttributes(): array
     {
         $processedFile = $this->imageUtiltiy->processImage($this->metricsUtility->getWidth(), $this->metricsUtility->getHeight());
-        $this->metricsUtility->log($processedFile);
 
         $config = [
             'img' => $this->imageUtiltiy->getUrl(),
@@ -139,6 +153,8 @@ class ImageRequest implements MiddlewareInterface
                     // Override the file config with the identifier
                     $data['debug']['request']['config']['file'] = $this->metricsUtility->getIdentifier();
                 }
+
+                $this->logRequest();
 
                 return new JsonResponse($data,200,$headers);
             }
