@@ -28,8 +28,6 @@ export class Observer {
           return;
         }
 
-        console.log('ResizeObserver', entry.contentRect.width, entry.contentRect.height);
-
         callback({
           width: entry.contentRect.width,
           height: entry.contentRect.height

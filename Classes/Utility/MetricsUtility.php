@@ -106,4 +106,13 @@ class MetricsUtility
     public function getHeight(): ?int {
         return $this->aspectRatio?->getHeight($this->width);
     }
+
+    public function toArray(): array
+    {
+        return [
+            'identifier' => $this->getIdentifier(),
+            'width' => $this->getWidth(),
+            'height' => $this->getHeight()
+        ];
+    }
 }

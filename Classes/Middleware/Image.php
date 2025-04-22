@@ -127,11 +127,16 @@ class Image implements MiddlewareInterface
                 $data = [
                     'processed' => $this->getAttributes(),
                     'view' => $this->configRequest->getViewport(),
-                    'aspectRatio' => $this->aspectRatio->toArray(),
                 ];
 
                 if ($this->settingsUtility->get('debug')) {
-                    $data['debug']['request'] = $this->configRequest->toArray();
+                    $data['debug'] = [
+                        'aspectRatio' => $this->aspectRatio->toArray(),
+                        'request' => $this->configRequest->toArray(),
+                        'metrics' => $this->metricsUtility->toArray(),
+                    ];
+
+                    // Override the file config with the identifier
                     $data['debug']['request']['config']['file'] = $this->metricsUtility->getIdentifier();
                 }
 
