@@ -6,13 +6,14 @@ namespace Zeroseven\Picturerino\Utility;
 
 use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Resource\ProcessedFile;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use Zeroseven\Picturerino\Entity\AspectRatio;
 use Zeroseven\Picturerino\Entity\ConfigRequest;
 
 class MetricsUtility
 {
-    protected const string TABLE_NAME = 'tx_picturerino_metrics';
+    protected const string TABLE_NAME = 'tx_picturerino_requests';
     protected const array SIMILAR_SIZE_RANGE = [-5, 30];
     protected const int STEP_SIZE = 50;
 
@@ -34,7 +35,7 @@ class MetricsUtility
         $this->evaluate();
     }
 
-    public function log(): void {
+    public function log(ProcessedFile $processedFile = null): void {
         $this->connection->insert(
             self::TABLE_NAME,
             [
@@ -43,9 +44,9 @@ class MetricsUtility
                 'height' => $this->configRequest->getHeight(),
                 'viewport' => $this->configRequest->getViewport(),
                 'ratio' => (string)($this->aspectRatio ?? ''),
-                'width_evaluated' => (int)$this->width,
-                'height_evaluated' => (int)$this->height,
-                'file' => $this->imageUtility->getFile()->getIdentifier(),
+                'width_processed' => (int)$this->imageUtility->getProperty('width', $processedFile),
+                'height_processed' => (int)$this->imageUtility->getProperty('height', $processedFile),
+                'file' => $this->imageUtility->getFile()->getPublicUrl(),
                 'ip' => $_SERVER['REMOTE_ADDR'] ?? '',
                 'tstamp' => time(),
                 'crdate' => time()

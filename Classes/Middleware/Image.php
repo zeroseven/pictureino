@@ -86,7 +86,6 @@ class Image implements MiddlewareInterface
 
             if ($this->isValid($request)) {
                 $this->metricsUtility = GeneralUtility::makeInstance(MetricsUtility::class, $identifier, $this->configRequest, $this->imageUtiltiy, $this->aspectRatio);
-                $this->metricsUtility->log();
 
                 return true;
             }
@@ -97,7 +96,8 @@ class Image implements MiddlewareInterface
 
     public function getAttributes(): array
     {
-        $this->imageUtiltiy->processImage($this->metricsUtility->getWidth(), $this->metricsUtility->getHeight());
+        $processedFile = $this->imageUtiltiy->processImage($this->metricsUtility->getWidth(), $this->metricsUtility->getHeight());
+        $this->metricsUtility->log($processedFile);
 
         $config = [
             'img' => $this->imageUtiltiy->getUrl(),

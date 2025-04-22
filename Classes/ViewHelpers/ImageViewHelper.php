@@ -6,6 +6,7 @@ namespace Zeroseven\Picturerino\ViewHelpers;
 
 use Exception;
 
+use TYPO3\CMS\Core\Resource\File;
 use TYPO3\CMS\Core\Resource\FileReference;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractViewHelper;
@@ -65,8 +66,8 @@ class ImageViewHelper extends AbstractViewHelper
             ];
         } elseif ($file instanceof File) {
             $config['file'] = [
-                'image' => $file->getPublicUrl(),
-                'treatIdAsReference' => true,
+                'src' => $file->getPublicUrl(),
+                'treatIdAsReference' => false,
             ];
         }
 
@@ -102,8 +103,9 @@ class ImageViewHelper extends AbstractViewHelper
             ->addAttribute('data-config', $this->createEncryptionHash())
             ->addAttribute('title', $this->arguments['title'])
             ->addAttribute('alt', $this->arguments['alt'])
-            ->addAttribute('onload', 'Picturerino.handle(this)')
-            ->addAttribute('class', $this->arguments['class']);
+            ->addAttribute('class', $this->arguments['class'])
+            ->addAttribute('style', $this->arguments['style'])
+            ->addAttribute('onload', 'Picturerino.handle(this)');
 
         return ($this->aspectRatioUtiltiy->count() === 1
             ? $tagUtility->renderImg(static::FALLBACK_WIDTH)
