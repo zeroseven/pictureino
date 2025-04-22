@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Zeroseven\Picturerino\Utility;
 
@@ -9,7 +11,7 @@ class SettingsUtility
 {
     protected array $settings = [];
 
-    public function __construct(ServerRequestInterface $request = null)
+    public function __construct(?ServerRequestInterface $request = null)
     {
         $this->loadSettings($request);
     }
@@ -19,7 +21,7 @@ class SettingsUtility
         return $GLOBALS['TYPO3_REQUEST'] ?? null;
     }
 
-    protected function loadSettings(ServerRequestInterface $request = null): void
+    protected function loadSettings(?ServerRequestInterface $request = null): void
     {
         try {
             $siteSettings = ($request ?? $this->getRequest())?->getAttribute('site')?->getSettings('zeroseven/picturerino');

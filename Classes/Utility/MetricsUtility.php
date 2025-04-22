@@ -4,14 +4,11 @@ declare(strict_types=1);
 
 namespace Zeroseven\Picturerino\Utility;
 
-use InvalidArgumentException;
 use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use Zeroseven\Picturerino\Entity\AspectRatio;
 use Zeroseven\Picturerino\Entity\ConfigRequest;
-use Zeroseven\Picturerino\Utility\AspectRatioUtility;
-use Zeroseven\Picturerino\Utility\SettingsUtility;
 
 class MetricsUtility
 {
@@ -28,7 +25,8 @@ class MetricsUtility
     protected ?int $width = null;
     protected ?int $height = null;
 
-    public function __construct(string $identifier, ConfigRequest $configRequest, ImageUtility $imageUtility, SettingsUtility $settingsUtility) {
+    public function __construct(string $identifier, ConfigRequest $configRequest, ImageUtility $imageUtility, SettingsUtility $settingsUtility)
+    {
         $this->identifier = $identifier;
         $this->configRequest = $configRequest;
         $this->imageUtility = $imageUtility;
@@ -41,31 +39,31 @@ class MetricsUtility
         $this->evaluate();
     }
 
-       /** @throws \InvalidArgumentException */
-       public function validate(): bool
-       {
-           if ($this->aspectRatio && abs($this->aspectRatio->getHeight($this->configRequest->getWidth()) - $this->configRequest->getHeight()) > $this->configRequest->getHeight() * 0.03) {
-               throw new InvalidArgumentException('The aspect ratio is invalid.', 1745092982);
-           }
+    /** @throws \InvalidArgumentException */
+    public function validate(): bool
+    {
+        if ($this->aspectRatio && abs($this->aspectRatio->getHeight($this->configRequest->getWidth()) - $this->configRequest->getHeight()) > $this->configRequest->getHeight() * 0.03) {
+            throw new \InvalidArgumentException('The aspect ratio is invalid.', 1745092982);
+        }
 
-           if ($this->configRequest->getWidth() > $this->configRequest->getViewport()) {
-               throw new InvalidArgumentException('Width exceeds the viewport.', 1745092983);
-           }
+        if ($this->configRequest->getWidth() > $this->configRequest->getViewport()) {
+            throw new \InvalidArgumentException('Width exceeds the viewport.', 1745092983);
+        }
 
-           if ($this->configRequest->getWidth() <= 0 || $this->configRequest->getHeight() <= 0) {
-               throw new InvalidArgumentException('Width or height must be greater than zero.', 1745092984);
-           }
+        if ($this->configRequest->getWidth() <= 0 || $this->configRequest->getHeight() <= 0) {
+            throw new \InvalidArgumentException('Width or height must be greater than zero.', 1745092984);
+        }
 
-           $maxWidth = (int)($this->configRequest->getConfig()['image_max_width'] ?? $this->settingsUtility->get('image_max_width'));
-           if ($maxWidth === 0 || $this->configRequest->getWidth() > $maxWidth) {
-               throw new InvalidArgumentException('Width exceeds the maximum width.', 1745092985);
-           }
+        $maxWidth = (int) ($this->configRequest->getConfig()['image_max_width'] ?? $this->settingsUtility->get('image_max_width'));
+        if (0 === $maxWidth || $this->configRequest->getWidth() > $maxWidth) {
+            throw new \InvalidArgumentException('Width exceeds the maximum width.', 1745092985);
+        }
 
-           return true;
-       }
+        return true;
+    }
 
-
-    protected function evaluate(): void {
+    protected function evaluate(): void
+    {
         $requestedWidth = $this->configRequest->getWidth();
 
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
@@ -95,9 +93,9 @@ class MetricsUtility
 
         // Use found metrics or calculate new size
         if ($result && isset($result['width'])) {
-            $this->width = (int)$result['width'];
+            $this->width = (int) $result['width'];
         } else {
-            $this->width = (int)(ceil($requestedWidth / self::STEP_SIZE) * self::STEP_SIZE);
+            $this->width = (int) (ceil($requestedWidth / self::STEP_SIZE) * self::STEP_SIZE);
         }
     }
 
@@ -111,7 +109,8 @@ class MetricsUtility
         return $this->width;
     }
 
-    public function getHeight(): ?int {
+    public function getHeight(): ?int
+    {
         return $this->aspectRatio?->getHeight($this->width);
     }
 
@@ -126,7 +125,7 @@ class MetricsUtility
             'identifier' => $this->getIdentifier(),
             'aspectRatio' => $this->getAspectRatio()?->toArray(),
             'width' => $this->getWidth(),
-            'height' => $this->getHeight()
+            'height' => $this->getHeight(),
         ];
     }
 }

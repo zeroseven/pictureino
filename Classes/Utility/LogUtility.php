@@ -45,16 +45,16 @@ class LogUtility
                 'width' => $this->configRequest->getWidth(),
                 'height' => $this->configRequest->getHeight(),
                 'viewport' => $this->configRequest->getViewport(),
-                'ratio' => (string)$this->metricsUtility->getAspectRatio(),
+                'ratio' => (string) $this->metricsUtility->getAspectRatio(),
                 'width_evaluated' => $this->metricsUtility->getWidth(),
                 'height_evaluated' => $this->metricsUtility->getHeight(),
                 'file' => $this->imageUtility->getFile()->getIdentifier(),
                 'ip' => $_SERVER['REMOTE_ADDR'] ?? '',
                 'tstamp' => time(),
-                'crdate' => time()
+                'crdate' => time(),
             ])->executeStatement();
 
-        return (int)$queryBuilder->getConnection()->lastInsertId();
+        return (int) $queryBuilder->getConnection()->lastInsertId();
     }
 
     protected function logProcessedFile(int $requestId, ProcessedFile $processedFile): void
@@ -64,13 +64,13 @@ class LogUtility
             ->insert(self::TABLE_REQUEST_PROCESSED)
             ->values([
                 'uid_local' => $requestId,
-                'uid_foreign' => $processedFile->getUid()
+                'uid_foreign' => $processedFile->getUid(),
             ])->executeStatement();
     }
 
     public function log(): void
     {
-        if($id = $this->logRequest()) {
+        if ($id = $this->logRequest()) {
             foreach ($this->imageUtility->getProcessedFiles() ?? [] as $processedFile) {
                 $this->logProcessedFile($id, $processedFile);
             }

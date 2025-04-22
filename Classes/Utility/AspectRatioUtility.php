@@ -1,42 +1,44 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Zeroseven\Picturerino\Utility;
 
-use Exception;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\MathUtility;
 use Zeroseven\Picturerino\Entity\AspectRatio;
 
-
-class AspectRatioUtility {
+class AspectRatioUtility
+{
     protected SettingsUtility $settingsUtility;
     protected array $aspectRatios;
     protected array $breakpointMap;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->aspectRatios = [0 => null];
 
         if ($breakpoints = GeneralUtility::makeInstance(SettingsUtility::class)->get('breakpoints')) {
             foreach ($breakpoints as $setup) {
                 if (preg_match('/(.+)\s*:\s*(\d+)/', $setup, $matches)) {
-                    $this->breakpointMap[$matches[1]] = (int)$matches[2];
+                    $this->breakpointMap[$matches[1]] = (int) $matches[2];
                 }
             }
         }
     }
 
-    /** @throws Exception */
+    /** @throws \Exception */
     protected function mapBreakpoint(mixed $view): int
     {
         if (MathUtility::canBeInterpretedAsInteger($view)) {
-            return (int)$view;
+            return (int) $view;
         }
 
         if (is_string($view) && isset($this->breakpointMap[$view])) {
             return $this->breakpointMap[$view];
         }
 
-        throw new Exception('Invalid breakpoint: "' . $view . '". Must be an integer or one of the registered strings (' . implode(', ', array_map(static fn($s) => '"'. $s .'"', array_keys($this->breakpointMap))) . ')');
+        throw new \Exception('Invalid breakpoint: "' . $view . '". Must be an integer or one of the registered strings (' . implode(', ', array_map(static fn ($s) => '"' . $s . '"', array_keys($this->breakpointMap))) . ')');
     }
 
     public function sortAspectRatios(): self
@@ -47,11 +49,11 @@ class AspectRatioUtility {
 
         $lastAspectRatio = '';
         foreach ($this->aspectRatios as $breakpoint => $aspectRatio) {
-            if ($lastAspectRatio === (string)$aspectRatio) {
+            if ($lastAspectRatio === (string) $aspectRatio) {
                 unset($this->aspectRatios[$breakpoint]);
             }
 
-            $lastAspectRatio = (string)$aspectRatio;
+            $lastAspectRatio = (string) $aspectRatio;
         }
 
         return $this;
@@ -69,7 +71,7 @@ class AspectRatioUtility {
 
     public function getAspectForWidth(int $width): ?AspectRatio
     {
-        if (count($this->aspectRatios) === 1) {
+        if (1 === count($this->aspectRatios)) {
             return $this->getFirstAspectRatio();
         }
 
@@ -84,7 +86,7 @@ class AspectRatioUtility {
         return $lastAspectRatio;
     }
 
-    /** @throws Exception */
+    /** @throws \Exception */
     public function setAspectRatios(mixed $input): self
     {
         if (is_array($input) && count($input) > 0) {
@@ -100,24 +102,24 @@ class AspectRatioUtility {
         return $this;
     }
 
-    /** @throws Exception */
+    /** @throws \Exception */
     public function addAspectRatio(mixed $asepectRatio, mixed $view = null, bool $sortAspectRatios = true): self
     {
         if (!empty($asepectRatio)) {
-            $breakpoint =  $this->mapBreakpoint($view ?? 0);
+            $breakpoint = $this->mapBreakpoint($view ?? 0);
 
             $this->aspectRatios[$breakpoint] = GeneralUtility::makeInstance(AspectRatio::class)->set($asepectRatio);
         }
 
-        return $sortAspectRatios === false ? $this : $this->sortAspectRatios();
+        return false === $sortAspectRatios ? $this : $this->sortAspectRatios();
     }
 
-    /** @throws Exception */
+    /** @throws \Exception */
     public function removeAspectRatio(mixed $view): self
     {
         $breakpoint = $this->mapBreakpoint($view);
 
-        if ($breakpoint === 0) {
+        if (0 === $breakpoint) {
             $this->aspectRatios[0] = null;
 
             return $this;
@@ -132,7 +134,7 @@ class AspectRatioUtility {
 
     public function isEmpty(): bool
     {
-        return count($this->aspectRatios) <= 1 && $this->aspectRatios[0] === null;
+        return count($this->aspectRatios) <= 1 && null === $this->aspectRatios[0];
     }
 
     public function count(): int

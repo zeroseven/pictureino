@@ -1,11 +1,13 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Zeroseven\Picturerino\Utility;
 
-use Exception;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
-class EncryptionUtility {
+class EncryptionUtility
+{
     protected const ENCRYPT_METHOD = 'AES-256-CBC';
     protected string $encryptionKey;
 
@@ -20,12 +22,13 @@ class EncryptionUtility {
             return hash('sha256', $encryptionKey . '¯\_(ツ)_/¯');
         }
 
-        throw new Exception('No encryptionKey given.', 1667886790);
+        throw new \Exception('No encryptionKey given.', 1667886790);
     }
 
     protected function getInitializationVector(): string
     {
         $length = openssl_cipher_iv_length(self::ENCRYPT_METHOD);
+
         return substr($this->encryptionKey, 0, $length);
     }
 
@@ -43,7 +46,7 @@ class EncryptionUtility {
 
     public function decryptString(string $string): ?string
     {
-        return openssl_decrypt(base64_decode($string), self::ENCRYPT_METHOD, $this->encryptionKey, 0, $this->getInitializationVector()) ?: null;
+        return openssl_decrypt(base64_decode($string, true), self::ENCRYPT_METHOD, $this->encryptionKey, 0, $this->getInitializationVector()) ?: null;
     }
 
     public function decryptArray(string $string): ?array

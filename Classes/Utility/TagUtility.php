@@ -1,14 +1,15 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Zeroseven\Picturerino\Utility;
 
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3Fluid\Fluid\Core\ViewHelper\TagBuilder;
 use Zeroseven\Picturerino\Entity\AspectRatio;
-use Zeroseven\Picturerino\Utility\ImageUtility;
-use Zeroseven\Picturerino\Utility\AspectRatioUtility;
 
-class TagUtility {
+class TagUtility
+{
     protected ImageUtility $imageUtility;
     protected AspectRatioUtility $aspectRatioUtility;
     protected bool $debugMode;
@@ -21,12 +22,12 @@ class TagUtility {
     {
         $this->imageUtility = $imageUtility;
         $this->aspectRatioUtility = $aspectRatioUtility;
-        $this->debugMode = (bool)GeneralUtility::makeInstance(SettingsUtility::class)->get('debug');
+        $this->debugMode = (bool) GeneralUtility::makeInstance(SettingsUtility::class)->get('debug');
     }
 
-    public function addAttribute(string $attribute, string $value = null): self
+    public function addAttribute(string $attribute, ?string $value = null): self
     {
-        $value === null || $this->attributes[$attribute] = $value;
+        null === $value || $this->attributes[$attribute] = $value;
 
         return $this;
     }
@@ -38,7 +39,7 @@ class TagUtility {
 
     public function getDataAttributes(): array
     {
-        return array_filter($this->attributes, fn($key)  =>  str_starts_with($key, 'data-'), ARRAY_FILTER_USE_KEY);
+        return array_filter($this->attributes, fn ($key) => str_starts_with($key, 'data-'), ARRAY_FILTER_USE_KEY);
     }
 
     protected function renderSource(int $breakpoint, AspectRatio $ratio, int $width): string
@@ -54,7 +55,7 @@ class TagUtility {
         $source->addAttribute('height', $this->imageUtility->getProperty('height'));
 
         if ($this->debugMode) {
-            $source->addAttribute('data-aspact-ratio', (string)$ratio);
+            $source->addAttribute('data-aspact-ratio', (string) $ratio);
         }
 
         if ($mimetype = $this->imageUtility->getProperty('mimetype')) {
@@ -79,10 +80,10 @@ class TagUtility {
         $this->getAttribute('title') || $this->addAttribute('title', $this->imageUtility->getProperty('title'));
         $this->getAttribute('alt') || $this->addAttribute('alt', $this->imageUtility->getProperty('alternative') ?? '');
 
-        $this->debugMode && $this->addAttribute('data-aspect-ratio', (string)$firstAspect);
+        $this->debugMode && $this->addAttribute('data-aspect-ratio', (string) $firstAspect);
 
         foreach ($this->attributes as $key => $value) {
-            $value === null || $img->addAttribute($key, $value);
+            null === $value || $img->addAttribute($key, $value);
         }
 
         return $img->render();

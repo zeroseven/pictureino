@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Zeroseven\Picturerino\Middleware;
 
-use InvalidArgumentException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
@@ -25,13 +24,12 @@ class ImageRequest implements MiddlewareInterface
     protected ?MetricsUtility $metricsUtility = null;
     protected ?SettingsUtility $settingsUtility = null;
 
-
     protected function isRetina(): bool
     {
         $config = $this->configRequest->getConfig()['retina'] ?? null;
 
-        if ($this->configRequest->isRetina() && $config !== false) {
-            return $this->settingsUtility->get('retina') || $config === true;
+        if ($this->configRequest->isRetina() && false !== $config) {
+            return $this->settingsUtility->get('retina') || true === $config;
         }
 
         return false;
@@ -53,9 +51,9 @@ class ImageRequest implements MiddlewareInterface
             $config = $this->configRequest->getConfig();
 
             $this->imageUtiltiy = GeneralUtility::makeInstance(ImageUtility::class)->setFile(
-                (string)($config['file']['src'] ?? ''),
+                (string) ($config['file']['src'] ?? ''),
                 $config['file']['image'] ?? null,
-                (bool)($config['file']['treatIdAsReference'] ?? false)
+                (bool) ($config['file']['treatIdAsReference'] ?? false)
             );
 
             $this->metricsUtility = GeneralUtility::makeInstance(MetricsUtility::class, $this->identifier, $this->configRequest, $this->imageUtiltiy, $this->settingsUtility);
@@ -84,7 +82,7 @@ class ImageRequest implements MiddlewareInterface
         $config = [
             'img' => $this->imageUtiltiy->getUrl(),
             'width' => $this->imageUtiltiy->getProperty('width'),
-            'height' => $this->imageUtiltiy->getProperty('height')
+            'height' => $this->imageUtiltiy->getProperty('height'),
         ];
 
         if ($this->isRetina()) {
@@ -122,13 +120,13 @@ class ImageRequest implements MiddlewareInterface
 
                 $this->logRequest();
 
-                return new JsonResponse($data,200,$headers);
+                return new JsonResponse($data, 200, $headers);
             }
-        } catch (InvalidArgumentException $e) {
+        } catch (\InvalidArgumentException $e) {
             return new JsonResponse(['error' => [
-                    'message' => $e->getMessage(),
-                    'code' => $e->getCode(),
-                ]], 400, $headers);
+                'message' => $e->getMessage(),
+                'code' => $e->getCode(),
+            ]], 400, $headers);
         }
 
         return $handler->handle($request);

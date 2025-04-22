@@ -4,15 +4,13 @@ declare(strict_types=1);
 
 namespace Zeroseven\Picturerino\ViewHelpers;
 
-use Exception;
-
 use TYPO3\CMS\Core\Resource\File;
 use TYPO3\CMS\Core\Resource\FileReference;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractViewHelper;
+use Zeroseven\Picturerino\Utility\AspectRatioUtility;
 use Zeroseven\Picturerino\Utility\EncryptionUtility;
 use Zeroseven\Picturerino\Utility\ImageUtility;
-use Zeroseven\Picturerino\Utility\AspectRatioUtility;
 use Zeroseven\Picturerino\Utility\TagUtility;
 
 class ImageViewHelper extends AbstractViewHelper
@@ -71,8 +69,8 @@ class ImageViewHelper extends AbstractViewHelper
             ];
         }
 
-        if ($this->arguments['retina'] !== null) {
-            $config['retina'] = (bool)$this->arguments['retina'];
+        if (null !== $this->arguments['retina']) {
+            $config['retina'] = (bool) $this->arguments['retina'];
         }
 
         if (!$this->aspectRatioUtiltiy->isEmpty()) {
@@ -82,7 +80,7 @@ class ImageViewHelper extends AbstractViewHelper
         return EncryptionUtility::encryptConfig($config);
     }
 
-    /** @throws Exception */
+    /** @throws \Exception */
     public function render(): string
     {
         $this->imageUtiltiy->setFile(
@@ -107,7 +105,7 @@ class ImageViewHelper extends AbstractViewHelper
             ->addAttribute('style', $this->arguments['style'])
             ->addAttribute('onload', 'Picturerino.handle(this)');
 
-        return ($this->aspectRatioUtiltiy->count() === 1
+        return (1 === $this->aspectRatioUtiltiy->count()
             ? $tagUtility->renderImg(static::FALLBACK_WIDTH)
             : $tagUtility->renderPicture(static::FALLBACK_WIDTH))
             . "\n" . $tagUtility->structuredData(static::SEO_CONTENT_WIDTH);

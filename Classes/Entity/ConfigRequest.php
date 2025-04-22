@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Zeroseven\Picturerino\Entity;
 
@@ -26,10 +28,10 @@ class ConfigRequest
             preg_match('/\/-\/img\/(\d+)x(\d+)\/(\d+)([12])x([A-Za-z0-9+=]+)\/?$/', $path, $matches)
             && $this->config = EncryptionUtility::decryptConfig($matches[5])
         ) {
-            $this->width = (int)$matches[1];
-            $this->height = (int)$matches[2];
-            $this->viewport = (int)$matches[3];
-            $this->retina = (int)$matches[4] === 2;
+            $this->width = (int) $matches[1];
+            $this->height = (int) $matches[2];
+            $this->viewport = (int) $matches[3];
+            $this->retina = 2 === (int) $matches[4];
             $this->isValid = true;
         }
     }
@@ -70,7 +72,7 @@ class ConfigRequest
             'config' => $this->config,
             'width' => $this->width,
             'height' => $this->height,
-            'viewport' => $this->viewport
+            'viewport' => $this->viewport,
         ];
     }
 }
