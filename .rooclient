@@ -1,0 +1,92 @@
+{
+  "name": "picturerino",
+  "type": "typo3-cms-extension",
+  "description": "TYPO3 extension for optimized image delivery with security validation",
+  "workflow": {
+    "frontend": {
+      "viewHelper": {
+        "class": "ImageViewHelper",
+        "fallbackWidth": 150,
+        "seoContentWidth": 1200,
+        "function": "Provides fallback image and initiates JavaScript handler"
+      },
+      "javascript": {
+        "handler": "Picturerino.handle",
+        "action": "Sends AJAX request with viewport information",
+        "implementation": "TypeScript with strict types"
+      }
+    },
+    "backend": {
+      "middleware": {
+        "class": "ImageRequest",
+        "security": {
+          "validation": "Validates image requests for security",
+          "logging": "Records all image requests",
+          "headers": {
+            "cache-control": "no-store, no-cache, must-revalidate",
+            "x-robots": "noindex, nofollow"
+          }
+        },
+        "metricsUtility": {
+          "function": "Determines optimal image size",
+          "caching": "Uses frequently requested sizes",
+          "stepSize": 50,
+          "sizeRange": [-5, 30]
+        }
+      }
+    }
+  },
+  "codingGuidelines": {
+    "general": {
+      "comments": "English only, use when necessary to explain complex logic",
+      "methods": "Keep methods focused and concise",
+      "naming": "Self-explanatory class and method names",
+      "returnTypes": "Clear return type declarations"
+    },
+    "php": {
+      "strict": "declare(strict_types=1) in all PHP files",
+      "typing": "Strong type hints for properties, parameters and return types"
+    },
+    "typescript": {
+      "strict": "strict mode enabled in tsconfig.json",
+      "types": "Explicit interface definitions for all data structures"
+    },
+    "typo3": {
+      "core": "Utilize TYPO3 core functionality where possible",
+      "standards": [
+        "GeneralUtility for dependency injection",
+        "PSR-15 for middleware",
+        "Core logging functionality",
+        "FAL for image handling"
+      ]
+    },
+    "structure": {
+      "separation": "Clear class responsibilities and single responsibility principle",
+      "utilities": {
+        "ImageUtility": "Image processing and manipulation",
+        "MetricsUtility": "Size calculations and optimization",
+        "LogUtility": "Request logging and metrics",
+        "AspectRatioUtility": "Ratio calculations and validation"
+      }
+    }
+  },
+  "security": {
+    "imageValidation": {
+      "aspectRatio": "Validates aspect ratio with 3% tolerance",
+      "viewportCheck": "Prevents images larger than viewport",
+      "dimensionLimits": "Checks against configured maximum size",
+      "encryption": "Encrypted image configuration"
+    },
+    "logging": {
+      "table": "tx_picturerino_request",
+      "metrics": "Stores usage statistics for image sizes"
+    },
+    "validation": "Input validation on all levels",
+    "logging": "Comprehensive request tracking",
+    "encryption": "Config parameter encryption"
+  },
+  "requirements": {
+    "typo3": "13.0.0-13.99.99",
+    "php": "8.2.0-8.99.99"
+  }
+}

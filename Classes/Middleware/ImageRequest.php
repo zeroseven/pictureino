@@ -11,44 +11,20 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use TYPO3\CMS\Core\Http\JsonResponse;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use Zeroseven\Picturerino\Entity\AspectRatio;
 use Zeroseven\Picturerino\Entity\ConfigRequest;
-use Zeroseven\Picturerino\Utility\AspectRatioUtility;
 use Zeroseven\Picturerino\Utility\ImageUtility;
+use Zeroseven\Picturerino\Utility\LogUtility;
 use Zeroseven\Picturerino\Utility\MetricsUtility;
 use Zeroseven\Picturerino\Utility\SettingsUtility;
 
 class ImageRequest implements MiddlewareInterface
 {
     protected ?ConfigRequest $configRequest = null;
+    protected ?string $identifier = null;
     protected ?ImageUtility $imageUtiltiy = null;
-    protected ?AspectRatioUtility $aspectRatioUtiltiy = null;
     protected ?MetricsUtility $metricsUtility = null;
-    protected ?AspectRatio $aspectRatio = null;
     protected ?SettingsUtility $settingsUtility = null;
 
-    /** @throws \InvalidArgumentException */
-    protected function isValid(ServerRequestInterface $request): bool
-    {
-        if ($this->aspectRatio && abs($this->aspectRatio->getHeight($this->configRequest->getWidth()) - $this->configRequest->getHeight()) > $this->configRequest->getHeight() * 0.03) {
-            throw new InvalidArgumentException('The aspect ratio is invalid.', 1745092982);
-        }
-
-        if ($this->configRequest->getWidth() > $this->configRequest->getViewport()) {
-            throw new InvalidArgumentException('Width exceeds the viewport.', 1745092983);
-        }
-
-        if ($this->configRequest->getWidth() <= 0 || $this->configRequest->getHeight() <= 0) {
-            throw new InvalidArgumentException('Width or height must be greater than zero.', 1745092984);
-        }
-
-        $maxWidth = (int)($this->configRequest->getConfig()['image_max_width'] ?? GeneralUtility::makeInstance(SettingsUtility::class, $request)->get('image_max_width'));
-        if ($maxWidth === 0 || $this->configRequest->getWidth() > $maxWidth) {
-            throw new InvalidArgumentException('Width exceeds the maximum width.', 1745092985);
-        }
-
-        return true;
-    }
 
     protected function isRetina(): bool
     {
@@ -71,8 +47,10 @@ class ImageRequest implements MiddlewareInterface
         $this->configRequest = GeneralUtility::makeInstance(ConfigRequest::class, $request);
 
         if ($this->configRequest->isValid()) {
+            $this->identifier = md5($request->getAttribute('site')?->getIdentifier() . json_encode($config['file'] ?? []));
+            $this->initializeSettings($request);
+
             $config = $this->configRequest->getConfig();
-            $identifier = md5($request->getAttribute('site')?->getIdentifier() . json_encode($config['file'] ?? []));
 
             $this->imageUtiltiy = GeneralUtility::makeInstance(ImageUtility::class)->setFile(
                 (string)($config['file']['src'] ?? ''),
@@ -80,24 +58,28 @@ class ImageRequest implements MiddlewareInterface
                 (bool)($config['file']['treatIdAsReference'] ?? false)
             );
 
-            $this->aspectRatio = GeneralUtility::makeInstance(AspectRatioUtility::class)
-                    ->setAspectRatios($config['aspectRatio'] ?? null)
-                    ->getAspectForWidth($this->configRequest->getViewport());
+            $this->metricsUtility = GeneralUtility::makeInstance(MetricsUtility::class, $this->identifier, $this->configRequest, $this->imageUtiltiy, $this->settingsUtility);
 
-            if ($this->isValid($request)) {
-                $this->metricsUtility = GeneralUtility::makeInstance(MetricsUtility::class, $identifier, $this->configRequest, $this->imageUtiltiy, $this->aspectRatio);
-
-                return true;
-            }
+            return $this->metricsUtility->validate();
         }
 
         return false;
     }
 
+    protected function logRequest(): void
+    {
+        GeneralUtility::makeInstance(
+            LogUtility::class,
+            $this->metricsUtility->getIdentifier(),
+            $this->configRequest,
+            $this->imageUtiltiy,
+            $this->metricsUtility
+        )?->log();
+    }
+
     public function getAttributes(): array
     {
-        $processedFile = $this->imageUtiltiy->processImage($this->metricsUtility->getWidth(), $this->metricsUtility->getHeight());
-        $this->metricsUtility->log($processedFile);
+        $this->imageUtiltiy->processImage($this->metricsUtility->getWidth(), $this->metricsUtility->getHeight());
 
         $config = [
             'img' => $this->imageUtiltiy->getUrl(),
@@ -107,6 +89,7 @@ class ImageRequest implements MiddlewareInterface
 
         if ($this->isRetina()) {
             $this->imageUtiltiy->processImage($this->metricsUtility->getWidth() * 2, $this->metricsUtility->getHeight() * 2);
+
             $config['img2x'] = $this->imageUtiltiy->getUrl();
         }
 
@@ -122,8 +105,6 @@ class ImageRequest implements MiddlewareInterface
             ];
 
             if ($this->initializeConfig($request)) {
-                $this->initializeSettings($request);
-
                 $data = [
                     'processed' => $this->getAttributes(),
                     'view' => $this->configRequest->getViewport(),
@@ -131,7 +112,6 @@ class ImageRequest implements MiddlewareInterface
 
                 if ($this->settingsUtility->get('debug')) {
                     $data['debug'] = [
-                        'aspectRatio' => $this->aspectRatio->toArray(),
                         'request' => $this->configRequest->toArray(),
                         'metrics' => $this->metricsUtility->toArray(),
                     ];
@@ -139,6 +119,8 @@ class ImageRequest implements MiddlewareInterface
                     // Override the file config with the identifier
                     $data['debug']['request']['config']['file'] = $this->metricsUtility->getIdentifier();
                 }
+
+                $this->logRequest();
 
                 return new JsonResponse($data,200,$headers);
             }
