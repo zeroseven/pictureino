@@ -18,7 +18,7 @@ use Zeroseven\Picturerino\Utility\ImageUtility;
 use Zeroseven\Picturerino\Utility\MetricsUtility;
 use Zeroseven\Picturerino\Utility\SettingsUtility;
 
-class Image implements MiddlewareInterface
+class ImageRequest implements MiddlewareInterface
 {
     protected ?ConfigRequest $configRequest = null;
     protected ?ImageUtility $imageUtiltiy = null;
