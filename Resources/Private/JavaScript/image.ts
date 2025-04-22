@@ -26,9 +26,12 @@ export class Image {
   }
 
   private getRequestUri(): string {
+    const width = parseInt(this.size.width.toString(), 10);
+    const height = parseInt(this.size.height.toString(), 10);
     const view = Math.round(window.innerWidth);
     const retina = window.devicePixelRatio > 1 ? 2 : 1;
-    return `/-/img/${this.size.width}x${this.size.height}/${view}${retina}x${this.config}/`;
+
+    return `/-/img/${width}x${height}/${view}${retina}x${this.config}/`;
   }
 
   private updateImage(imageResponse: ImageResponse): void {

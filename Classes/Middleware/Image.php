@@ -25,6 +25,7 @@ class Image implements MiddlewareInterface
     protected ?AspectRatioUtility $aspectRatioUtiltiy = null;
     protected ?MetricsUtility $metricsUtility = null;
     protected ?AspectRatio $aspectRatio = null;
+    protected ?SettingsUtility $settingsUtility = null;
 
     /** @throws \InvalidArgumentException */
     protected function isValid(ServerRequestInterface $request): bool
@@ -47,6 +48,22 @@ class Image implements MiddlewareInterface
         }
 
         return true;
+    }
+
+    protected function isRetina(): bool
+    {
+        $config = $this->configRequest->getConfig()['retina'] ?? null;
+
+        if ($this->configRequest->isRetina() && $config !== false) {
+            return $this->settingsUtility->get('retina') || $config === true;
+        }
+
+        return false;
+    }
+
+    protected function initializeSettings(ServerRequestInterface $request): void
+    {
+        $this->settingsUtility = GeneralUtility::makeInstance(SettingsUtility::class, $request);
     }
 
     protected function initializeConfig(ServerRequestInterface $request): bool
@@ -88,7 +105,7 @@ class Image implements MiddlewareInterface
             'height' => $this->imageUtiltiy->getProperty('height')
         ];
 
-        if ($this->configRequest->isRetina()) {
+        if ($this->isRetina()) {
             $this->imageUtiltiy->processImage($this->metricsUtility->getWidth() * 2, $this->metricsUtility->getHeight() * 2);
             $config['img2x'] = $this->imageUtiltiy->getUrl();
         }
@@ -99,24 +116,32 @@ class Image implements MiddlewareInterface
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         try {
+            $headers = [
+                'cache-control' => 'no-store, no-cache, must-revalidate, max-age=0',
+                'x-robots' => 'noindex, nofollow',
+            ];
+
             if ($this->initializeConfig($request)) {
-                return new JsonResponse([
-                        'processed' => $this->getAttributes(),
-                        'view' => $this->configRequest->getViewport(),
-                        'aspectRatio' => $this->aspectRatio->toArray(),
-                    ],
-                    200,
-                    ['cache-control' => 'no-store, no-cache, must-revalidate, max-age=0'],
-                );
+                $this->initializeSettings($request);
+
+                $data = [
+                    'processed' => $this->getAttributes(),
+                    'view' => $this->configRequest->getViewport(),
+                    'aspectRatio' => $this->aspectRatio->toArray(),
+                ];
+
+                if ($this->settingsUtility->get('debug')) {
+                    $data['debug']['request'] = $this->configRequest->toArray();
+                    $data['debug']['request']['config']['file'] = $this->metricsUtility->getIdentifier();
+                }
+
+                return new JsonResponse($data,200,$headers);
             }
         } catch (InvalidArgumentException $e) {
             return new JsonResponse(['error' => [
                     'message' => $e->getMessage(),
                     'code' => $e->getCode(),
-                ]],
-                400,
-                ['cache-control' => 'no-store, no-cache, must-revalidate, max-age=0'],
-            );
+                ]], 400, $headers);
         }
 
         return $handler->handle($request);

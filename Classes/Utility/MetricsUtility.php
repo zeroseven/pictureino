@@ -93,6 +93,11 @@ class MetricsUtility
         }
     }
 
+    public function getIdentifier(): string
+    {
+        return $this->identifier;
+    }
+
     public function getWidth(): ?int
     {
         return $this->width;
