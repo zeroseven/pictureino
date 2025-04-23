@@ -95,7 +95,7 @@ export class Image {
   }
 
   private init(): void {
-    ['data-config', 'onload', 'srcset'].forEach(attr => {
+    ['onload', 'srcset'].forEach(attr => {
       this.element.removeAttribute(attr);
     });
 
