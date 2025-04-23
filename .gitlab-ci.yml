@@ -1,0 +1,4 @@
+include:
+  - project: 'zeroseven/gitlab-ci-templates'
+    ref: master
+    file: '/typo3/zeroseven-extension.gitlab-ci.yml'
