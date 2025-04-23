@@ -72,12 +72,17 @@ export class Image {
   }
 
   private updateSource(): void {
+    this.element.dataset.loaded = 'false';
+
     this.loader.requestImage(this.getRequestUri())
       .then((result: ImageResponse) => {
         const sourceKey = this.getSourceKey(result.view);
         sourceKey ? this.updateSourceTag(sourceKey, result) : this.updateImage(result);
 
-        this.element.addEventListener('load', this.observeElement, { once: true });
+        this.element.addEventListener('load', () =>{
+          this.observeElement();
+          this.element.dataset.loaded = 'true';
+        }, { once: true });
       }).catch(error => {
         if (error.code === 1745092982) {
           this.observeElement();

@@ -99,6 +99,7 @@ class ImageViewHelper extends AbstractViewHelper
 
         $tagUtility = GeneralUtility::makeInstance(TagUtility::class, $this->imageUtiltiy, $this->aspectRatioUtiltiy)
             ->addAttribute('data-config', $this->createEncryptionHash())
+            ->addAttribute('data-loaded', 'false')
             ->addAttribute('title', $this->arguments['title'])
             ->addAttribute('alt', $this->arguments['alt'])
             ->addAttribute('class', $this->arguments['class'])

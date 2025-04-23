@@ -24,7 +24,11 @@ export class Observer {
       const entry = entries[0];
 
       this.resizeTimeout = window.setTimeout(() => {
-        if (size && size.width === entry.contentRect.width && size.height === entry.contentRect.height) {
+        if (
+          size &&
+          Math.abs(size.width - entry.contentRect.width) / size.width <= 0.02 &&
+          Math.abs(size.height - entry.contentRect.height) / size.height <= 0.02
+        ) {
           return;
         }
 
