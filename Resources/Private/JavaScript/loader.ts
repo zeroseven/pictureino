@@ -9,7 +9,10 @@ export class Loader {
 
   public requestImage(url: string): Promise<ImageResponse> {
     if (this.cache.has(url)) {
-      return Promise.resolve(this.cache.get(url)!);
+      const cachedImage = this.cache.get(url);
+      if (cachedImage) {
+        return Promise.resolve(cachedImage);
+      }
     }
 
     return fetch(url)

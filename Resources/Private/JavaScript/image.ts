@@ -68,7 +68,7 @@ export class Image {
       return lowerViews.length ? Math.max(...lowerViews) : 0;
     }
 
-    return 0
+    return 0;
   }
 
   private updateSource(): void {
@@ -82,16 +82,16 @@ export class Image {
         if (error.code === 1745092982) {
           this.observeElement();
         } else {
-          console.warn(error)
+          console.warn(error);
         }
       });
   }
 
   private observeElement(): void {
-      this.observer.onResize(size => {
-        this.size = size;
-        this.updateSource();
-      }, this.size)
+    this.observer.onResize(size => {
+      this.size = size;
+      this.updateSource();
+    }, this.size);
   }
 
   private init(): void {
@@ -102,12 +102,19 @@ export class Image {
     const picture = this.element.closest('picture') as HTMLPictureElement;
     if (picture) {
       Array.prototype.slice.call(picture.getElementsByTagName('source')).forEach((source: HTMLSourceElement) => {
-        const view = parseInt(source.getAttribute('media')!.match(/\d+/)![0], 10);
-
-        view && (this.sources[view] = source);
-      })
+        const mediaAttr = source.getAttribute('media');
+        if (mediaAttr) {
+          const matches = mediaAttr.match(/\d+/);
+          if (matches && matches[0]) {
+            const view = parseInt(matches[0], 10);
+            if (view) {
+              this.sources[view] = source;
+            }
+          }
+        }
+      });
     }
 
-    this.observer.inView(() => this.updateSource())
+    this.observer.inView(() => this.updateSource());
   }
 }

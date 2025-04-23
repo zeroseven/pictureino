@@ -13,10 +13,15 @@
 		"watch": "vite build --watch --mode development",
 		"preview": "vite preview",
 		"format": "npx prettier Resources/Private/JavaScript/**/**/*.ts --no-semi --single-quote --write",
-		"uglify": "npx uglify-js Resources/Public/JavaScript/main.js --compress --mangle --output Resources/Public/JavaScript/main.js"
+		"uglify": "npx uglify-js Resources/Public/JavaScript/main.js --compress --mangle --output Resources/Public/JavaScript/main.js",
+		"lint": "eslint Resources/Private/JavaScript/**/*.ts",
+		"lint:fix": "eslint Resources/Private/JavaScript/**/*.ts --fix"
 	},
 	"devDependencies": {
 		"@types/node": "~22.14.1",
+		"@typescript-eslint/eslint-plugin": "^8.31.0",
+		"@typescript-eslint/parser": "^8.31.0",
+		"eslint": "^9.25.1",
 		"prettier": "~3.5.3",
 		"sass": "~1.86.3",
 		"typescript": "~5.8.3",

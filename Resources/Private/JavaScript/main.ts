@@ -1,5 +1,13 @@
 import { Image } from './image';
 
+declare global {
+  interface Window {
+    Picturerino: {
+      handle: (element: HTMLImageElement) => void;
+    };
+  }
+}
+
 class Picturerino {
   public static getConfig(element: HTMLImageElement): string {
     return element.getAttribute('data-config') as string;
@@ -12,6 +20,6 @@ class Picturerino {
   }
 }
 
-(window as any).Picturerino = {
-  handle: (element: HTMLImageElement) => Picturerino.handle(element)
+window.Picturerino = {
+  handle: (element: HTMLImageElement): void => Picturerino.handle(element)
 };
