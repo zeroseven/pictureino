@@ -35,8 +35,37 @@ class LogUtility
         return $this->connectionPool->getQueryBuilderForTable($table);
     }
 
-    protected function logRequest(): int
+    protected function logRequest(): ?int
     {
+        $queryBuilder = $this->getQueryBuilder(self::TABLE_REQUEST);
+
+        $existingEntry = $queryBuilder
+            ->select('uid', 'count')
+            ->from(self::TABLE_REQUEST)
+            ->where(
+                $queryBuilder->expr()->eq('identifier', $queryBuilder->createNamedParameter($this->identifier)),
+                $queryBuilder->expr()->eq('width', $queryBuilder->createNamedParameter($this->configRequest->getWidth() ?? 0)),
+                $queryBuilder->expr()->eq('height', $queryBuilder->createNamedParameter($this->configRequest->getHeight() ?? 0)),
+                $queryBuilder->expr()->eq('width_evaluated', $queryBuilder->createNamedParameter($this->metricsUtility->getWidth() ?? 0)),
+                $queryBuilder->expr()->eq('height_evaluated', $queryBuilder->createNamedParameter($this->metricsUtility->getHeight() ?? 0))
+            )
+            ->executeQuery()
+            ->fetchAssociative();
+
+        if ($existingEntry) {
+            $queryBuilder = $this->getQueryBuilder(self::TABLE_REQUEST);
+            $queryBuilder
+                ->update(self::TABLE_REQUEST)
+                ->where(
+                    $queryBuilder->expr()->eq('uid', $queryBuilder->createNamedParameter($existingEntry['uid']))
+                )
+                ->set('count', $existingEntry['count'] + 1)
+                ->set('tstamp', time())
+                ->executeStatement();
+
+            return null;
+        }
+
         $queryBuilder = $this->getQueryBuilder(self::TABLE_REQUEST);
         $queryBuilder
             ->insert(self::TABLE_REQUEST)
@@ -49,12 +78,12 @@ class LogUtility
                 'width_evaluated' => $this->metricsUtility->getWidth() ?? 0,
                 'height_evaluated' => $this->metricsUtility->getHeight() ?? 0,
                 'file' => $this->imageUtility->getFile()->getIdentifier(),
-                'count' => 0,
+                'count' => 1,
                 'tstamp' => time(),
                 'crdate' => time(),
             ])->executeStatement();
 
-        return (int) $queryBuilder->getConnection()->lastInsertId();
+        return (int)$queryBuilder->getConnection()->lastInsertId();
     }
 
     protected function logProcessedFile(int $requestId, ProcessedFile $processedFile): void
@@ -63,16 +92,16 @@ class LogUtility
         $queryBuilder
             ->insert(self::TABLE_REQUEST_PROCESSED)
             ->values([
-                'uid_local' => $requestId,
-                'uid_foreign' => $processedFile->getUid(),
+                'request' => $requestId,
+                'processedfile' => $processedFile->getUid(),
             ])->executeStatement();
     }
 
     public function log(): void
     {
-        if ($id = $this->logRequest()) {
+        if ($newRequestId = $this->logRequest()) {
             foreach ($this->imageUtility->getProcessedFiles() ?? [] as $processedFile) {
-                $this->logProcessedFile($id, $processedFile);
+                $this->logProcessedFile($newRequestId, $processedFile);
             }
         }
     }

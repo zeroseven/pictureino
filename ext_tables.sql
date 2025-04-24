@@ -13,20 +13,12 @@ CREATE TABLE tx_picturerino_request (
 		count int(11) DEFAULT '0' NOT NULL,
 
     PRIMARY KEY (uid),
-    KEY request (identifier,width,height,width_evaluated,height_evaluated),
+    KEY request (identifier, width, height, width_evaluated, height_evaluated),
 );
 
 CREATE TABLE tx_picturerino_request_processed (
 	request       int(11) unsigned DEFAULT '0' NOT NULL,
-	processed     int(11) unsigned DEFAULT '0' NOT NULL,
+	processedfile     int(11) unsigned DEFAULT '0' NOT NULL,
 
-	PRIMARY KEY (request, processed)
-);
-
-CREATE TABLE tx_picturerino_request_ip (
-	request       int(11) unsigned DEFAULT '0' NOT NULL,
-	ip     				varchar(255) DEFAULT '' NOT NULL,
-	crdate 				int(11) unsigned DEFAULT '0' NOT NULL,
-
-	PRIMARY KEY (request, ip)
+	PRIMARY KEY (request, processedfile)
 );
