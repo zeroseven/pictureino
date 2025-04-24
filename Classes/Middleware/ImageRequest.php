@@ -77,7 +77,7 @@ class ImageRequest implements MiddlewareInterface
         }
 
         $currentTime = time();
-        $requests = array_filter($_SESSION[$this->identifier] ?? [], fn($timestamp) => $currentTime - $timestamp < 3600);
+        $requests = array_filter($_SESSION[$this->identifier] ?? [], fn($timestamp) => $currentTime - $timestamp < 1200);
 
         if (count($requests) >= 10 * ($this->isRetina() ? 2 : 1)) {
             return true;
