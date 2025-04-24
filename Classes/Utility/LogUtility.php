@@ -42,14 +42,14 @@ class LogUtility
             ->insert(self::TABLE_REQUEST)
             ->values([
                 'identifier' => $this->identifier,
-                'width' => $this->configRequest->getWidth(),
-                'height' => $this->configRequest->getHeight(),
-                'viewport' => $this->configRequest->getViewport(),
-                'ratio' => (string) $this->metricsUtility->getAspectRatio(),
-                'width_evaluated' => $this->metricsUtility->getWidth(),
-                'height_evaluated' => $this->metricsUtility->getHeight(),
+                'width' => $this->configRequest->getWidth() ?? 0,
+                'height' => $this->configRequest->getHeight() ?? 0,
+                'viewport' => $this->configRequest->getViewport() ?? 0,
+                'ratio' => $this->metricsUtility->getAspectRatio() ?? '',
+                'width_evaluated' => $this->metricsUtility->getWidth() ?? 0,
+                'height_evaluated' => $this->metricsUtility->getHeight() ?? 0,
                 'file' => $this->imageUtility->getFile()->getIdentifier(),
-                'ip' => $_SERVER['REMOTE_ADDR'] ?? '',
+                'count' => 0,
                 'tstamp' => time(),
                 'crdate' => time(),
             ])->executeStatement();
