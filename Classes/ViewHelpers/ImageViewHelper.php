@@ -43,6 +43,7 @@ class ImageViewHelper extends AbstractViewHelper
 
         // Image rendering settings
         $this->registerArgument('aspectRatio', 'string|array', 'Set the aspect ratio of the image, or create a array for different formats like "{xs:\'1:1\', sm:\'4:3\', lg:\'16:9\'}"');
+        $this->registerArgument('freeApspectRatio', 'bool', 'Set free aspect ratio. This means that the image will be cropped to the given width and height. (This is the same than "aspectRatio=\'free\'")', false, false);
         $this->registerArgument('retina', 'bool', 'If set, the image will be rendered in retina mode. This means that the image will be rendered in double size and scaled down to the original size. This is useful for high-resolution displays.');
 
         // Some attributes for the image tag
@@ -75,6 +76,10 @@ class ImageViewHelper extends AbstractViewHelper
 
         if (!$this->aspectRatioUtiltiy->isEmpty()) {
             $config['aspectRatio'] = $this->aspectRatioUtiltiy->toArray();
+        }
+
+        if ($this->arguments['freeApspectRatio'] ?? false) {
+            $config['aspectRatio'] = 'free';
         }
 
         return EncryptionUtility::encryptConfig($config);
