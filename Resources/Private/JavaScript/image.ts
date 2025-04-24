@@ -83,13 +83,7 @@ export class Image {
           this.observeElement();
           this.element.dataset.loaded = 'true';
         }, { once: true });
-      }).catch(error => {
-        if (error.code === 1745092982) {
-          this.observeElement();
-        } else {
-          console.warn(error);
-        }
-      });
+      }).catch(this.observeElement);
   }
 
   private observeElement(): void {

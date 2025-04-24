@@ -12,7 +12,6 @@ use Psr\Http\Server\RequestHandlerInterface;
 use TYPO3\CMS\Core\Context\Context;
 use TYPO3\CMS\Core\Http\JsonResponse;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Frontend\Authentication\FrontendUserAuthentication;
 use Zeroseven\Picturerino\Entity\ConfigRequest;
 use Zeroseven\Picturerino\Utility\ImageUtility;
 use Zeroseven\Picturerino\Utility\LogUtility;
@@ -21,6 +20,11 @@ use Zeroseven\Picturerino\Utility\SettingsUtility;
 
 class ImageRequest implements MiddlewareInterface
 {
+    protected const array REQUEST_HEADERS = [
+        'cache-control' => 'no-store, no-cache, must-revalidate, max-age=0',
+        'x-robots' => 'noindex, nofollow',
+    ];
+
     protected ?ConfigRequest $configRequest = null;
     protected ?string $identifier = null;
     protected ?ImageUtility $imageUtiltiy = null;
@@ -64,16 +68,27 @@ class ImageRequest implements MiddlewareInterface
 
     protected function tooManyRequests(): bool
     {
-        if ($this->logUtility->hasExistingEntry() && !GeneralUtility::makeInstance(Context::class)->getPropertyFromAspect('backend.user', 'isLoggedIn')) {
-
-
-
+        if (GeneralUtility::makeInstance(Context::class)->getPropertyFromAspect('backend.user', 'isLoggedIn') || $this->logUtility->hasExistingEntry()) {
+            return false;
         }
+
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        $currentTime = time();
+        $requests = array_filter($_SESSION[$this->identifier] ?? [], fn($timestamp) => $currentTime - $timestamp < 3600);
+
+        if (count($requests) >= 10 * ($this->isRetina() ? 2 : 1)) {
+            return true;
+        }
+
+        $_SESSION[$this->identifier] = [...$requests, $currentTime];
 
         return false;
     }
 
-    public function processImage(): array
+    protected function processImage(): array
     {
         $this->imageUtiltiy->processImage($this->metricsUtility->getWidth(), $this->metricsUtility->getHeight());
 
@@ -92,17 +107,20 @@ class ImageRequest implements MiddlewareInterface
         return $config;
     }
 
+    protected function returnErrorResponse(string $message, int $code, int $status = null): JsonResponse
+    {
+        return new JsonResponse(['error' => [
+            'message' => $message,
+            'code' => $code,
+        ]], $status ?? 400, static::REQUEST_HEADERS);
+    }
+
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         try {
-            $headers = [
-                'cache-control' => 'no-store, no-cache, must-revalidate, max-age=0',
-                'x-robots' => 'noindex, nofollow',
-            ];
-
             if ($this->initializeConfig($request)) {
                 if ($this->tooManyRequests()) {
-                    return new JsonResponse(['error' => 'Too many requests'], 429, $headers);
+                    return $this->returnErrorResponse('Too many requests', 1310,429);
                 }
 
                 $data = [
@@ -122,13 +140,10 @@ class ImageRequest implements MiddlewareInterface
 
                 $this->logUtility->log();
 
-                return new JsonResponse($data, 200, $headers);
+                return new JsonResponse($data, 200, static::REQUEST_HEADERS);
             }
         } catch (InvalidArgumentException $e) {
-            return new JsonResponse(['error' => [
-                'message' => $e->getMessage(),
-                'code' => $e->getCode(),
-            ]], 400, $headers);
+            return $this->returnErrorResponse($e->getMessage(), $e->getCode());
         }
 
         return $handler->handle($request);
