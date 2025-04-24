@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace Zeroseven\Picturerino\Middleware;
 
+use InvalidArgumentException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use TYPO3\CMS\Core\Context\Context;
 use TYPO3\CMS\Core\Http\JsonResponse;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Frontend\Authentication\FrontendUserAuthentication;
 use Zeroseven\Picturerino\Entity\ConfigRequest;
 use Zeroseven\Picturerino\Utility\ImageUtility;
 use Zeroseven\Picturerino\Utility\LogUtility;
@@ -23,6 +26,7 @@ class ImageRequest implements MiddlewareInterface
     protected ?ImageUtility $imageUtiltiy = null;
     protected ?MetricsUtility $metricsUtility = null;
     protected ?SettingsUtility $settingsUtility = null;
+    protected ?LogUtility $logUtility = null;
 
     protected function isRetina(): bool
     {
@@ -35,18 +39,13 @@ class ImageRequest implements MiddlewareInterface
         return false;
     }
 
-    protected function initializeSettings(ServerRequestInterface $request): void
-    {
-        $this->settingsUtility = GeneralUtility::makeInstance(SettingsUtility::class, $request);
-    }
-
     protected function initializeConfig(ServerRequestInterface $request): bool
     {
         $this->configRequest = GeneralUtility::makeInstance(ConfigRequest::class, $request);
 
         if ($this->configRequest->isValid() && $config = $this->configRequest->getConfig()) {
             $this->identifier = md5($request->getAttribute('site')?->getIdentifier() . json_encode($config['file'] ?? []));
-            $this->initializeSettings($request);
+            $this->settingsUtility = GeneralUtility::makeInstance(SettingsUtility::class, $request);
 
             $this->imageUtiltiy = GeneralUtility::makeInstance(ImageUtility::class)->setFile(
                 (string) ($config['file']['src'] ?? ''),
@@ -55,6 +54,7 @@ class ImageRequest implements MiddlewareInterface
             );
 
             $this->metricsUtility = GeneralUtility::makeInstance(MetricsUtility::class, $this->identifier, $this->configRequest, $this->imageUtiltiy, $this->settingsUtility);
+            $this->logUtility = GeneralUtility::makeInstance(LogUtility::class, $this->identifier, $this->configRequest, $this->imageUtiltiy, $this->metricsUtility);
 
             return $this->metricsUtility->validate();
         }
@@ -62,18 +62,18 @@ class ImageRequest implements MiddlewareInterface
         return false;
     }
 
-    protected function logRequest(): void
+    protected function tooManyRequests(): bool
     {
-        GeneralUtility::makeInstance(
-            LogUtility::class,
-            $this->metricsUtility->getIdentifier(),
-            $this->configRequest,
-            $this->imageUtiltiy,
-            $this->metricsUtility
-        )?->log();
+        if ($this->logUtility->hasExistingEntry() && !GeneralUtility::makeInstance(Context::class)->getPropertyFromAspect('backend.user', 'isLoggedIn')) {
+
+
+
+        }
+
+        return false;
     }
 
-    public function getAttributes(): array
+    public function processImage(): array
     {
         $this->imageUtiltiy->processImage($this->metricsUtility->getWidth(), $this->metricsUtility->getHeight());
 
@@ -101,8 +101,12 @@ class ImageRequest implements MiddlewareInterface
             ];
 
             if ($this->initializeConfig($request)) {
+                if ($this->tooManyRequests()) {
+                    return new JsonResponse(['error' => 'Too many requests'], 429, $headers);
+                }
+
                 $data = [
-                    'processed' => $this->getAttributes(),
+                    'processed' => $this->processImage(),
                     'view' => $this->configRequest->getViewport(),
                 ];
 
@@ -116,11 +120,11 @@ class ImageRequest implements MiddlewareInterface
                     $data['debug']['request']['config']['file'] = $this->metricsUtility->getIdentifier();
                 }
 
-                $this->logRequest();
+                $this->logUtility->log();
 
                 return new JsonResponse($data, 200, $headers);
             }
-        } catch (\InvalidArgumentException $e) {
+        } catch (InvalidArgumentException $e) {
             return new JsonResponse(['error' => [
                 'message' => $e->getMessage(),
                 'code' => $e->getCode(),
