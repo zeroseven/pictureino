@@ -80,17 +80,20 @@ export class Image {
         sourceKey ? this.updateSourceTag(sourceKey, result) : this.updateImage(result);
 
         this.element.addEventListener('load', () =>{
-          this.observeElement();
           this.element.dataset.loaded = 'true';
+          setTimeout(this.observeElement, 1000);
         }, { once: true });
-      }).catch(this.observeElement);
+      }).catch(() => {
+        this.element.dataset.loaded = 'true';
+        setTimeout(this.observeElement, 1000);
+      });
   }
 
   private observeElement(): void {
     this.observer.onResize(size => {
       this.size = size;
       this.updateSource();
-    }, this.size);
+    }, this.size)
   }
 
   private init(): void {
