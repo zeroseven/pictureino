@@ -22,6 +22,15 @@
         "security": {
           "validation": "Validates image requests for security",
           "logging": "Records all image requests",
+          "rateLimiting": {
+            "type": "Session-based limiting for frontend requests",
+            "limit": "100 requests per hour",
+            "scope": "PHP native session storage"
+          },
+          "requestDifferentiation": {
+            "backend": "Encrypted config hash from ViewHelper",
+            "frontend": "Direct API requests with rate limiting"
+          },
           "headers": {
             "cache-control": "no-store, no-cache, must-revalidate",
             "x-robots": "noindex, nofollow"
@@ -30,6 +39,11 @@
         "metricsUtility": {
           "function": "Determines optimal image size",
           "caching": "Uses frequently requested sizes",
+          "metrics": {
+            "countAggregation": "Sums up count values of similar dimensions",
+            "similarSizes": "Groups requests within defined size range",
+            "optimization": "Prioritizes most frequently used dimensions"
+          },
           "stepSize": 50,
           "sizeRange": [-5, 30]
         }
@@ -77,12 +91,22 @@
       "dimensionLimits": "Checks against configured maximum size",
       "encryption": "Encrypted image configuration"
     },
+    "requestControl": {
+      "sessionLimiting": {
+        "type": "PHP native session tracking",
+        "limit": "100 requests per hour",
+        "cleanup": "Auto-removes requests older than 1 hour"
+      },
+      "backendBypass": "Backend users exempt from limits"
+    },
     "logging": {
       "table": "tx_picturerino_request",
-      "metrics": "Stores usage statistics for image sizes"
+      "metrics": {
+        "storage": "Stores usage statistics for image sizes",
+        "aggregation": "Combines counts for similar dimensions"
+      }
     },
     "validation": "Input validation on all levels",
-    "logging": "Comprehensive request tracking",
     "encryption": "Config parameter encryption"
   },
   "requirements": {
