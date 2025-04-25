@@ -92,6 +92,9 @@ class MetricsUtility
                 $queryBuilder->createNamedParameter(self::SIMILAR_SIZE_RANGE[0]) . ' AND ' .
                 $queryBuilder->createNamedParameter(self::SIMILAR_SIZE_RANGE[1])
             )
+            ->andWhere(
+                $queryBuilder->expr()->eq('aspect_ratio', $queryBuilder->createNamedParameter((string)$this->aspectRatio))
+            )
             ->groupBy('width', 'height', 'width_diff', 'height_diff')
             ->orderBy('total_count', 'DESC')
             ->addOrderBy('width_diff', 'ASC')
