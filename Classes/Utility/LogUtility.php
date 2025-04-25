@@ -7,6 +7,7 @@ namespace Zeroseven\Picturerino\Utility;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\Resource\ProcessedFile;
+use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use Zeroseven\Picturerino\Entity\ConfigRequest;
 
@@ -61,11 +62,17 @@ class LogUtility
         return $this->existingEntry;
     }
 
-    public function hasExistingEntry(): bool
+    protected function getExtensionVersion(): string
     {
-        $existingEntry = $this->getExistingEntry();
+        $_EXTKEY = 'picturerino';
 
-        return $existingEntry && (int)($existingEntry['uid'] ?? 0) > 0;
+        if (($path = ExtensionManagementUtility::extPath($_EXTKEY, 'ext_emconf.php')) && file_exists($path)) {
+            include $path;
+
+            return $EM_CONF[$_EXTKEY]['version'] ?? '';
+        }
+
+        return '';
     }
 
     protected function countRequest(): void
@@ -83,6 +90,13 @@ class LogUtility
         }
     }
 
+    public function hasExistingEntry(): bool
+    {
+        $existingEntry = $this->getExistingEntry();
+
+        return $existingEntry && (int)($existingEntry['uid'] ?? 0) > 0;
+    }
+
     protected function createRequest(): int
     {
         $queryBuilder = $this->getQueryBuilder(self::TABLE_REQUEST);
@@ -98,6 +112,7 @@ class LogUtility
                 'height_evaluated' => $this->metricsUtility->getHeight() ?? 0,
                 'file' => $this->imageUtility->getFile()->getIdentifier(),
                 'count' => 1,
+                'version' => $this->getExtensionVersion(),
                 'tstamp' => time(),
                 'crdate' => time(),
             ])->executeStatement();
