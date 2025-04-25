@@ -87,23 +87,23 @@ class AspectRatioUtility
     }
 
     /** @throws \Exception */
-    public function setAspectRatios(mixed $input): self
+    public function set(mixed $input): self
     {
         if (is_array($input) && count($input) > 0) {
             foreach ($input as $view => $ratio) {
-                $this->addAspectRatio($ratio, $view, false);
+                $this->add($ratio, $view, false);
             }
 
             return $this->sortAspectRatios();
         }
 
-        $this->addAspectRatio($input, 0);
+        $this->add($input, 0);
 
         return $this;
     }
 
     /** @throws \Exception */
-    public function addAspectRatio(mixed $asepectRatio, mixed $view = null, bool $sortAspectRatios = true): self
+    public function add(mixed $asepectRatio, mixed $view = null, bool $sortAspectRatios = true): self
     {
         if (!empty($asepectRatio)) {
             $breakpoint = $this->mapBreakpoint($view ?? 0);
@@ -115,7 +115,7 @@ class AspectRatioUtility
     }
 
     /** @throws \Exception */
-    public function removeAspectRatio(mixed $view): self
+    public function remove(mixed $view): self
     {
         $breakpoint = $this->mapBreakpoint($view);
 
@@ -134,7 +134,7 @@ class AspectRatioUtility
 
     public function isEmpty(): bool
     {
-        return count($this->aspectRatios) <= 1 && null === $this->aspectRatios[0];
+        return empty($this->aspectRatios[0]) && count($this->aspectRatios) <= 1;
     }
 
     public function count(): int

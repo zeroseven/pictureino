@@ -93,7 +93,7 @@ class LogUtility
                 'width' => $this->configRequest->getWidth() ?? 0,
                 'height' => $this->configRequest->getHeight() ?? 0,
                 'viewport' => $this->configRequest->getViewport() ?? 0,
-                'ratio' => $this->metricsUtility->getAspectRatio() ?? '',
+                'aspect_ratio' => $this->metricsUtility->getAspectRatio() ?? '',
                 'width_evaluated' => $this->metricsUtility->getWidth() ?? 0,
                 'height_evaluated' => $this->metricsUtility->getHeight() ?? 0,
                 'file' => $this->imageUtility->getFile()->getIdentifier(),

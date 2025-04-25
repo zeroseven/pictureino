@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace Zeroseven\Picturerino\Entity;
 
+use TYPO3\CMS\Core\Resource\FileInterface;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\MathUtility;
 
 class AspectRatio
 {
-    protected int $x = 1;
-    protected int $y = 1;
+    protected ?int $x = null;
+    protected ?int $y = null;
 
     public function __construct(?int $x = null, ?int $y = null)
     {
@@ -69,12 +70,22 @@ class AspectRatio
     public function set(...$input): self
     {
         if (1 === count($input)) {
-            if (is_string($input[0]) && $aspectRatio = self::splitString($input[0])) {
+            $value = $input[0];
+
+            if($value === null || $value === '') {
+                return $this->setX(null)->setY(null);
+            }
+
+            if (is_string($value) && $aspectRatio = self::splitString($value)) {
                 return $this->setX($aspectRatio[0])->setY($aspectRatio[1])->reduce();
             }
 
-            if (is_array($input[0])) {
-                return $this->set(...$input[0]);
+            if (is_array($value)) {
+                return $this->set(...$value);
+            }
+
+            if ($value instanceof FileInterface) {
+                return $this->set($value->getProperty('width'), $value->getProperty('height'));
             }
         }
 
@@ -102,6 +113,10 @@ class AspectRatio
 
     public function __toString(): string
     {
+        if (null === $this->x || null === $this->y) {
+            return '';
+        }
+
         return $this->x . ':' . $this->y;
     }
 }

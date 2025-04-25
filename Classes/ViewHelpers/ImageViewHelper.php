@@ -8,6 +8,7 @@ use TYPO3\CMS\Core\Resource\File;
 use TYPO3\CMS\Core\Resource\FileReference;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractViewHelper;
+use Zeroseven\Picturerino\Entity\AspectRatio;
 use Zeroseven\Picturerino\Utility\AspectRatioUtility;
 use Zeroseven\Picturerino\Utility\EncryptionUtility;
 use Zeroseven\Picturerino\Utility\ImageUtility;
@@ -43,6 +44,7 @@ class ImageViewHelper extends AbstractViewHelper
 
         // Image rendering settings
         $this->registerArgument('aspectRatio', 'string|array', 'Set the aspect ratio of the image, or create a array for different formats like "{xs:\'1:1\', sm:\'4:3\', lg:\'16:9\'}"');
+        $this->registerArgument('freeAspectRatio', 'bool', 'Set free aspect ratio. This means that the image will be cropped to the given width and height. (This is the same than "aspectRatio=\'free\'")', false, false);
         $this->registerArgument('retina', 'bool', 'If set, the image will be rendered in retina mode. This means that the image will be rendered in double size and scaled down to the original size. This is useful for high-resolution displays.');
 
         // Some attributes for the image tag
@@ -80,6 +82,23 @@ class ImageViewHelper extends AbstractViewHelper
         return EncryptionUtility::encryptConfig($config);
     }
 
+    protected function determineAspectRatio(): AspectRatioUtility
+    {
+        if ($this->arguments['freeAspectRatio'] ?? false) {
+            return $this->aspectRatioUtiltiy->set('');
+        }
+
+        if ($aspectRatio = $this->arguments['aspectRatio']) {
+            return $this->aspectRatioUtiltiy->set($aspectRatio);
+        }
+
+        if (($width = $this->arguments['width']) && $height = $this->arguments['height']) {
+            return $this->aspectRatioUtiltiy->add([$width, $height], 0);
+        }
+
+        return $this->aspectRatioUtiltiy->add($this->imageUtiltiy->getFile(), 0);
+    }
+
     /** @throws \Exception */
     public function render(): string
     {
@@ -89,13 +108,7 @@ class ImageViewHelper extends AbstractViewHelper
             $this->arguments['treatIdAsReference'] ?? false
         );
 
-        if (($width = $this->arguments['width']) && $height = $this->arguments['height']) {
-            $this->aspectRatioUtiltiy->addAspectRatio([$width, $height], 0);
-        }
-
-        if ($aspectRatio = $this->arguments['aspectRatio']) {
-            $this->aspectRatioUtiltiy->setAspectRatios($aspectRatio);
-        }
+        $this->determineAspectRatio();
 
         $tagUtility = GeneralUtility::makeInstance(TagUtility::class, $this->imageUtiltiy, $this->aspectRatioUtiltiy)
             ->addAttribute('data-config', $this->createEncryptionHash())
@@ -106,7 +119,7 @@ class ImageViewHelper extends AbstractViewHelper
             ->addAttribute('style', $this->arguments['style'])
             ->addAttribute('onload', 'Picturerino.handle(this)');
 
-        return (1 === $this->aspectRatioUtiltiy->count()
+        return ($this->aspectRatioUtiltiy->count() <= 1
             ? $tagUtility->renderImg(static::FALLBACK_WIDTH)
             : $tagUtility->renderPicture(static::FALLBACK_WIDTH))
             . "\n" . $tagUtility->structuredData(static::SEO_CONTENT_WIDTH);
