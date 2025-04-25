@@ -1,20 +1,7 @@
 import { ImageResponse } from './types';
 
 export class Loader {
-  private cache: Map<string, ImageResponse>;
-
-  constructor() {
-    this.cache = new Map();
-  }
-
   public requestImage(url: string): Promise<ImageResponse> {
-    if (this.cache.has(url)) {
-      const cachedImage = this.cache.get(url);
-      if (cachedImage) {
-        return Promise.resolve(cachedImage);
-      }
-    }
-
     return fetch(url)
       .then(async response => {
         const data = await response.json();
@@ -34,17 +21,5 @@ export class Loader {
 
         return data;
       })
-      .then((config: ImageResponse) => {
-        this.cache.set(url, config);
-        return config;
-      })
-  }
-
-  public clearCache(): void {
-    this.cache.clear();
-  }
-
-  public removeFromCache(url: string): void {
-    this.cache.delete(url);
   }
 }
