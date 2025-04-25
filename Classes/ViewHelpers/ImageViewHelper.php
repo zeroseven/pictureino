@@ -93,10 +93,10 @@ class ImageViewHelper extends AbstractViewHelper
         }
 
         if (($width = $this->arguments['width']) && $height = $this->arguments['height']) {
-            return $this->aspectRatioUtiltiy->addAspectRatio([$width, $height], 0);
+            return $this->aspectRatioUtiltiy->add([$width, $height], 0);
         }
 
-        return $this->aspectRatioUtiltiy->set($this->imageUtiltiy->getFile());
+        return $this->aspectRatioUtiltiy->add($this->imageUtiltiy->getFile(), 0);
     }
 
     /** @throws \Exception */
@@ -119,7 +119,7 @@ class ImageViewHelper extends AbstractViewHelper
             ->addAttribute('style', $this->arguments['style'])
             ->addAttribute('onload', 'Picturerino.handle(this)');
 
-        return (1 === $this->aspectRatioUtiltiy->count()
+        return ($this->aspectRatioUtiltiy->count() <= 1
             ? $tagUtility->renderImg(static::FALLBACK_WIDTH)
             : $tagUtility->renderPicture(static::FALLBACK_WIDTH))
             . "\n" . $tagUtility->structuredData(static::SEO_CONTENT_WIDTH);
