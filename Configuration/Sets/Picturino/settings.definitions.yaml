@@ -9,12 +9,12 @@ settings:
     category: Picturerino.settings
     label: 'Breakpoints'
     description: 'Define as many breakpoints as you need. The default breakpoints are based on Bootstrap. You can use the following format: "alias: value".'
-  picturerino.image_max_width:
+  picturerino.maxImageDimensions:
     type: int
     default: '2000'
     category: Picturerino.settings
-    label: 'Max image width (px)'
-    description: 'The maximum width of processed images. This is used to calculate the size of the image. The default value is 2000 (px).'
+    label: 'The maximum height or width (px)'
+    description: 'The maximum width or height of processed images. This is used to calculate the size of the image. The default value is 2000 (px).'
   picturerino.retina:
     type: bool
     default: 0

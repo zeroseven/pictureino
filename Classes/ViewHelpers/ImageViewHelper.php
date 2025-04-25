@@ -79,10 +79,6 @@ class ImageViewHelper extends AbstractViewHelper
             $config['aspectRatio'] = $this->aspectRatioUtiltiy->toArray();
         }
 
-        if ($this->arguments['freeAspectRatio'] ?? false) {
-            $config['aspectRatio'] = 'free';
-        }
-
         return EncryptionUtility::encryptConfig($config);
     }
 

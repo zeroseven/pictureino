@@ -32,7 +32,7 @@ class MetricsUtility
         $this->imageUtility = $imageUtility;
         $this->settingsUtility = $settingsUtility;
         $this->aspectRatio = GeneralUtility::makeInstance(AspectRatioUtility::class)
-            ->setAspectRatios($configRequest->getConfig()['aspectRatio'] ?? null)
+            ->set($configRequest->getConfig()['aspectRatio'] ?? null)
             ->getAspectForWidth($this->configRequest->getViewport());
         $this->connection = GeneralUtility::makeInstance(ConnectionPool::class)->getConnectionForTable(self::TABLE_NAME);
 
@@ -54,9 +54,10 @@ class MetricsUtility
             throw new \InvalidArgumentException('Width or height must be greater than zero.', 1745092984);
         }
 
-        $maxWidth = (int) ($this->configRequest->getConfig()['image_max_width'] ?? $this->settingsUtility->get('image_max_width'));
-        if (0 === $maxWidth || $this->configRequest->getWidth() > $maxWidth) {
-            throw new \InvalidArgumentException('Width exceeds the maximum width.', 1745092985);
+        if($maxImageDimensions = (int)($this->configRequest->getConfig()['maxImageDimensions'] ?? $this->settingsUtility->get('maxImageDimensions'))) {
+            if ($this->configRequest->getWidth() > $maxImageDimensions || $this->configRequest->getHeight() > $maxImageDimensions) {
+                throw new \InvalidArgumentException('Dimensions exceeds the maximum lenght.', 1745092985);
+            }
         }
 
         return true;
@@ -65,6 +66,7 @@ class MetricsUtility
     protected function evaluate(): void
     {
         $requestedWidth = $this->configRequest->getWidth();
+        $requestedHeight = $this->configRequest->getHeight();
 
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
             ->getQueryBuilderForTable(self::TABLE_NAME);
@@ -72,8 +74,10 @@ class MetricsUtility
         $result = $queryBuilder
             ->selectLiteral(
                 'width',
+                'height',
                 'COUNT(*) AS frequency',
-                'ABS(width - ' . $queryBuilder->createNamedParameter($requestedWidth) . ') AS width_diff'
+                'ABS(width - ' . $queryBuilder->createNamedParameter($requestedWidth) . ') AS width_diff',
+                'ABS(height - ' . $queryBuilder->createNamedParameter($requestedHeight) . ') AS height_diff'
             )
             ->from(self::TABLE_NAME)
             ->where(
@@ -84,18 +88,26 @@ class MetricsUtility
                 $queryBuilder->createNamedParameter(self::SIMILAR_SIZE_RANGE[0]) . ' AND ' .
                 $queryBuilder->createNamedParameter(self::SIMILAR_SIZE_RANGE[1])
             )
-            ->groupBy('width', 'height', 'width_diff')
+            ->andWhere(
+                'height - ' . $queryBuilder->createNamedParameter($requestedHeight) . ' BETWEEN ' .
+                $queryBuilder->createNamedParameter(self::SIMILAR_SIZE_RANGE[0]) . ' AND ' .
+                $queryBuilder->createNamedParameter(self::SIMILAR_SIZE_RANGE[1])
+            )
+            ->groupBy('width', 'height', 'width_diff', 'height_diff')
             ->orderBy('frequency', 'DESC')
             ->addOrderBy('width_diff', 'ASC')
+            ->addOrderBy('height_diff', 'ASC')
             ->setMaxResults(1)
             ->executeQuery()
             ->fetchAssociative();
 
-        // Use found metrics or calculate new size
-        if ($result && isset($result['width'])) {
-            $this->width = (int) $result['width'];
+        // Use found metrics or calculate new sizes
+        if ($result && isset($result['width'], $result['height'])) {
+            $this->width = (int)$result['width'];
+            $this->height = (int)$result['height'];
         } else {
-            $this->width = (int) (ceil($requestedWidth / self::STEP_SIZE) * self::STEP_SIZE);
+            $this->width = (int)(ceil($requestedWidth / self::STEP_SIZE) * self::STEP_SIZE);
+            $this->height = $this->aspectRatio?->getHeight($this->width) ?? (int)(ceil($requestedHeight / self::STEP_SIZE) * self::STEP_SIZE);
         }
     }
 
@@ -111,7 +123,7 @@ class MetricsUtility
 
     public function getHeight(): ?int
     {
-        return $this->aspectRatio?->getHeight($this->width);
+        return $this->height;
     }
 
     public function getAspectRatio(): ?AspectRatio
