@@ -94,6 +94,8 @@ class MetricsUtility
             )
             ->groupBy('width', 'height', 'width_diff', 'height_diff')
             ->orderBy('total_count', 'DESC')
+            ->addOrderBy('width_diff', 'ASC')
+            ->addOrderBy('height_diff', 'ASC')
             ->setMaxResults(1)
             ->executeQuery()
             ->fetchAssociative();
