@@ -72,10 +72,9 @@ class MetricsUtility
             ->getQueryBuilderForTable(self::TABLE_NAME);
 
         $result = $queryBuilder
-            ->selectLiteral(
-                'width',
-                'height',
-                'COUNT(*) AS frequency',
+            ->select('width', 'height')
+            ->addSelectLiteral(
+                'SUM(count) as total_count',
                 'ABS(width - ' . $queryBuilder->createNamedParameter($requestedWidth) . ') AS width_diff',
                 'ABS(height - ' . $queryBuilder->createNamedParameter($requestedHeight) . ') AS height_diff'
             )
@@ -94,9 +93,7 @@ class MetricsUtility
                 $queryBuilder->createNamedParameter(self::SIMILAR_SIZE_RANGE[1])
             )
             ->groupBy('width', 'height', 'width_diff', 'height_diff')
-            ->orderBy('frequency', 'DESC')
-            ->addOrderBy('width_diff', 'ASC')
-            ->addOrderBy('height_diff', 'ASC')
+            ->orderBy('total_count', 'DESC')
             ->setMaxResults(1)
             ->executeQuery()
             ->fetchAssociative();
