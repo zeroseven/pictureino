@@ -110,7 +110,7 @@ class TagUtility
 
     public function structuredData(int $width): string
     {
-        $processedFile = $this->imageUtility->processImage($width);
+        $processedFile = $this->imageUtility->processImage($width, null, true);
 
         $script = GeneralUtility::makeInstance(TagBuilder::class, 'script');
         $script->addAttribute('type', 'application/ld+json');
