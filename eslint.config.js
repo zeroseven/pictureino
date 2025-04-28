@@ -53,7 +53,6 @@ export default [
       'semi': ['error', 'never'],
       'quotes': ['error', 'single'],
       'indent': ['error', 2],
-      'max-len': ['error', { 'code': 120 }],
       'comma-dangle': ['error', 'always-multiline'],
       'object-curly-spacing': ['error', 'never'],
       'arrow-parens': ['error', 'as-needed'],

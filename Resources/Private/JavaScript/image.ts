@@ -8,6 +8,7 @@ export class Image {
   private observer: Observer
   private loader: Loader
   private sources: SourceMap
+  private webpSupport: boolean
   private size: ElementSize
 
   constructor(element: HTMLImageElement, config: string) {
@@ -16,6 +17,7 @@ export class Image {
     this.observer = new Observer(this.element)
     this.loader = new Loader()
     this.sources = {}
+    this.webpSupport = false
     this.size = {
       width: this.element.offsetWidth,
       height: this.element.offsetHeight,
@@ -25,13 +27,22 @@ export class Image {
     this.init()
   }
 
+  private checkWebpSupport(): void {
+    const source = 'data:image/webp;base64,UklGRkoAAABXRUJQVlA4WAoAAAAQAAAAAAAAAAAAQUxQSAwAAAARBxAR/Q9ERP8DAABWUDggGAAAABQBAJ0BKgEAAQAAAP4AAA3AAP7mtQAAAA=='
+    const img = document.createElement('img') as HTMLImageElement
+
+    img.onload = (): void => { this.webpSupport = (img.width > 0) && (img.height > 0) }
+    img.src = source
+  }
+
   private getRequestUri(): string {
+    const webp = this.webpSupport ? 'webp/' : ''
     const width = parseInt(this.size.width.toString(), 10)
     const height = parseInt(this.size.height.toString(), 10)
     const view = Math.round(window.innerWidth)
     const retina = window.devicePixelRatio > 1 ? 2 : 1
 
-    return `/-/img/${width}x${height}/${view}${retina}x${this.config}/`
+    return `/-/picturerino/img/${view}${retina}x${this.config}/${webp}${width}x${height}/`
   }
 
   private updateImage(imageResponse: ImageResponse): void {
@@ -97,6 +108,8 @@ export class Image {
   }
 
   private init(): void {
+    this.checkWebpSupport();
+
     ['onload', 'srcset'].forEach(attr => {
       this.element.removeAttribute(attr);3
     })

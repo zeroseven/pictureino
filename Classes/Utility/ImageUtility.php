@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Zeroseven\Picturerino\Utility;
 
+use TYPO3\CMS\Core\Imaging\GraphicalFunctions;
 use TYPO3\CMS\Core\Resource\FileInterface;
 use TYPO3\CMS\Core\Resource\ProcessedFile;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -13,11 +14,17 @@ class ImageUtility
 {
     protected ImageService $imageService;
     protected FileInterface $file;
-    protected ?array $processedFiles = [];
+    protected ?array $processedFiles;
+    protected ?bool $webpSupported;
 
     public function __construct()
     {
         $this->imageService = GeneralUtility::makeInstance(ImageService::class);
+    }
+
+    protected function isWebpSupported(): bool
+    {
+        return $this->webpSupported ??= GeneralUtility::makeInstance(GraphicalFunctions::class)?->webpSupportAvailable();
     }
 
     public function getFile(): FileInterface
@@ -47,18 +54,18 @@ class ImageUtility
     }
 
     /** @throws \Exception */
-    public function processImage(int|string|null $width = null, int|string|null $height = null, ?bool $keepAspectRatio = null, ?array $processingInstructions = null): ProcessedFile
+    public function processImage(int|string|null $width = null, int|string|null $height = null, bool $forceWebp = null, ?array $processingInstructions = null): ProcessedFile
     {
         if (null === $this->file) {
             throw new \Exception('No image. Please call "setFile" method, to set an image file', 1382284105);
         }
 
-        $mode = !$keepAspectRatio && $width && $height ? 'c' : 'm';
-
         return $this->processedFiles[] = $this->imageService->applyProcessingInstructions($this->file, array_merge($processingInstructions ?? [], [
-            'width' => $width ? ($width . $mode) : null,
-            'height' => $height ? ($height . $mode) : null,
-        ]));
+            'width' => $width ? ($width . 'c') : null,
+            'height' => $height ? ($height . 'c') : null,
+        ], $forceWebp && $this->isWebpSupported() ? [
+            'fileExtension' => 'webp',
+        ] : []));
     }
 
     /** @throws \Exception */
@@ -89,10 +96,14 @@ class ImageUtility
 
     public function getLastProcessedFile(): ?ProcessedFile
     {
-        return end($this->processedFiles) ?: null;
+        if (null === $this->processedFiles) {
+            return null;
+        }
+
+        return end($this->processedFiles);
     }
 
-    public function getProcessedFiles(): array
+    public function getProcessedFiles(): ?array
     {
         return $this->processedFiles;
     }
