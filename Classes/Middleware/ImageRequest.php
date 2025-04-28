@@ -43,6 +43,35 @@ class ImageRequest implements MiddlewareInterface
         return false;
     }
 
+    protected function checkWebpCompatibilty(): bool
+    {
+        if ($webpSupport = $this->configRequest->getWebpSupport()) {
+            $extension = $this->imageUtiltiy->getFile()->getProperty('extension');
+            $supportedTypes = array_map(static function($type) {
+                $keys = [
+                    'Ly' => 'lossy',
+                    'Ls' => 'lossless',
+                    'Aa' => 'alpha',
+                    'An' => 'animation',
+                ];
+
+                return $keys[$type] ?? null;
+            }, preg_split('/(?=[A-Z])/', $webpSupport, -1, PREG_SPLIT_NO_EMPTY));
+
+            if ($extension === 'png') {
+                return in_array('alpha', $supportedTypes, true);
+            }
+
+            if ($extension === 'gif') {
+                return in_array('animation', $supportedTypes, true);
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
     protected function initializeConfig(ServerRequestInterface $request): bool
     {
         $this->configRequest = GeneralUtility::makeInstance(ConfigRequest::class, $request);
@@ -90,7 +119,8 @@ class ImageRequest implements MiddlewareInterface
 
     protected function processImage(): array
     {
-        $this->imageUtiltiy->processImage($this->metricsUtility->getWidth(), $this->metricsUtility->getHeight(), true);
+        $forceWebp = $this->checkWebpCompatibilty();
+        $this->imageUtiltiy->processImage($this->metricsUtility->getWidth(), $this->metricsUtility->getHeight(), $forceWebp);
 
         $config = [
             'img' => $this->imageUtiltiy->getUrl(),
@@ -99,7 +129,7 @@ class ImageRequest implements MiddlewareInterface
         ];
 
         if ($this->isRetina()) {
-            $this->imageUtiltiy->processImage($this->metricsUtility->getWidth() * 2, $this->metricsUtility->getHeight() * 2, true);
+            $this->imageUtiltiy->processImage($this->metricsUtility->getWidth() * 2, $this->metricsUtility->getHeight() * 2, $forceWebp);
 
             $config['img2x'] = $this->imageUtiltiy->getUrl();
         }

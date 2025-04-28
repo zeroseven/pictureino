@@ -57,11 +57,9 @@ class ConfigRequest
         return $this->height;
     }
 
-    public function getWebpSupport(): ?array
+    public function getWebpSupport(): ?string
     {
-        return $this->webpSupport
-            ? preg_split('/(?=[A-Z])/', $this->webpSupport, -1, PREG_SPLIT_NO_EMPTY)
-            : null;
+        return $this->webpSupport;
     }
 
     public function getViewport(): ?int

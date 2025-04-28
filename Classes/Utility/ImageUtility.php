@@ -24,8 +24,7 @@ class ImageUtility
 
     protected function isWebpSupported(): bool
     {
-        return $this->webpSupported ??= GeneralUtility::makeInstance(GraphicalFunctions::class)?->webpSupportAvailable()
-            && strpos($_SERVER['HTTP_ACCEPT'] ?? '', 'image/webp') !== false;
+        return $this->webpSupported ??= GeneralUtility::makeInstance(GraphicalFunctions::class)?->webpSupportAvailable();
     }
 
     public function getFile(): FileInterface
