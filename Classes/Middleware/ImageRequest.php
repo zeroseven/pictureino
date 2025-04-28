@@ -52,9 +52,9 @@ class ImageRequest implements MiddlewareInterface
             $this->settingsUtility = GeneralUtility::makeInstance(SettingsUtility::class, $request);
 
             $this->imageUtiltiy = GeneralUtility::makeInstance(ImageUtility::class)->setFile(
-                (string) ($config['file']['src'] ?? ''),
+                (string)($config['file']['src'] ?? ''),
                 $config['file']['image'] ?? null,
-                (bool) ($config['file']['treatIdAsReference'] ?? false)
+                (bool)($config['file']['treatIdAsReference'] ?? false)
             );
 
             $this->metricsUtility = GeneralUtility::makeInstance(MetricsUtility::class, $this->identifier, $this->configRequest, $this->imageUtiltiy, $this->settingsUtility);
@@ -90,7 +90,7 @@ class ImageRequest implements MiddlewareInterface
 
     protected function processImage(): array
     {
-        $this->imageUtiltiy->processImage($this->metricsUtility->getWidth(), $this->metricsUtility->getHeight());
+        $this->imageUtiltiy->processImage($this->metricsUtility->getWidth(), $this->metricsUtility->getHeight(), true);
 
         $config = [
             'img' => $this->imageUtiltiy->getUrl(),
@@ -99,7 +99,7 @@ class ImageRequest implements MiddlewareInterface
         ];
 
         if ($this->isRetina()) {
-            $this->imageUtiltiy->processImage($this->metricsUtility->getWidth() * 2, $this->metricsUtility->getHeight() * 2);
+            $this->imageUtiltiy->processImage($this->metricsUtility->getWidth() * 2, $this->metricsUtility->getHeight() * 2, true);
 
             $config['img2x'] = $this->imageUtiltiy->getUrl();
         }
