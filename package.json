@@ -18,14 +18,14 @@
 		"lint:fix": "eslint Resources/Private/JavaScript/**/*.ts --fix"
 	},
 	"devDependencies": {
-		"@types/node": "~22.14.1",
+		"@types/node": "~22.15.2",
 		"@typescript-eslint/eslint-plugin": "^8.31.0",
 		"@typescript-eslint/parser": "^8.31.0",
 		"eslint": "^9.25.1",
 		"prettier": "~3.5.3",
-		"sass": "~1.86.3",
+		"sass": "~1.87.0",
 		"typescript": "~5.8.3",
 		"uglify-js": "~3.19.3",
-		"vite": "~6.2.6"
+		"vite": "~6.3.3"
 	}
 }
