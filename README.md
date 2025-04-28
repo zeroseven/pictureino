@@ -20,3 +20,23 @@ Simple image integration in your fluid template.
 
 </html>
 ```
+
+## Installation
+
+```bash
+composer require zeroseven/picturerino
+```
+
+## Configuration
+
+...
+
+## Commands
+
+### Cleanup processed images
+
+Remove all images of dynamic image requests and cleanup the picturerino database entries:
+
+```bash
+vendor/bin/typo3 picturerino:cleanup
+```
