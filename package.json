@@ -12,7 +12,8 @@
 		"build": "tsc && vite build && npm run uglify",
 		"watch": "vite build --watch --mode development",
 		"preview": "vite preview",
-		"format": "npx prettier Resources/Private/JavaScript/**/**/*.ts --no-semi --single-quote --write",
+		"format": "eslint Resources/Private/JavaScript/**/*.ts --fix",
+		"format:check": "eslint Resources/Private/JavaScript/**/*.ts",
 		"uglify": "npx uglify-js Resources/Public/JavaScript/main.js --compress --mangle --output Resources/Public/JavaScript/main.js",
 		"lint": "eslint Resources/Private/JavaScript/**/*.ts",
 		"lint:fix": "eslint Resources/Private/JavaScript/**/*.ts --fix"
@@ -22,7 +23,6 @@
 		"@typescript-eslint/eslint-plugin": "^8.31.0",
 		"@typescript-eslint/parser": "^8.31.0",
 		"eslint": "^9.25.1",
-		"prettier": "~3.5.3",
 		"sass": "~1.87.0",
 		"typescript": "~5.8.3",
 		"uglify-js": "~3.19.3",

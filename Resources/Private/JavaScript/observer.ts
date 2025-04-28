@@ -1,27 +1,27 @@
-import { ElementSize } from './types';
+import {ElementSize} from './types'
 
 type ResizeCallback = (size: ElementSize, observer: Observer) => void;
 type ViewCallback = (observer: Observer) => void;
 
 export class Observer {
-  private element: Element;
-  private resizeObserver: ResizeObserver | null = null;
-  private intersectionObserver: IntersectionObserver | null = null;
-  private resizeTimeout: number | null = null;
+  private element: Element
+  private resizeObserver: ResizeObserver | null = null
+  private intersectionObserver: IntersectionObserver | null = null
+  private resizeTimeout: number | null = null
 
   constructor(element: Element) {
-    this.element = element;
+    this.element = element
   }
 
   public onResize(callback: ResizeCallback, size?: ElementSize): void {
-    this.resizeObserver?.disconnect();
+    this.resizeObserver?.disconnect()
 
-    this.resizeObserver = new ResizeObserver((entries) => {
+    this.resizeObserver = new ResizeObserver(entries => {
       if (this.resizeTimeout) {
-        window.clearTimeout(this.resizeTimeout);
+        window.clearTimeout(this.resizeTimeout)
       }
 
-      const entry = entries[0];
+      const entry = entries[0]
 
       this.resizeTimeout = window.setTimeout(() => {
         if (
@@ -29,43 +29,43 @@ export class Observer {
           Math.abs(size.width - entry.contentRect.width) / size.width <= 0.02 &&
           Math.abs(size.height - entry.contentRect.height) / size.height <= 0.02
         ) {
-          return;
+          return
         }
 
         callback({
           width: entry.contentRect.width,
-          height: entry.contentRect.height
-        }, this);
+          height: entry.contentRect.height,
+        }, this)
 
-        this.resizeObserver?.disconnect();
-      }, 150);
-    });
+        this.resizeObserver?.disconnect()
+      }, 150)
+    })
 
-    this.resizeObserver.observe(this.element);
+    this.resizeObserver.observe(this.element)
   }
 
   public inView(callback: ViewCallback): void {
-    this.intersectionObserver?.disconnect();
+    this.intersectionObserver?.disconnect()
 
     this.intersectionObserver = new IntersectionObserver(
-      (entries) => {
+      entries => {
         if (entries[0].isIntersecting) {
-          callback(this);
-          this.intersectionObserver?.disconnect();
+          callback(this)
+          this.intersectionObserver?.disconnect()
         }
       },
-      { threshold: 0.1, rootMargin: '0px' }
-    );
+      {threshold: 0.1, rootMargin: '0px'},
+    )
 
-    this.intersectionObserver.observe(this.element);
+    this.intersectionObserver.observe(this.element)
   }
 
   public disconnect(): void {
     if (this.resizeTimeout) {
-      window.clearTimeout(this.resizeTimeout);
-      this.resizeTimeout = null;
+      window.clearTimeout(this.resizeTimeout)
+      this.resizeTimeout = null
     }
-    this.resizeObserver?.disconnect();
-    this.intersectionObserver?.disconnect();
+    this.resizeObserver?.disconnect()
+    this.intersectionObserver?.disconnect()
   }
 }
