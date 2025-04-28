@@ -8,7 +8,7 @@ export class Image {
   private observer: Observer
   private loader: Loader
   private sources: SourceMap
-  private webpSupport: string[]
+  private webpSupport: boolean
   private size: ElementSize
 
   constructor(element: HTMLImageElement, config: string) {
@@ -17,7 +17,7 @@ export class Image {
     this.observer = new Observer(this.element)
     this.loader = new Loader()
     this.sources = {}
-    this.webpSupport = []
+    this.webpSupport = false
     this.size = {
       width: this.element.offsetWidth,
       height: this.element.offsetHeight,
@@ -28,29 +28,21 @@ export class Image {
   }
 
   private checkWebpSupport(): void {
-    const types: {[key: string]: string} = {
-      lossy: 'UklGRiIAAABXRUJQVlA4IBYAAAAwAQCdASoBAAEADsD+JaQAA3AAAAAA',
-      lossless: 'UklGRhoAAABXRUJQVlA4TA0AAAAvAAAAEAcQERGIiP4HAA==',
-      alpha: 'UklGRkoAAABXRUJQVlA4WAoAAAAQAAAAAAAAAAAAQUxQSAwAAAARBxAR/Q9ERP8DAABWUDggGAAAABQBAJ0BKgEAAQAAAP4AAA3AAP7mtQAAAA==',
-      animation: 'UklGRlIAAABXRUJQVlA4WAoAAAASAAAAAAAAAAAAQU5JTQYAAAD/////AABBTk1GJgAAAAAAAAAAAAAAAAAAAGQAAABWUDhMDQAAAC8AAAAQBxAREYiI/gcA',
-    }
+    const source = 'data:image/webp;base64,UklGRkoAAABXRUJQVlA4WAoAAAAQAAAAAAAAAAAAQUxQSAwAAAARBxAR/Q9ERP8DAABWUDggGAAAABQBAJ0BKgEAAQAAAP4AAA3AAP7mtQAAAA=='
+    const img = document.createElement('img') as HTMLImageElement
 
-    Object.keys(types).forEach((key: string) => {
-      var img = document.createElement('img') as HTMLImageElement
-      img.onload = (): void => { (img.width > 0) && (img.height > 0) && this.webpSupport.push(key) }
-
-      img.src = 'data:image/webp;base64,' + types[key]
-    })
+    img.onload = (): void => { this.webpSupport = (img.width > 0) && (img.height > 0) }
+    img.src = source
   }
 
   private getRequestUri(): string {
+    const webp = this.webpSupport ? 'webp/' : ''
     const width = parseInt(this.size.width.toString(), 10)
     const height = parseInt(this.size.height.toString(), 10)
     const view = Math.round(window.innerWidth)
     const retina = window.devicePixelRatio > 1 ? 2 : 1
-    const webp = this.webpSupport.length ? this.webpSupport.map(key => key[0].toUpperCase() + key[key.length - 1]).join('') : ''
 
-    return `/-/img/${width}x${height}/${webp}${view}${retina}x${this.config}/`
+    return `/-/picturerino/img/${view}${retina}x${this.config}/${webp}${width}x${height}/`
   }
 
   private updateImage(imageResponse: ImageResponse): void {

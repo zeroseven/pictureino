@@ -12,9 +12,9 @@ class ConfigRequest
     protected ?array $config = null;
     protected ?int $width = null;
     protected ?int $height = null;
-    protected ?string $webpSupport = null;
     protected ?int $viewport = null;
-    protected ?bool $retina = null;
+    protected bool $retina = false;
+    protected bool $webpSupport = false;
 
     public function __construct(ServerRequestInterface $request)
     {
@@ -25,19 +25,19 @@ class ConfigRequest
     {
         if (
             // Make an simple test first ...
-            str_starts_with($path, '/-/img/')
+            str_starts_with($path, '/-/picturerino/img/')
 
-            // Path like "/-/img/200x100/LyAa10242xcHVvWmMzWDVERzFnVkRQSW==" to "200" (width), "100" (height), "LyAa" (webP Support) "1024" (viewport), "2" (retina = 2x) and "cHVvWmMzWDVERzFnVkRQSW==" (the config)
-            && preg_match('/\/-\/img\/(\d+)x(\d+)\/((?:[A-Z][a-z])+)?(\d+)([12])x([A-Za-z0-9+=]+)\/?$/', $path, $matches)
+            // Path like "/-/img/10242xcHVvWmMzWDVERzFnVkRQSW/webp/200x100/" to "1024" (viewport), "2" (retina = 2x), "cHVvWmMzWDVERzFnVkRQSW==" (the config), "webp" (webP Support), "200" (width), and "100" (height),
+            && preg_match('/\/-\/picturerino\/img\/(\d+)([12])x([A-Za-z0-9+=]+)\/(?:(webp)\/)?(\d+)x(\d+)\/?$/', $path, $matches)
 
             // Check if the config is valid
-            && $this->config = EncryptionUtility::decryptConfig($matches[6])
+            && $this->config = EncryptionUtility::decryptConfig($matches[3])
         ) {
-            $this->width = (int)$matches[1];
-            $this->height = (int)$matches[2];
-            $this->webpSupport = (string)$matches[3];
-            $this->viewport = (int)$matches[4];
-            $this->retina = 2 === (int)$matches[5];
+            $this->width = (int)$matches[5];
+            $this->height = (int)$matches[6];
+            $this->viewport = (int)$matches[1];
+            $this->retina = 2 === (int)$matches[2];
+            $this->webpSupport = 'webp' === (string)$matches[4];
 
         }
     }
@@ -57,11 +57,6 @@ class ConfigRequest
         return $this->height;
     }
 
-    public function getWebpSupport(): ?string
-    {
-        return $this->webpSupport;
-    }
-
     public function getViewport(): ?int
     {
         return $this->viewport;
@@ -70,6 +65,11 @@ class ConfigRequest
     public function isRetina(): bool
     {
         return $this->retina;
+    }
+
+    public function hasWebpSupport(): bool
+    {
+        return $this->webpSupport;
     }
 
     public function isValid(): bool
