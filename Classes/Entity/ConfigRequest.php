@@ -12,9 +12,9 @@ class ConfigRequest
     protected ?array $config = null;
     protected ?int $width = null;
     protected ?int $height = null;
+    protected ?string $webpSupport = null;
     protected ?int $viewport = null;
     protected ?bool $retina = null;
-    protected bool $isValid = false;
 
     public function __construct(ServerRequestInterface $request)
     {
@@ -24,15 +24,21 @@ class ConfigRequest
     protected function parseRequest(string $path): void
     {
         if (
-            // Path like "/-/img/200x100/10242xcHVvWmMzWDVERzFnVkRQSW==" to "200" (width), "100" (height), "1024" (viewport), "2" (retina) and "cHVvWmMzWDVERzFnVkRQSW=="
-            preg_match('/\/-\/img\/(\d+)x(\d+)\/(\d+)([12])x([A-Za-z0-9+=]+)\/?$/', $path, $matches)
-            && $this->config = EncryptionUtility::decryptConfig($matches[5])
+            // Make an simple test first ...
+            str_starts_with($path, '/-/img/')
+
+            // Path like "/-/img/200x100/LyAa10242xcHVvWmMzWDVERzFnVkRQSW==" to "200" (width), "100" (height), "LyAa" (webP Support) "1024" (viewport), "2" (retina = 2x) and "cHVvWmMzWDVERzFnVkRQSW==" (the config)
+            && preg_match('/\/-\/img\/(\d+)x(\d+)\/((?:[A-Z][a-z])+)?(\d+)([12])x([A-Za-z0-9+=]+)\/?$/', $path, $matches)
+
+            // Check if the config is valid
+            && $this->config = EncryptionUtility::decryptConfig($matches[6])
         ) {
-            $this->width = (int) $matches[1];
-            $this->height = (int) $matches[2];
-            $this->viewport = (int) $matches[3];
-            $this->retina = 2 === (int) $matches[4];
-            $this->isValid = true;
+            $this->width = (int)$matches[1];
+            $this->height = (int)$matches[2];
+            $this->webpSupport = (string)$matches[3];
+            $this->viewport = (int)$matches[4];
+            $this->retina = 2 === (int)$matches[5];
+
         }
     }
 
@@ -51,6 +57,13 @@ class ConfigRequest
         return $this->height;
     }
 
+    public function getWebpSupport(): ?array
+    {
+        return $this->webpSupport
+            ? preg_split('/(?=[A-Z])/', $this->webpSupport, -1, PREG_SPLIT_NO_EMPTY)
+            : null;
+    }
+
     public function getViewport(): ?int
     {
         return $this->viewport;
@@ -63,7 +76,10 @@ class ConfigRequest
 
     public function isValid(): bool
     {
-        return $this->isValid;
+        return $this->width !== null
+            && $this->height !== null
+            && $this->viewport !== null
+            && $this->config !== null;
     }
 
     public function toArray(): array
