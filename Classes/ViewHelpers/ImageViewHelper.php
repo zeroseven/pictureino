@@ -8,7 +8,6 @@ use TYPO3\CMS\Core\Resource\File;
 use TYPO3\CMS\Core\Resource\FileReference;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractViewHelper;
-use Zeroseven\Pictureino\Entity\AspectRatio;
 use Zeroseven\Pictureino\Utility\AspectRatioUtility;
 use Zeroseven\Pictureino\Utility\EncryptionUtility;
 use Zeroseven\Pictureino\Utility\ImageUtility;
@@ -37,7 +36,7 @@ class ImageViewHelper extends AbstractViewHelper
         $this->registerArgument('src', 'string', 'a path to a file, a combined FAL identifier or an uid (int). If $treatIdAsReference is set, the integer is considered the uid of the sys_file_reference record. If you already got a FAL object, consider using the $image parameter instead', false, '');
         $this->registerArgument('treatIdAsReference', 'bool', 'given src argument is a sys_file_reference record', false, false);
         $this->registerArgument('image', 'object', 'a FAL object (\\TYPO3\\CMS\\Core\\Resource\\File or \\TYPO3\\CMS\\Core\\Resource\\FileReference)');
-        $this->registerArgument('cropVariant', 'string', 'select a cropping variant, in case multiple croppings have been specified or stored in FileReference', false, 'default');
+        $this->registerArgument('cropVariant', 'string', 'select a cropping variant, in case multiple croppings have been specified or stored in FileReference');
         $this->registerArgument('fileExtension', 'string', 'Custom file extension to use');
         $this->registerArgument('width', 'string', 'width of the image. This can be a numeric value representing the fixed width of the image in pixels. But you can also perform simple calculations by adding "m" or "c" to the value. See imgResource.width in the TypoScript Reference on https://docs.typo3.org/permalink/t3tsref:confval-imgresource-width for possible options.');
         $this->registerArgument('height', 'string', 'height of the image. This can be a numeric value representing the fixed height of the image in pixels. But you can also perform simple calculations by adding "m" or "c" to the value. See imgResource.height in the TypoScript Reference https://docs.typo3.org/permalink/t3tsref:confval-imgresource-height for possible options.');
@@ -72,11 +71,15 @@ class ImageViewHelper extends AbstractViewHelper
         }
 
         if (null !== $this->arguments['retina']) {
-            $config['retina'] = (bool) $this->arguments['retina'];
+            $config['retina'] = (bool)$this->arguments['retina'];
         }
 
         if (!$this->aspectRatioUtiltiy->isEmpty()) {
             $config['aspectRatio'] = $this->aspectRatioUtiltiy->toArray();
+        }
+
+        if ($cropVariant = $this->arguments['cropVariant'] ?? null) {
+            $config['cropVariant'] = $cropVariant;
         }
 
         return EncryptionUtility::encryptConfig($config);
@@ -107,6 +110,10 @@ class ImageViewHelper extends AbstractViewHelper
             $this->arguments['image'],
             $this->arguments['treatIdAsReference'] ?? false
         );
+
+        if ($cropVariant = $this->arguments['cropVariant']) {
+            $this->imageUtiltiy->setCropVariant($cropVariant);
+        }
 
         $this->determineAspectRatio();
 
