@@ -57,6 +57,10 @@ class ImageRequest implements MiddlewareInterface
                 (bool)($config['file']['treatIdAsReference'] ?? false)
             );
 
+            if ($cropVariant = $config['cropVariant'] ?? null) {
+                $this->imageUtiltiy->setCropVariant($cropVariant);
+            }
+
             $this->metricsUtility = GeneralUtility::makeInstance(MetricsUtility::class, $this->identifier, $this->configRequest, $this->imageUtiltiy, $this->settingsUtility);
             $this->logUtility = GeneralUtility::makeInstance(LogUtility::class, $this->identifier, $this->configRequest, $this->imageUtiltiy, $this->metricsUtility);
 
