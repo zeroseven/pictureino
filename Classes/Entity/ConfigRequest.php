@@ -87,6 +87,8 @@ class ConfigRequest
             'width' => $this->width,
             'height' => $this->height,
             'viewport' => $this->viewport,
+            'retina' => $this->retina,
+            'webpSupport' => $this->webpSupport
         ];
     }
 }

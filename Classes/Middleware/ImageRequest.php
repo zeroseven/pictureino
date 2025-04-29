@@ -118,6 +118,8 @@ class ImageRequest implements MiddlewareInterface
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         try {
+            $requestStartTime = microtime(true);
+
             if ($this->initializeConfig($request)) {
                 if ($this->tooManyRequests()) {
                     return $this->returnErrorResponse('Too many requests', 1310,429);
@@ -132,6 +134,7 @@ class ImageRequest implements MiddlewareInterface
                     $data['debug'] = [
                         'request' => $this->configRequest->toArray(),
                         'metrics' => $this->metricsUtility->toArray(),
+                        'time' => round((microtime(true) - $requestStartTime) * 1000, 2) . 'ms',
                     ];
 
                     // Override the file config with the identifier
