@@ -5,8 +5,8 @@ defined('TYPO3') || die('🖼️');
 $GLOBALS['TCA']['sys_file_reference']['columns']['crop']['config']['type'] = 'imageManipulation';
 
 // Add allowed aspect ratios
-$GLOBALS['TCA']['sys_file_reference']['columns']['crop']['config']['cropVariants']['default'] = [
-    'title' => 'LLL:EXT:core/Resources/Private/Language/locallang_wizards.xlf:imwizard.crop_variant.default',
+$GLOBALS['TCA']['sys_file_reference']['columns']['crop']['config']['cropVariants'][\Zeroseven\Pictureino\Utility\ImageUtility::DEFAULT_CROP_VARIANT] = [
+    'title' => 'Responsive Image',
     'allowedAspectRatios' => [
         'NaN' => [
             'title' => 'LLL:EXT:core/Resources/Private/Language/locallang_wizards.xlf:imwizard.ratio.free',
