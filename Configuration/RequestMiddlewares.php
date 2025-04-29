@@ -2,8 +2,8 @@
 
 return [
     'frontend' => [
-        'zeroseven/picturerino/image' => [
-            'target' => \Zeroseven\Picturerino\Middleware\ImageRequest::class,
+        'zeroseven/pictureino/image' => [
+            'target' => \Zeroseven\Pictureino\Middleware\ImageRequest::class,
             'before' => [
                 'typo3/cms-frontend/base-redirect-resolver'
             ],

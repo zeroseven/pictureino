@@ -1,8 +1,8 @@
 <?php
 
 $EM_CONF[$_EXTKEY] = [
-    'title' => 'Picturerino',
-    'description' => 'Picturerino – when your images size themselves',
+    'title' => 'Pictureiño',
+    'description' => 'Automated responseive images for TYPO3. Get perfect images without any effort.',
     'category' => 'fe',
     'version' => '0.8.0',
     'state' => 'beta',

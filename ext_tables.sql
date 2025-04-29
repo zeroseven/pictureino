@@ -1,4 +1,4 @@
-CREATE TABLE tx_picturerino_request (
+CREATE TABLE tx_pictureino_request (
 	uid int(11) unsigned NOT NULL auto_increment,
 	identifier varchar(255) DEFAULT '' NOT NULL,
 	width int(11) DEFAULT '0' NOT NULL,
@@ -17,7 +17,7 @@ CREATE TABLE tx_picturerino_request (
 	KEY request (identifier, width, height, width_evaluated, height_evaluated),
 	);
 
-CREATE TABLE tx_picturerino_request_processed (
+CREATE TABLE tx_pictureino_request_processed (
 	request int(11) unsigned DEFAULT '0' NOT NULL,
 	processedfile int(11) unsigned DEFAULT '0' NOT NULL,
 

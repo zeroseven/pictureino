@@ -7,7 +7,7 @@ Handles aspect ratios for responsive images with breakpoint support.
 ### Single Ratio
 
 ```php
-use Zeroseven\Picturerino\Utility\AspectRatioUtility;
+use Zeroseven\Pictureino\Utility\AspectRatioUtility;
 
 $ratios = AspectRatioUtility::processRatios('16:9');
 

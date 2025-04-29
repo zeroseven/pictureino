@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace Zeroseven\Picturerino\ViewHelpers;
+namespace Zeroseven\Pictureino\ViewHelpers;
 
 use TYPO3\CMS\Core\Resource\File;
 use TYPO3\CMS\Core\Resource\FileReference;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractViewHelper;
-use Zeroseven\Picturerino\Entity\AspectRatio;
-use Zeroseven\Picturerino\Utility\AspectRatioUtility;
-use Zeroseven\Picturerino\Utility\EncryptionUtility;
-use Zeroseven\Picturerino\Utility\ImageUtility;
-use Zeroseven\Picturerino\Utility\TagUtility;
+use Zeroseven\Pictureino\Entity\AspectRatio;
+use Zeroseven\Pictureino\Utility\AspectRatioUtility;
+use Zeroseven\Pictureino\Utility\EncryptionUtility;
+use Zeroseven\Pictureino\Utility\ImageUtility;
+use Zeroseven\Pictureino\Utility\TagUtility;
 
 class ImageViewHelper extends AbstractViewHelper
 {
@@ -117,7 +117,7 @@ class ImageViewHelper extends AbstractViewHelper
             ->addAttribute('alt', $this->arguments['alt'])
             ->addAttribute('class', $this->arguments['class'])
             ->addAttribute('style', $this->arguments['style'])
-            ->addAttribute('onload', 'Picturerino.handle(this)');
+            ->addAttribute('onload', 'Pictureiño.handle(this)');
 
         return ($this->aspectRatioUtiltiy->count() <= 1
             ? $tagUtility->renderImg(static::FALLBACK_WIDTH)

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Zeroseven\Picturerino\Middleware;
+namespace Zeroseven\Pictureino\Middleware;
 
 use InvalidArgumentException;
 use Psr\Http\Message\ResponseInterface;
@@ -12,11 +12,11 @@ use Psr\Http\Server\RequestHandlerInterface;
 use TYPO3\CMS\Core\Context\Context;
 use TYPO3\CMS\Core\Http\JsonResponse;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use Zeroseven\Picturerino\Entity\ConfigRequest;
-use Zeroseven\Picturerino\Utility\ImageUtility;
-use Zeroseven\Picturerino\Utility\LogUtility;
-use Zeroseven\Picturerino\Utility\MetricsUtility;
-use Zeroseven\Picturerino\Utility\SettingsUtility;
+use Zeroseven\Pictureino\Entity\ConfigRequest;
+use Zeroseven\Pictureino\Utility\ImageUtility;
+use Zeroseven\Pictureino\Utility\LogUtility;
+use Zeroseven\Pictureino\Utility\MetricsUtility;
+use Zeroseven\Pictureino\Utility\SettingsUtility;
 
 class ImageRequest implements MiddlewareInterface
 {

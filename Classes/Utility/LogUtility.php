@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace Zeroseven\Picturerino\Utility;
+namespace Zeroseven\Pictureino\Utility;
 
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\Resource\ProcessedFile;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use Zeroseven\Picturerino\Entity\ConfigRequest;
+use Zeroseven\Pictureino\Entity\ConfigRequest;
 
 class LogUtility
 {
-    protected const string TABLE_REQUEST = 'tx_picturerino_request';
-    protected const string TABLE_REQUEST_PROCESSED = 'tx_picturerino_request_processed';
+    protected const string TABLE_REQUEST = 'tx_pictureino_request';
+    protected const string TABLE_REQUEST_PROCESSED = 'tx_pictureino_request_processed';
 
     protected string $identifier;
     protected ConfigRequest $configRequest;
@@ -64,7 +64,7 @@ class LogUtility
 
     protected function getExtensionVersion(): string
     {
-        $_EXTKEY = 'picturerino';
+        $_EXTKEY = 'pictureino';
 
         if (($path = ExtensionManagementUtility::extPath($_EXTKEY, 'ext_emconf.php')) && file_exists($path)) {
             include $path;

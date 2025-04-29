@@ -1,5 +1,5 @@
 {
-  "name": "picturerino",
+  "name": "pictureino",
   "type": "typo3-cms-extension",
   "description": "TYPO3 extension for optimized image delivery with security validation",
   "workflow": {
@@ -11,7 +11,7 @@
         "function": "Provides fallback image and initiates JavaScript handler"
       },
       "javascript": {
-        "handler": "Picturerino.handle",
+        "handler": "Pictureino.handle",
         "action": "Sends AJAX request with viewport information",
         "implementation": "TypeScript with strict types"
       }
@@ -100,7 +100,7 @@
       "backendBypass": "Backend users exempt from limits"
     },
     "logging": {
-      "table": "tx_picturerino_request",
+      "table": "tx_pictureino_request",
       "metrics": {
         "storage": "Stores usage statistics for image sizes",
         "aggregation": "Combines counts for similar dimensions"

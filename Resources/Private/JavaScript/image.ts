@@ -42,7 +42,7 @@ export class Image {
     const view = Math.round(window.innerWidth)
     const retina = window.devicePixelRatio > 1 ? 2 : 1
 
-    return `/-/picturerino/img/${view}${retina}x${this.config}/${webp}${width}x${height}/`
+    return `/-/pictureino/img/${view}${retina}x${this.config}/${webp}${width}x${height}/`
   }
 
   private updateImage(imageResponse: ImageResponse): void {

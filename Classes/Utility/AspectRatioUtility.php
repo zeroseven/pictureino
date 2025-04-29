@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Zeroseven\Picturerino\Utility;
+namespace Zeroseven\Pictureino\Utility;
 
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\MathUtility;
-use Zeroseven\Picturerino\Entity\AspectRatio;
+use Zeroseven\Pictureino\Entity\AspectRatio;
 
 class AspectRatioUtility
 {

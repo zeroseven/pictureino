@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace Zeroseven\Picturerino\Utility;
+namespace Zeroseven\Pictureino\Utility;
 
 use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use Zeroseven\Picturerino\Entity\AspectRatio;
-use Zeroseven\Picturerino\Entity\ConfigRequest;
+use Zeroseven\Pictureino\Entity\AspectRatio;
+use Zeroseven\Pictureino\Entity\ConfigRequest;
 
 class MetricsUtility
 {
-    protected const string TABLE_NAME = 'tx_picturerino_request';
+    protected const string TABLE_NAME = 'tx_pictureino_request';
     protected const array SIMILAR_SIZE_RANGE = [-5, 30];
     protected const int STEP_SIZE = 50;
 

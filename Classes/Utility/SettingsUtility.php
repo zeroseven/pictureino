@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Zeroseven\Picturerino\Utility;
+namespace Zeroseven\Pictureino\Utility;
 
 use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Core\Site\Entity\SiteSettings;
@@ -24,10 +24,10 @@ class SettingsUtility
     protected function loadSettings(?ServerRequestInterface $request = null): void
     {
         try {
-            $siteSettings = ($request ?? $this->getRequest())?->getAttribute('site')?->getSettings('zeroseven/picturerino');
+            $siteSettings = ($request ?? $this->getRequest())?->getAttribute('site')?->getSettings('zeroseven/pictureino');
 
             if ($siteSettings instanceof SiteSettings) {
-                $this->settings = $siteSettings->get('picturerino') ?? [];
+                $this->settings = $siteSettings->get('pictureino') ?? [];
             }
         } catch (\Exception $e) {
             $this->settings = [];

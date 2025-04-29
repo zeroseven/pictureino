@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Zeroseven\Picturerino\Command;
+namespace Zeroseven\Pictureino\Command;
 
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -16,8 +16,8 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 class CleanupCommand extends Command
 {
-    private const TABLE_REQUEST = 'tx_picturerino_request';
-    private const TABLE_REQUEST_PROCESSED = 'tx_picturerino_request_processed';
+    private const TABLE_REQUEST = 'tx_pictureino_request';
+    private const TABLE_REQUEST_PROCESSED = 'tx_pictureino_request_processed';
 
     protected ProcessedFileRepository $processedFileRepository;
     protected ConnectionPool $connectionPool;
@@ -43,7 +43,7 @@ class CleanupCommand extends Command
 
         $processedFileIds = $this->getProcessedFileIds();
         $deletedFiles = $this->deleteProcessedFiles($processedFileIds);
-        $this->truncatePicturerinoTables();
+        $this->truncatePictureinoTables();
         $this->removePhysicalFiles();
 
         $this->outputResults($deletedFiles);
@@ -92,7 +92,7 @@ class CleanupCommand extends Command
         return $result;
     }
 
-    protected function truncatePicturerinoTables(): void
+    protected function truncatePictureinoTables(): void
     {
         foreach ([self::TABLE_REQUEST, self::TABLE_REQUEST_PROCESSED] as $table) {
             $connection = $this->connectionPool->getConnectionForTable($table);

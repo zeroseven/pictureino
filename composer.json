@@ -1,7 +1,7 @@
 {
-    "name": "zeroseven/picturerino",
+    "name": "zeroseven/pictureino",
     "type": "typo3-cms-extension",
-    "description": "Picturerino – when your images size themselves",
+    "description": "Pictureino – when your images size themselves",
     "license": "GPL-2.0-or-later",
     "authors": [
         {
@@ -18,7 +18,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Zeroseven\\Picturerino\\": "Classes/"
+            "Zeroseven\\Pictureino\\": "Classes/"
         }
     },
     "scripts": {
@@ -27,7 +27,7 @@
     },
     "extra": {
         "typo3/cms": {
-            "extension-key": "picturerino"
+            "extension-key": "pictureino"
         }
     }
 }

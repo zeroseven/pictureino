@@ -4,11 +4,11 @@ services:
     autoconfigure: true
     public: false
 
-  Zeroseven\Picturerino\:
+  Zeroseven\Pictureino\:
     resource: '../Classes/*'
 
-  Zeroseven\Picturerino\Command\CleanupCommand:
+  Zeroseven\Pictureino\Command\CleanupCommand:
     tags:
       - name: 'console.command'
-        command: 'picturerino:cleanup'
+        command: 'pictureino:cleanup'
         description: 'Cleanup all processed images'

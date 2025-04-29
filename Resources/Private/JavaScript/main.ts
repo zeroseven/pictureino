@@ -2,24 +2,24 @@ import {Image} from './image'
 
 declare global {
   interface Window {
-    Picturerino: {
+    Pictureiño: {
       handle: (element: HTMLImageElement) => void;
     };
   }
 }
 
-class Picturerino {
+class Pictureiño {
   public static getConfig(element: HTMLImageElement): string {
     return element.getAttribute('data-config') as string
   }
 
   public static handle(element: HTMLImageElement): void {
-    const config = Picturerino.getConfig(element)
+    const config = Pictureiño.getConfig(element)
 
     new Image(element, config)
   }
 }
 
-window.Picturerino = {
-  handle: (element: HTMLImageElement): void => Picturerino.handle(element),
+window.Pictureiño = {
+  handle: (element: HTMLImageElement): void => Pictureiño.handle(element),
 }
