@@ -1,5 +1,5 @@
 {
-  "name": "pictureino",
+  "name": "Pictureiño",
   "type": "typo3-cms-extension",
   "description": "TYPO3 extension for optimized image delivery with security validation",
   "workflow": {
@@ -11,7 +11,7 @@
         "function": "Provides fallback image and initiates JavaScript handler"
       },
       "javascript": {
-        "handler": "Pictureino.handle",
+        "handler": "Pictureiño.handle",
         "action": "Sends AJAX request with viewport information",
         "implementation": "TypeScript with strict types"
       }
