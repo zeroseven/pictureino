@@ -72,7 +72,7 @@ class AspectRatio
         if (1 === count($input)) {
             $value = $input[0];
 
-            if($value === null || $value === '') {
+            if (null === $value || '' === $value) {
                 return $this->setX(null)->setY(null);
             }
 

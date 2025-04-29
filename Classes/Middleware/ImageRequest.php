@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Zeroseven\Pictureino\Middleware;
 
-use InvalidArgumentException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
@@ -53,9 +52,9 @@ class ImageRequest implements MiddlewareInterface
             $this->settingsUtility = GeneralUtility::makeInstance(SettingsUtility::class, $request);
 
             $this->imageUtiltiy = GeneralUtility::makeInstance(ImageUtility::class)->setFile(
-                (string)($config['file']['src'] ?? ''),
+                (string) ($config['file']['src'] ?? ''),
                 $config['file']['image'] ?? null,
-                (bool)($config['file']['treatIdAsReference'] ?? false)
+                (bool) ($config['file']['treatIdAsReference'] ?? false)
             );
 
             if ($cropVariant = $config['cropVariant'] ?? null) {
@@ -77,12 +76,12 @@ class ImageRequest implements MiddlewareInterface
             return false;
         }
 
-        if (session_status() === PHP_SESSION_NONE) {
+        if (PHP_SESSION_NONE === session_status()) {
             session_start();
         }
 
         $currentTime = time();
-        $requests = array_filter($_SESSION[$this->identifier] ?? [], fn($timestamp) => $currentTime - $timestamp < 1200);
+        $requests = array_filter($_SESSION[$this->identifier] ?? [], fn ($timestamp) => $currentTime - $timestamp < 1200);
 
         if (count($requests) >= 10 * ($this->isRetina() ? 2 : 1)) {
             return true;
@@ -112,7 +111,7 @@ class ImageRequest implements MiddlewareInterface
         return $config;
     }
 
-    protected function returnErrorResponse(string $message, int $code, int $status = null): JsonResponse
+    protected function returnErrorResponse(string $message, int $code, ?int $status = null): JsonResponse
     {
         return new JsonResponse(['error' => [
             'message' => $message,
@@ -127,7 +126,7 @@ class ImageRequest implements MiddlewareInterface
 
             if ($this->initializeConfig($request)) {
                 if ($this->tooManyRequests()) {
-                    return $this->returnErrorResponse('Too many requests', 1310,429);
+                    return $this->returnErrorResponse('Too many requests', 1310, 429);
                 }
 
                 $data = [
@@ -150,7 +149,7 @@ class ImageRequest implements MiddlewareInterface
 
                 return new JsonResponse($data, 200, static::REQUEST_HEADERS);
             }
-        } catch (InvalidArgumentException $e) {
+        } catch (\InvalidArgumentException $e) {
             return $this->returnErrorResponse($e->getMessage(), $e->getCode());
         }
 

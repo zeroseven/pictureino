@@ -71,7 +71,7 @@ class ImageViewHelper extends AbstractViewHelper
         }
 
         if (null !== $this->arguments['retina']) {
-            $config['retina'] = (bool)$this->arguments['retina'];
+            $config['retina'] = (bool) $this->arguments['retina'];
         }
 
         if (!$this->aspectRatioUtiltiy->isEmpty()) {

@@ -8,7 +8,6 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
-use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Resource\ProcessedFile;
 use TYPO3\CMS\Core\Resource\ProcessedFileRepository;
@@ -65,7 +64,7 @@ class CleanupCommand extends Command
     {
         $result = [
             'total' => count($processedFileIds),
-            'success' => 0
+            'success' => 0,
         ];
 
         if (empty($processedFileIds)) {
@@ -76,10 +75,10 @@ class CleanupCommand extends Command
 
         foreach ($processedFileIds as $processedFileId) {
             try {
-                $processedFile = $this->processedFileRepository->findByUid((int)$processedFileId);
+                $processedFile = $this->processedFileRepository->findByUid((int) $processedFileId);
                 if ($processedFile instanceof ProcessedFile) {
                     $processedFile->delete(true);
-                    $result['success']++;
+                    ++$result['success'];
                 }
             } catch (\Exception $e) {
                 $this->io->warning(sprintf('Could not delete processed file with ID %d: %s', $processedFileId, $e->getMessage()));
@@ -114,8 +113,8 @@ class CleanupCommand extends Command
         $this->io->table(
             ['Processed Files', 'Count'],
             [
-                ['Total', (string)$deletedFiles['total']],
-                ['Successfully deleted', (string)$deletedFiles['success']]
+                ['Total', (string) $deletedFiles['total']],
+                ['Successfully deleted', (string) $deletedFiles['success']],
             ]
         );
 

@@ -54,7 +54,7 @@ class MetricsUtility
             throw new \InvalidArgumentException('Width or height must be greater than zero.', 1745092984);
         }
 
-        if($maxImageDimensions = (int)($this->configRequest->getConfig()['maxImageDimensions'] ?? $this->settingsUtility->get('maxImageDimensions'))) {
+        if ($maxImageDimensions = (int) ($this->configRequest->getConfig()['maxImageDimensions'] ?? $this->settingsUtility->get('maxImageDimensions'))) {
             if ($this->configRequest->getWidth() > $maxImageDimensions || $this->configRequest->getHeight() > $maxImageDimensions) {
                 throw new \InvalidArgumentException('Dimensions exceeds the maximum lenght.', 1745092985);
             }
@@ -93,7 +93,7 @@ class MetricsUtility
                 $queryBuilder->createNamedParameter(self::SIMILAR_SIZE_RANGE[1])
             )
             ->andWhere(
-                $queryBuilder->expr()->eq('aspect_ratio', $queryBuilder->createNamedParameter((string)$this->aspectRatio))
+                $queryBuilder->expr()->eq('aspect_ratio', $queryBuilder->createNamedParameter((string) $this->aspectRatio))
             )
             ->groupBy('width', 'height', 'width_diff', 'height_diff')
             ->orderBy('total_count', 'DESC')
@@ -105,11 +105,11 @@ class MetricsUtility
 
         // Use found metrics or calculate new sizes
         if ($result && isset($result['width'], $result['height'])) {
-            $this->width = (int)$result['width'];
-            $this->height = (int)$result['height'];
+            $this->width = (int) $result['width'];
+            $this->height = (int) $result['height'];
         } else {
-            $this->width = (int)(ceil($requestedWidth / self::STEP_SIZE) * self::STEP_SIZE);
-            $this->height = $this->aspectRatio?->getHeight($this->width) ?? (int)(ceil($requestedHeight / self::STEP_SIZE) * self::STEP_SIZE);
+            $this->width = (int) (ceil($requestedWidth / self::STEP_SIZE) * self::STEP_SIZE);
+            $this->height = $this->aspectRatio?->getHeight($this->width) ?? (int) (ceil($requestedHeight / self::STEP_SIZE) * self::STEP_SIZE);
         }
     }
 

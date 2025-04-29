@@ -33,11 +33,11 @@ class ConfigRequest
             // Check if the config is valid
             && $this->config = EncryptionUtility::decryptConfig($matches[3])
         ) {
-            $this->width = (int)$matches[5];
-            $this->height = (int)$matches[6];
-            $this->viewport = (int)$matches[1];
-            $this->retina = 2 === (int)$matches[2];
-            $this->webpSupport = 'webp' === (string)$matches[4];
+            $this->width = (int) $matches[5];
+            $this->height = (int) $matches[6];
+            $this->viewport = (int) $matches[1];
+            $this->retina = 2 === (int) $matches[2];
+            $this->webpSupport = 'webp' === (string) $matches[4];
 
         }
     }
@@ -74,10 +74,10 @@ class ConfigRequest
 
     public function isValid(): bool
     {
-        return $this->width !== null
-            && $this->height !== null
-            && $this->viewport !== null
-            && $this->config !== null;
+        return null !== $this->width
+            && null !== $this->height
+            && null !== $this->viewport
+            && null !== $this->config;
     }
 
     public function toArray(): array
@@ -88,7 +88,7 @@ class ConfigRequest
             'height' => $this->height,
             'viewport' => $this->viewport,
             'retina' => $this->retina,
-            'webpSupport' => $this->webpSupport
+            'webpSupport' => $this->webpSupport,
         ];
     }
 }

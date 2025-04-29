@@ -95,11 +95,11 @@ class ImageUtility
 
         $focus = ($offset / (1.0 - $size)) * 200 - 100;
 
-        return max(-100, min(100, (int)round($focus)));
+        return max(-100, min(100, (int) round($focus)));
     }
 
     /** @throws \Exception */
-    public function processImage(int|string|null $width = null, int|string|null $height = null, bool $forceWebp = null, ?array $processingInstructions = []): ProcessedFile
+    public function processImage(int|string|null $width = null, int|string|null $height = null, ?bool $forceWebp = null, ?array $processingInstructions = []): ProcessedFile
     {
         if (null === $this->file) {
             throw new \Exception('No image. Please call "setFile" method, to set an image file', 1382284105);

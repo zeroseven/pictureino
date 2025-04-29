@@ -84,7 +84,7 @@ class LogUtility
                 ->where(
                     $queryBuilder->expr()->eq('uid', $queryBuilder->createNamedParameter($this->existingEntry['uid']))
                 )
-                ->set('count', (int)($this->existingEntry['count'] ?? 0) + 1)
+                ->set('count', (int) ($this->existingEntry['count'] ?? 0) + 1)
                 ->set('tstamp', time())
                 ->executeStatement();
         }
@@ -94,7 +94,7 @@ class LogUtility
     {
         $existingEntry = $this->getExistingEntry();
 
-        return $existingEntry && (int)($existingEntry['uid'] ?? 0) > 0;
+        return $existingEntry && (int) ($existingEntry['uid'] ?? 0) > 0;
     }
 
     protected function createRequest(): int
@@ -117,7 +117,7 @@ class LogUtility
                 'crdate' => time(),
             ])->executeStatement();
 
-        return (int)$queryBuilder->getConnection()->lastInsertId();
+        return (int) $queryBuilder->getConnection()->lastInsertId();
     }
 
     protected function logRequest(): ?int
@@ -128,7 +128,7 @@ class LogUtility
             return null;
         }
 
-       return $this->createRequest();
+        return $this->createRequest();
     }
 
     protected function logProcessedFile(int $requestId, ProcessedFile $processedFile): void
