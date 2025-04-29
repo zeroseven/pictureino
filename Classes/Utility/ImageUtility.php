@@ -15,8 +15,6 @@ use TYPO3\CMS\Extbase\Service\ImageService;
 
 class ImageUtility
 {
-    public const string DEFAULT_CROP_VARIANT = 'picutureino';
-
     protected ImageService $imageService;
     protected FileInterface $file;
     protected ?array $processedFiles;
@@ -66,7 +64,7 @@ class ImageUtility
 
     public function getCropArea(): ?Area
     {
-        if ($area = $this->cropVariantCollection?->getCropArea($this->getCropVariant())) {
+        if ($this->cropVariant && $area = $this->cropVariantCollection?->getCropArea($this->cropVariant)) {
             return $area->isEmpty() ? null : $area;
         }
 
@@ -75,7 +73,7 @@ class ImageUtility
 
     public function getFocusArea(): ?Area
     {
-        if ($area = $this->cropVariantCollection?->getFocusArea($this->getCropVariant())) {
+        if ($this->cropVariant && $area = $this->cropVariantCollection?->getFocusArea($this->cropVariant)) {
             return $area->isEmpty() ? null : $area;
         }
 
@@ -87,11 +85,6 @@ class ImageUtility
         $this->cropVariant = $cropVariant;
 
         return $this;
-    }
-
-    public function getCropVariant(): string
-    {
-        return $this->cropVariant ?? self::DEFAULT_CROP_VARIANT;
     }
 
     protected function calculateFocus(float $offset, float $size): int
