@@ -48,7 +48,8 @@ class ImageRequest implements MiddlewareInterface
         $this->configRequest = GeneralUtility::makeInstance(ConfigRequest::class, $request);
 
         if ($this->configRequest->isValid() && $config = $this->configRequest->getConfig()) {
-            $this->identifier = md5($request->getAttribute('site')?->getIdentifier() . json_encode($config['file'] ?? []));
+            $this->identifier = md5($request->getAttribute('site')?->getIdentifier() . ($config['cropVariant'] ?? '') . json_encode($config['file'] ?? []));
+
             $this->settingsUtility = GeneralUtility::makeInstance(SettingsUtility::class, $request);
 
             $this->imageUtiltiy = GeneralUtility::makeInstance(ImageUtility::class)->setFile(
