@@ -1,3 +1,5 @@
 /node_modules
+/vendor
+/public
 Resources/Public/Css/
 Resources/Public/JavaScript/
