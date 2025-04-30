@@ -1,0 +1,13 @@
+.gitattributes
+.gitignore
+.gitlab-ci.yml
+.php-cs-fixer.cache
+.php-cs-fixer.php
+.rooclient
+composer.lock
+eslint.config.js
+package-lock.json
+package.json
+phpstan.neon
+tsconfig.json
+vite.config.ts
