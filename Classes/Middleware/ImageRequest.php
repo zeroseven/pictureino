@@ -94,21 +94,15 @@ class ImageRequest implements MiddlewareInterface
 
     protected function processImage(): array
     {
-        $this->imageUtiltiy->processImage($this->metricsUtility->getWidth(), $this->metricsUtility->getHeight(), $this->configRequest->hasWebpSupport());
+        $pixelDensity = $this->isRetina() ? 2 : 1;
 
-        $config = [
-            'img' => $this->imageUtiltiy->getUrl(),
-            'width' => $this->imageUtiltiy->getProperty('width'),
-            'height' => $this->imageUtiltiy->getProperty('height'),
+        $this->imageUtiltiy->processImage($this->metricsUtility->getWidth() * $pixelDensity, $this->metricsUtility->getHeight() * $pixelDensity, $this->configRequest->hasWebpSupport());
+
+        return [
+            'img' . $pixelDensity . 'x' => $this->imageUtiltiy->getUrl(),
+            'width' => (int)$this->imageUtiltiy->getProperty('width') / $pixelDensity,
+            'height' => (int)$this->imageUtiltiy->getProperty('height') / $pixelDensity,
         ];
-
-        if ($this->isRetina()) {
-            $this->imageUtiltiy->processImage($this->metricsUtility->getWidth() * 2, $this->metricsUtility->getHeight() * 2, $this->configRequest->hasWebpSupport());
-
-            $config['img2x'] = $this->imageUtiltiy->getUrl();
-        }
-
-        return $config;
     }
 
     protected function returnErrorResponse(string $message, int $code, ?int $status = null): JsonResponse

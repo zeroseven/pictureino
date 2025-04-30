@@ -9,7 +9,7 @@ export interface ImageResponse {
     code: number,
   };
   processed: {
-    img: string,
+    img1x?: string,
     img2x?: string,
     width: number,
     height: number,

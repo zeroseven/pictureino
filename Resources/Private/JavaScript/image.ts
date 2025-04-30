@@ -48,10 +48,16 @@ export class Image {
   private updateImage(imageResponse: ImageResponse): void {
     this.element.width = imageResponse.processed.width
     this.element.height = imageResponse.processed.height
-    this.element.src = imageResponse.processed.img
+
+    if (imageResponse.processed.img1x) {
+      this.element.src = imageResponse.processed.img1x
+    }
 
     if (imageResponse.processed.img2x) {
+      this.element.src = imageResponse.processed.img2x
       this.element.srcset = imageResponse.processed.img2x + ' 2x'
+    } else {
+      this.element.removeAttribute('srcset')
     }
   }
 
@@ -62,10 +68,12 @@ export class Image {
       source.width = imageResponse.processed.width
       source.height = imageResponse.processed.height
 
+      if (imageResponse.processed.img1x) {
+        source.srcset = imageResponse.processed.img1x
+      }
+
       if (imageResponse.processed.img2x) {
-        source.srcset = imageResponse.processed.img + ', ' + imageResponse.processed.img2x + ' 2x'
-      } else {
-        source.srcset = imageResponse.processed.img
+        source.srcset = imageResponse.processed.img2x + ' 2x'
       }
     }
   }
