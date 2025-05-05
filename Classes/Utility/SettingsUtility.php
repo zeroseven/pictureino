@@ -6,9 +6,12 @@ namespace Zeroseven\Pictureino\Utility;
 
 use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Core\Site\Entity\SiteSettings;
+use TYPO3\CMS\Core\Site\SiteFinder;
+use TYPO3\CMS\Core\TypoScript\TemplateService;
 use TYPO3\CMS\Core\Utility\VersionNumberUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\TypoScript\TypoScriptService;
+use TYPO3\CMS\Core\Utility\RootlineUtility;
 use TYPO3\CMS\Extbase\Configuration\ConfigurationManager;
 use TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface;
 
@@ -28,16 +31,26 @@ class SettingsUtility
 
     protected function loadSettings(?ServerRequestInterface $request = null): void
     {
-        try {
+        $version = VersionNumberUtility::getCurrentTypo3Version();
 
-            $version = VersionNumberUtility::getCurrentTypo3Version();
-            if (version_compare($version, '12.0.0', '>=') && version_compare($version, '13.0.0', '<')) {
+        try {
+            if (version_compare($version, '12.4.0', '>=') && version_compare($version, '13.0.0', '<')) {
 
                 $pluginConfiguration = GeneralUtility::makeInstance(ConfigurationManager::class)
-                            ->getConfiguration(ConfigurationManagerInterface::CONFIGURATION_TYPE_FULL_TYPOSCRIPT)['plugin.']['tx_pictureino.'] ?? [];
+                    ->getConfiguration(ConfigurationManagerInterface::CONFIGURATION_TYPE_FULL_TYPOSCRIPT)['plugin.']['tx_pictureino.'] ?? null;
 
-                $typoScriptService = GeneralUtility::makeInstance(TypoScriptService::class);
-                $this->settings = $typoScriptService->convertTypoScriptArrayToPlainArray($pluginConfiguration ?? []);
+                // @see https://buergel.dev/blog/post/typo3-middleware-typoscript-konfiguration
+                if ($pluginConfiguration === null && $rootPage = ($request ?? $this->getRequest())?->getAttribute('site')?->getRootPageId()) {
+                    $rootlineUtility = GeneralUtility::makeInstance(RootlineUtility::class, $rootPage);
+
+                    $templateService = GeneralUtility::makeInstance(TemplateService::class);
+                    $templateService->tt_track = 0;
+                    $templateService->runThroughTemplates($rootlineUtility->get());
+                    $templateService->generateConfig();
+                    $pluginConfiguration = $templateService->setup['plugin.']['tx_pictureino.'] ?? null;
+                }
+
+                $this->settings = GeneralUtility::makeInstance(TypoScriptService::class)->convertTypoScriptArrayToPlainArray($pluginConfiguration ?? []);
             } else {
                 $siteSettings = ($request ?? $this->getRequest())?->getAttribute('site')?->getSettings('zeroseven/pictureino');
 
@@ -49,6 +62,7 @@ class SettingsUtility
             $this->settings = [];
         }
     }
+
 
     public function getSettings(): array
     {
