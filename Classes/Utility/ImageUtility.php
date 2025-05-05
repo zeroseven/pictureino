@@ -29,12 +29,12 @@ class ImageUtility
 
     protected function isWebpSupported(): bool
     {
-        // Fallback for TYPO3 12
+        // Fallback for TYPO3 12, @phpstan-ignore-next-line
         if (!method_exists(GraphicalFunctions::class, 'webpSupportAvailable')) {
-            $this->webpSupported ??= in_array('webp', GeneralUtility::trimExplode(',', $GLOBALS['TYPO3_CONF_VARS']['GFX']['imagefile_ext'] ?? ''), true);
+            return $this->webpSupported ??= in_array('webp', GeneralUtility::trimExplode(',', $GLOBALS['TYPO3_CONF_VARS']['GFX']['imagefile_ext'] ?? ''), true);
         }
 
-        return $this->webpSupported ??= (bool)GeneralUtility::makeInstance(GraphicalFunctions::class)->webpSupportAvailable();
+        return $this->webpSupported ??= (bool) GeneralUtility::makeInstance(GraphicalFunctions::class)->webpSupportAvailable();
     }
 
     public function getFile(): FileInterface

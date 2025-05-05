@@ -6,12 +6,11 @@ namespace Zeroseven\Pictureino\Utility;
 
 use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Core\Site\Entity\SiteSettings;
-use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Core\TypoScript\TemplateService;
-use TYPO3\CMS\Core\Utility\VersionNumberUtility;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\TypoScript\TypoScriptService;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\RootlineUtility;
+use TYPO3\CMS\Core\Utility\VersionNumberUtility;
 use TYPO3\CMS\Extbase\Configuration\ConfigurationManager;
 use TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface;
 
@@ -34,19 +33,25 @@ class SettingsUtility
         $version = VersionNumberUtility::getCurrentTypo3Version();
 
         try {
+            // Fallback for TYPO3 12
             if (version_compare($version, '12.4.0', '>=') && version_compare($version, '13.0.0', '<')) {
 
                 $pluginConfiguration = GeneralUtility::makeInstance(ConfigurationManager::class)
                     ->getConfiguration(ConfigurationManagerInterface::CONFIGURATION_TYPE_FULL_TYPOSCRIPT)['plugin.']['tx_pictureino.'] ?? null;
 
                 // @see https://buergel.dev/blog/post/typo3-middleware-typoscript-konfiguration
-                if ($pluginConfiguration === null && $rootPage = ($request ?? $this->getRequest())?->getAttribute('site')?->getRootPageId()) {
+                if (null === $pluginConfiguration && $rootPage = ($request ?? $this->getRequest())?->getAttribute('site')?->getRootPageId()) {
                     $rootlineUtility = GeneralUtility::makeInstance(RootlineUtility::class, $rootPage);
 
+                    // @phpstan-ignore-next-line
                     $templateService = GeneralUtility::makeInstance(TemplateService::class);
+                    // @phpstan-ignore-next-line
                     $templateService->tt_track = 0;
+                    // @phpstan-ignore-next-line
                     $templateService->runThroughTemplates($rootlineUtility->get());
+                    // @phpstan-ignore-next-line
                     $templateService->generateConfig();
+                    // @phpstan-ignore-next-line
                     $pluginConfiguration = $templateService->setup['plugin.']['tx_pictureino.'] ?? null;
                 }
 
@@ -62,7 +67,6 @@ class SettingsUtility
             $this->settings = [];
         }
     }
-
 
     public function getSettings(): array
     {
