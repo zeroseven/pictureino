@@ -23,6 +23,7 @@ class ImageViewHelper extends AbstractViewHelper
 
     protected const FALLBACK_WIDTH = 150;
     protected const SEO_CONTENT_WIDTH = 1200;
+    public const ON_LOAD_EVENT = 'Pictureiño.handle(this)';
 
     public function __construct()
     {
@@ -121,14 +122,6 @@ class ImageViewHelper extends AbstractViewHelper
                 }
             }
         }
-
-        document.addEventListener('DOMContentLoaded', function () {
-            document.querySelectorAll('img[data-config]').forEach(function (img) {
-                if (img.dataset.loaded === 'false') {
-                    Pictureiño.handle(img);
-                }
-            });
-        });
         JS;
 
         $this->assetCollector->addInlineJavaScript('pictureino-handle',$script,[],[
@@ -159,7 +152,8 @@ class ImageViewHelper extends AbstractViewHelper
             ->addAttribute('title', $this->arguments['title'])
             ->addAttribute('alt', $this->arguments['alt'])
             ->addAttribute('class', $this->arguments['class'])
-            ->addAttribute('style', $this->arguments['style']);
+            ->addAttribute('style', $this->arguments['style'])
+            ->addAttribute('onload', static::ON_LOAD_EVENT);
 
         return ($this->aspectRatioUtiltiy->count() <= 1
             ? $tagUtility->renderImg(static::FALLBACK_WIDTH)
