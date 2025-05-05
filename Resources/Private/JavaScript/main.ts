@@ -16,7 +16,11 @@ class Pictureiño {
   public static handle(element: HTMLImageElement): void {
     const config = Pictureiño.getConfig(element)
 
-    new Image(element, config)
+    if (config) {
+      new Image(element, config)
+    } else {
+      console.warn('No config found for the provided element.')
+    }
   }
 }
 
