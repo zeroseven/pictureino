@@ -12,9 +12,9 @@ use Zeroseven\Pictureino\Entity\ConfigRequest;
 
 class MetricsUtility
 {
-    protected const string TABLE_NAME = 'tx_pictureino_request';
-    protected const array SIMILAR_SIZE_RANGE = [-5, 30];
-    protected const int STEP_SIZE = 50;
+    protected const TABLE_NAME = 'tx_pictureino_request';
+    protected const SIMILAR_SIZE_RANGE = [-5, 30];
+    protected const STEP_SIZE = 50;
 
     protected string $identifier;
     protected ConfigRequest $configRequest;

@@ -10,9 +10,9 @@ use Zeroseven\Pictureino\Entity\AspectRatio;
 
 class AspectRatioUtility
 {
-    protected SettingsUtility $settingsUtility;
-    protected array $aspectRatios;
-    protected array $breakpointMap;
+    protected ?SettingsUtility $settingsUtility = null;
+    protected array $aspectRatios = [];
+    protected array $breakpointMap = [];
 
     public function __construct()
     {

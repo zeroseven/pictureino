@@ -13,8 +13,8 @@ use Zeroseven\Pictureino\Entity\ConfigRequest;
 
 class LogUtility
 {
-    protected const string TABLE_REQUEST = 'tx_pictureino_request';
-    protected const string TABLE_REQUEST_PROCESSED = 'tx_pictureino_request_processed';
+    protected const TABLE_REQUEST = 'tx_pictureino_request';
+    protected const TABLE_REQUEST_PROCESSED = 'tx_pictureino_request_processed';
 
     protected string $identifier;
     protected ConfigRequest $configRequest;

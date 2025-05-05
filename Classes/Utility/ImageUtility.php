@@ -17,10 +17,10 @@ class ImageUtility
 {
     protected ImageService $imageService;
     protected FileInterface $file;
-    protected ?array $processedFiles;
-    protected ?bool $webpSupported;
-    protected ?CropVariantCollection $cropVariantCollection;
-    protected ?string $cropVariant;
+    protected ?array $processedFiles = null;
+    protected ?bool $webpSupported = null;
+    protected ?CropVariantCollection $cropVariantCollection = null;
+    protected ?string $cropVariant = null;
 
     public function __construct()
     {
@@ -29,6 +29,11 @@ class ImageUtility
 
     protected function isWebpSupported(): bool
     {
+        // Fallback for TYPO3 12
+        if (!method_exists(GraphicalFunctions::class, 'webpSupportAvailable')) {
+            $this->webpSupported ??= in_array('webp', GeneralUtility::trimExplode(',', $GLOBALS['TYPO3_CONF_VARS']['GFX']['imagefile_ext'] ?? ''), true);
+        }
+
         return $this->webpSupported ??= (bool)GeneralUtility::makeInstance(GraphicalFunctions::class)->webpSupportAvailable();
     }
 
