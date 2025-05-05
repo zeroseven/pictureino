@@ -1,1 +1,18 @@
 @import 'EXT:pictureino/Configuration/Sets/Picturino/setup.typoscript'
+
+[typo3.branch == "12.4"]
+plugin.tx_pictureino {
+  breakpoints {
+    0 = {$plugin.tx_pictureino.breakpoints.0}
+    1 = {$plugin.tx_pictureino.breakpoints.1}
+    2 = {$plugin.tx_pictureino.breakpoints.2}
+    3 = {$plugin.tx_pictureino.breakpoints.3}
+    4 = {$plugin.tx_pictureino.breakpoints.4}
+    5 = {$plugin.tx_pictureino.breakpoints.5}
+  }
+
+  retina = {$plugin.tx_pictureino.retina}
+  debug = {$plugin.tx_pictureino.debug}
+  maxImageDimensions = {$plugin.tx_pictureino.maxImageDimensions}
+}
+[END]
