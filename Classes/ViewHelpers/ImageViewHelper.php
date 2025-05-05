@@ -121,6 +121,14 @@ class ImageViewHelper extends AbstractViewHelper
                 }
             }
         }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('img[data-config]').forEach(function (img) {
+                if (img.dataset.loaded === 'false') {
+                    Pictureiño.handle(img);
+                }
+            });
+        });
         JS;
 
         $this->assetCollector->addInlineJavaScript('pictureino-handle',$script,[],[
@@ -151,8 +159,7 @@ class ImageViewHelper extends AbstractViewHelper
             ->addAttribute('title', $this->arguments['title'])
             ->addAttribute('alt', $this->arguments['alt'])
             ->addAttribute('class', $this->arguments['class'])
-            ->addAttribute('style', $this->arguments['style'])
-            ->addAttribute('onload', 'Pictureiño.handle(this)');
+            ->addAttribute('style', $this->arguments['style']);
 
         return ($this->aspectRatioUtiltiy->count() <= 1
             ? $tagUtility->renderImg(static::FALLBACK_WIDTH)
