@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Zeroseven\Pictureino\ViewHelpers;
 
+use TYPO3\CMS\Core\Page\AssetCollector;
 use TYPO3\CMS\Core\Resource\File;
 use TYPO3\CMS\Core\Resource\FileReference;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -18,6 +19,7 @@ class ImageViewHelper extends AbstractViewHelper
     protected $escapeOutput = false;
     protected ImageUtility $imageUtiltiy;
     protected AspectRatioUtility $aspectRatioUtiltiy;
+    protected AssetCollector $assetCollector;
 
     protected const FALLBACK_WIDTH = 150;
     protected const SEO_CONTENT_WIDTH = 1200;
@@ -26,6 +28,11 @@ class ImageViewHelper extends AbstractViewHelper
     {
         $this->imageUtiltiy = GeneralUtility::makeInstance(ImageUtility::class);
         $this->aspectRatioUtiltiy = GeneralUtility::makeInstance(AspectRatioUtility::class);
+    }
+
+    public function injectAssetCollector(AssetCollector $assetCollector): void
+    {
+        $this->assetCollector = $assetCollector;
     }
 
     public function initializeArguments(): void
@@ -102,6 +109,26 @@ class ImageViewHelper extends AbstractViewHelper
         return $this->aspectRatioUtiltiy->add($this->imageUtiltiy->getFile(), 0);
     }
 
+    protected function addInlineScript(): void
+    {
+        $script = <<< JS
+        if (typeof Pictureiño === 'undefined') {
+            Pictureiño = {
+                handle: function (c) {
+                    window.addEventListener('load', function () {
+                        Pictureiño.handle(c);
+                    });
+                }
+            }
+        }
+        JS;
+
+        $this->assetCollector->addInlineJavaScript('pictureino-handle',$script,[],[
+            'priority' => true,
+            'useNonce' => true
+        ]);
+    }
+
     /** @throws \Exception */
     public function render(): string
     {
@@ -116,6 +143,7 @@ class ImageViewHelper extends AbstractViewHelper
         }
 
         $this->determineAspectRatio();
+        $this->addInlineScript();
 
         $tagUtility = GeneralUtility::makeInstance(TagUtility::class, $this->imageUtiltiy, $this->aspectRatioUtiltiy)
             ->addAttribute('data-config', $this->createEncryptionHash())
