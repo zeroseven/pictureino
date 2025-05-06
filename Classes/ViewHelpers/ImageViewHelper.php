@@ -23,6 +23,7 @@ class ImageViewHelper extends AbstractViewHelper
 
     protected const FALLBACK_WIDTH = 150;
     protected const SEO_CONTENT_WIDTH = 1200;
+    public const ON_LOAD_EVENT = 'Pictureiño.handle(this)';
 
     public function __construct()
     {
@@ -152,7 +153,7 @@ class ImageViewHelper extends AbstractViewHelper
             ->addAttribute('alt', $this->arguments['alt'])
             ->addAttribute('class', $this->arguments['class'])
             ->addAttribute('style', $this->arguments['style'])
-            ->addAttribute('onload', 'Pictureiño.handle(this)');
+            ->addAttribute('onload', static::ON_LOAD_EVENT);
 
         return ($this->aspectRatioUtiltiy->count() <= 1
             ? $tagUtility->renderImg(static::FALLBACK_WIDTH)
