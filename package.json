@@ -14,7 +14,7 @@
 		"preview": "vite preview",
 		"format": "eslint Resources/Private/JavaScript/**/*.ts --fix",
 		"format:check": "eslint Resources/Private/JavaScript/**/*.ts",
-		"uglify": "npx uglify-js Resources/Public/JavaScript/main.js --compress --mangle --output Resources/Public/JavaScript/main.js",
+		"uglify": "npx uglify-js Resources/Public/JavaScript/Frontend/main.js --compress --mangle --output Resources/Public/JavaScript/Frontend/main.js",
 		"lint": "eslint Resources/Private/JavaScript/**/*.ts",
 		"lint:fix": "eslint Resources/Private/JavaScript/**/*.ts --fix"
 	},

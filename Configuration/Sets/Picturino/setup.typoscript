@@ -1,2 +1,2 @@
-page.includeJS.pictureino = EXT:pictureino/Resources/Public/JavaScript/main.js
-page.includeCSS.pictureino = EXT:pictureino/Resources/Public/Css/main.css
+page.includeJS.pictureino = EXT:pictureino/Resources/Public/JavaScript/Frontend/main.js
+page.includeCSS.pictureino = EXT:pictureino/Resources/Public/Css/Frontend/main.css

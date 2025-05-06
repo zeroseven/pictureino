@@ -2,7 +2,8 @@ import {fileURLToPath, URL} from 'url'
 import {defineConfig} from 'vite'
 
 const entries = {
-  'JavaScript/main': '@/main'
+  'JavaScript/Frontend/main': '@/main',
+  'JavaScript/Backend/aspectratio': '@/../Backend/aspectratio',
 }
 
 export default defineConfig({
@@ -10,7 +11,7 @@ export default defineConfig({
   plugins: [],
   resolve: {
     alias: [
-      {find: '@', replacement: fileURLToPath(new URL('./Resources/Private/JavaScript', import.meta.url))},
+      {find: '@', replacement: fileURLToPath(new URL('./Resources/Private/JavaScript/Frontend', import.meta.url))}
     ]
   },
   build: {
