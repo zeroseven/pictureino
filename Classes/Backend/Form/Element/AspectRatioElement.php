@@ -14,6 +14,7 @@ use Zeroseven\Pictureino\Utility\SettingsUtility;
 
 class AspectRatioElement extends AbstractFormElement
 {
+    private const RENDER_TYPE = 'aspectRatio';
     private string $wrapperId = '';
     private string $fieldName = '';
     private array $breakpoints = [];
@@ -84,9 +85,18 @@ class AspectRatioElement extends AbstractFormElement
     public static function register(): void
     {
         $GLOBALS['TYPO3_CONF_VARS']['SYS']['formEngine']['nodeRegistry'][1746561328] = [
-            'nodeName' => 'aspectRatio',
-            'priority' => 40,
+            'nodeName' => static::RENDER_TYPE,
             'class' => static::class,
+            'priority' => 40
         ];
+    }
+
+    public static function addTCAConfig(array $override = null): array
+    {
+        return array_merge_recursive([
+            'type' => 'user',
+            'renderType' => static::RENDER_TYPE,
+            'default' => '',
+        ], $override ?? []);
     }
 }
