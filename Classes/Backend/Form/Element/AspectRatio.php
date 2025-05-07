@@ -6,20 +6,26 @@ namespace Zeroseven\Pictureino\Backend\Form\Element;
 
 use TYPO3\CMS\Backend\Form\Element\AbstractFormElement;
 use TYPO3\CMS\Core\Page\JavaScriptModuleInstruction;
+use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\StringUtility;
 use TYPO3Fluid\Fluid\Core\ViewHelper\TagBuilder;
+use Zeroseven\Pictureino\Utility\SettingsUtility;
 
 class AspectRatio extends AbstractFormElement
 {
     private string $wrapperId = '';
     private string $fieldName = '';
+    private array $breakpoints = [];
     private array $result = [];
 
     private function initializeElement(): void
     {
+        $site = GeneralUtility::makeInstance(SiteFinder::class)->getSiteByPageId(1);
+
         $this->wrapperId = StringUtility::getUniqueId('id');
         $this->fieldName = StringUtility::getUniqueId('id');
+        $this->breakpoints = GeneralUtility::makeInstance(SettingsUtility::class, $site)->getBreakpoints() ?? [];
         $this->result = $this->initializeResultArray();
     }
 
@@ -30,7 +36,7 @@ class AspectRatio extends AbstractFormElement
 
         $this->result['javaScriptModules'][] = JavaScriptModuleInstruction::create(
             '@zeroseven/pictureino/Backend/aspectratio.js'
-        )->instance($this->fieldName, $this->wrapperId, json_encode($parameters));
+        )->instance($this->fieldName, $this->wrapperId, json_encode($parameters), json_encode(array_flip($this->breakpoints)));
     }
 
     private function addMarkup(): void
@@ -38,6 +44,7 @@ class AspectRatio extends AbstractFormElement
         $wrap = GeneralUtility::makeInstance(TagBuilder::class, 'div');
         $wrap->addAttribute('id', $this->wrapperId);
 
+        // die(debug($this->breakpoints));
         $this->result['html'] .= $wrap->render();
     }
 

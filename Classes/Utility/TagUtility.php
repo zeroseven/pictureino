@@ -22,7 +22,7 @@ class TagUtility
     {
         $this->imageUtility = $imageUtility;
         $this->aspectRatioUtility = $aspectRatioUtility;
-        $this->debugMode = (bool) GeneralUtility::makeInstance(SettingsUtility::class)->get('debug');
+        $this->debugMode = (bool) GeneralUtility::makeInstance(SettingsUtility::class)->isDebug();
     }
 
     public function addAttribute(string $attribute, ?string $value = null): self

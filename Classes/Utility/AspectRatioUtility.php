@@ -17,14 +17,7 @@ class AspectRatioUtility
     public function __construct()
     {
         $this->aspectRatios = [0 => null];
-
-        if ($breakpoints = GeneralUtility::makeInstance(SettingsUtility::class)->get('breakpoints')) {
-            foreach ($breakpoints as $setup) {
-                if (preg_match('/(.+)\s*:\s*(\d+)/', $setup, $matches)) {
-                    $this->breakpointMap[$matches[1]] = (int) $matches[2];
-                }
-            }
-        }
+        $this->breakpointMap = GeneralUtility::makeInstance(SettingsUtility::class)->getBreakpoints();
     }
 
     /** @throws \Exception */
