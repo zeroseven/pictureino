@@ -12,7 +12,7 @@ use TYPO3\CMS\Core\Utility\StringUtility;
 use TYPO3Fluid\Fluid\Core\ViewHelper\TagBuilder;
 use Zeroseven\Pictureino\Utility\SettingsUtility;
 
-class AspectRatio extends AbstractFormElement
+class AspectRatioElement extends AbstractFormElement
 {
     private string $wrapperId = '';
     private string $fieldName = '';
