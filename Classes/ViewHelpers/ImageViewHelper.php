@@ -9,6 +9,7 @@ use TYPO3\CMS\Core\Resource\File;
 use TYPO3\CMS\Core\Resource\FileReference;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractViewHelper;
+use Zeroseven\Pictureino\Entity\ConfigRequest;
 use Zeroseven\Pictureino\Utility\AspectRatioUtility;
 use Zeroseven\Pictureino\Utility\EncryptionUtility;
 use Zeroseven\Pictureino\Utility\ImageUtility;
@@ -63,34 +64,36 @@ class ImageViewHelper extends AbstractViewHelper
 
     protected function createEncryptionHash(): string
     {
-        $config = [];
+        $configRequest = GeneralUtility::makeInstance(ConfigRequest::class);
         $file = $this->imageUtiltiy->getFile();
 
         if ($file instanceof FileReference) {
-            $config['file'] = [
+            $configRequest->addConfig('file', [
                 'src' => $file->getReferenceProperty('uid'),
                 'treatIdAsReference' => true,
-            ];
+            ]);
         } elseif ($file instanceof File) {
-            $config['file'] = [
+            $configRequest->addConfig('file', [
                 'src' => $file->getPublicUrl(),
                 'treatIdAsReference' => false,
-            ];
+            ]);
         }
 
         if (null !== $this->arguments['retina']) {
-            $config['retina'] = (bool) $this->arguments['retina'];
+            $configRequest->addConfig('retina', (bool) $this->arguments['retina']);
         }
 
         if (!$this->aspectRatioUtiltiy->isEmpty()) {
-            $config['aspectRatio'] = $this->aspectRatioUtiltiy->toArray();
+            $configRequest->addConfig('aspectRatio', $this->aspectRatioUtiltiy->toArray());
         }
 
         if ($cropVariant = $this->arguments['cropVariant'] ?? null) {
-            $config['cropVariant'] = $cropVariant;
+            $configRequest->addConfig('cropVariant', $cropVariant);
         }
 
-        return EncryptionUtility::encryptConfig($config);
+        debug($configRequest->getConfig(), 'configRequest');
+
+        return $configRequest->encryptConfig();
     }
 
     protected function determineAspectRatio(): AspectRatioUtility

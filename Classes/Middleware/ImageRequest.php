@@ -44,7 +44,7 @@ class ImageRequest implements MiddlewareInterface
 
     protected function initializeConfig(ServerRequestInterface $request): bool
     {
-        $this->configRequest = GeneralUtility::makeInstance(ConfigRequest::class, $request);
+        $this->configRequest = ConfigRequest::parseRequest( $request);
 
         if ($this->configRequest->isValid() && $config = $this->configRequest->getConfig()) {
             $this->identifier = md5($request->getAttribute('site')?->getIdentifier() . ($config['cropVariant'] ?? '') . json_encode($config['file'] ?? []));
