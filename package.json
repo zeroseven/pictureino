@@ -1,7 +1,6 @@
 {
-	"name": "Pictureino 🦏",
+	"name": "Pictureiño 🖼️",
 	"private": true,
-	"version": "0.10.0",
 	"type": "module",
 	"engines": {
 		"node": "^22"
