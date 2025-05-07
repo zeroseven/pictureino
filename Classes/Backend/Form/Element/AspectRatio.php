@@ -29,14 +29,19 @@ class AspectRatio extends AbstractFormElement
         $this->result = $this->initializeResultArray();
     }
 
+    private function addStyles(): void
+    {
+        $this->result['stylesheetFiles'][] = 'EXT:pictureino/Resources/Public/Css/Backend/aspectratio.css';
+    }
+
     private function addJavaScript(): void
     {
         $parameterArray = $this->data['parameterArray'];
-        $parameters = $parameterArray['fieldConf']['config']['parameters'] ?? [];
+        $value = $parameterArray['itemFormElValue'] ?? '';
 
         $this->result['javaScriptModules'][] = JavaScriptModuleInstruction::create(
             '@zeroseven/pictureino/Backend/aspectratio.js'
-        )->instance($this->fieldName, $this->wrapperId, json_encode($parameters), json_encode(array_flip($this->breakpoints)));
+        )->instance($this->fieldName, $this->wrapperId, $value, json_encode(array_keys($this->breakpoints)));
     }
 
     private function addMarkup(): void
@@ -71,6 +76,7 @@ class AspectRatio extends AbstractFormElement
         $this->addMarkup();
         $this->addJavaScript();
         $this->addHiddenField();
+        $this->addStyles();
 
         return $this->result;
     }
