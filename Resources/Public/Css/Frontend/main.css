@@ -1,0 +1,3 @@
+img[data-config]{width:100%;height:auto}
+img[data-loaded=false]{filter:blur(4px);transition:filter 0.25s}
+img[data-loaded=true]{filter:none;transition:filter 0.25s}

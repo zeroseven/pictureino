@@ -1,166 +1,167 @@
-type Ratio = [number, number]
+// Types & Interfaces
+interface RatioConfig {
+  width: number
+  height: number
+  isPortrait: boolean
+}
 
-class RatioSelector {
-  private static readonly ratios: Ratio[] = [
-    [1, 1],   // square
-    [16, 9],  // landscape/portrait 16:9
-    [5, 4],   // landscape/portrait 5:4
-    [4, 3],   // landscape/portrait 4:3
-  ]
+type BreakpointData = Record<string, string>
 
-  private select: HTMLSelectElement
-  private switchButton: HTMLButtonElement
-  private onChange: () => void
-  private isPortrait: boolean = false
+// Constants
+const PREDEFINED_RATIOS: [number, number][] = [
+  [1, 1],   // square
+  [16, 9],  // landscape/portrait 16:9
+  [5, 4],   // landscape/portrait 5:4
+  [4, 3],   // landscape/portrait 4:3
+]
 
-  constructor(initialValue: string, onChange: () => void) {
-    this.onChange = onChange
-    this.isPortrait = initialValue ? this.isRatioPortrait(initialValue) : false
-    this.select = this.createSelect(initialValue)
-    this.switchButton = this.createSwitchButton()
+// Utility Functions
+const parseRatio = (ratio: string): RatioConfig | null => {
+  if (!ratio || ratio === '1:1') {
+    return {width: 1, height: 1, isPortrait: false}
   }
 
-  private createOptions(): void {
-    // Entferne alle existierenden Optionen
-    while (this.select.firstChild) {
-      this.select.removeChild(this.select.firstChild)
-    }
+  const [width, height] = ratio.split(':').map(Number)
+  return {width, height, isPortrait: height > width}
+}
 
-    // Füge die Default-Option hinzu
-    const defaultOption = document.createElement('option')
-    defaultOption.value = ''
-    defaultOption.textContent = 'Select ratio'
-    this.select.appendChild(defaultOption)
+const formatRatio = ({width, height, isPortrait}: RatioConfig): string => {
+  if (width === 1 && height === 1) return '1:1'
+  return isPortrait ? `${height}:${width}` : `${width}:${height}`
+}
 
-    // Füge die Ratio-Optionen hinzu
-    RatioSelector.ratios.forEach(([width, height]) => {
-      const option = document.createElement('option')
-      const [first, second] = this.isPortrait ? [height, width] : [width, height]
-      const value = `${first}:${second}`
-      option.value = value
-      option.textContent = value
-      this.select.appendChild(option)
+const parseBreakpoints = (input: string[] | string): string[] => {
+  if (Array.isArray(input)) return input
+  if (!input?.trim()) return []
+
+  try {
+    const parsed = JSON.parse(input)
+    if (Array.isArray(parsed)) return parsed
+    if (typeof parsed === 'object' && parsed !== null) return Object.values(parsed)
+  } catch {
+    return input.split(',').map(b => b.trim()).filter(Boolean)
+  }
+
+  return []
+}
+
+// Components
+class RatioSelector {
+  private readonly element: HTMLSelectElement
+  private ratio: RatioConfig
+  private readonly onChange: () => void
+
+  constructor(initialRatio: string, onChange: () => void) {
+    this.element = document.createElement('select')
+    this.element.required = true
+    this.element.className = 'form-select form-control'
+    this.ratio = parseRatio(initialRatio) || {width: 0, height: 0, isPortrait: false}
+    this.onChange = onChange
+
+    this.initializeSelect()
+    this.setValue(initialRatio)
+  }
+
+  private initializeSelect(): void {
+    const options = this.generateOptions()
+    this.element.innerHTML = options
+      .map(opt => `<option value="${opt.value}">${opt.text}</option>`)
+      .join('')
+
+    this.element.addEventListener('change', () => {
+      this.ratio = parseRatio(this.element.value) || this.ratio
+      this.onChange()
     })
   }
 
-  private createSelect(initialValue: string): HTMLSelectElement {
-    const select = document.createElement('select')
-    select.className = 'ratio-select'
-    select.required = true
-    this.select = select
-
-    this.createOptions()
-
-    if (initialValue) {
-      select.value = initialValue
-    }
-
-    select.addEventListener('change', () => this.onChange())
-    return select
+  private generateOptions(): Array<{value: string, text: string}> {
+    const defaultOption = {value: '', text: 'Select ratio'}
+    const ratioOptions = PREDEFINED_RATIOS.map(([w, h]) => {
+      const config = {
+        width: w,
+        height: h,
+        isPortrait: this.ratio.isPortrait,
+      }
+      const value = formatRatio(config)
+      return {value, text: value}
+    })
+    return [defaultOption, ...ratioOptions]
   }
 
-  private createSwitchButton(): HTMLButtonElement {
-    const button = document.createElement('button')
-    button.textContent = '⟷'
-    button.className = 'switch-ratio'
-    button.type = 'button'
-    button.addEventListener('click', () => this.switchRatio())
-    return button
-  }
-
-  private isRatioPortrait(ratio: string): boolean {
-    if (ratio === '1:1') return false
-    const [width, height] = ratio.split(':').map(Number)
-    return height > width
-  }
-
-  private recreateSelect(selectedIndex: number): void {
-    this.createOptions()
-    this.select.selectedIndex = selectedIndex
-  }
-
-  private switchRatio(): void {
-    const currentRatio = this.select.value
-    if (!currentRatio || currentRatio === '1:1') return
-
-    const selectedIndex = this.select.selectedIndex
-    this.isPortrait = !this.isPortrait
-    this.recreateSelect(selectedIndex)
-
-    // Manuell ein Change-Event auslösen
-    const event = new Event('change', {bubbles: true})
-    this.select.dispatchEvent(event)
-  }
-
-  public getElement(): HTMLElement {
-    const container = document.createElement('div')
-    container.className = 'ratio-control'
-    container.appendChild(this.select)
-    container.appendChild(this.switchButton)
-    return container
+  public getElement(): HTMLSelectElement {
+    return this.element
   }
 
   public getValue(): string {
-    return this.select.value
+    return formatRatio(this.ratio)
+  }
+
+  public toggleOrientation(): void {
+    if (this.ratio.width === 1 && this.ratio.height === 1) return
+
+    const currentValue = this.getValue()
+    this.ratio = {...this.ratio, isPortrait: !this.ratio.isPortrait}
+
+    // Regenerate all options with new orientation
+    const options = this.generateOptions()
+    this.element.innerHTML = options
+      .map(opt => `<option value="${opt.value}">${opt.text}</option>`)
+      .join('')
+
+    // Update value after regenerating options
+    const newValue = formatRatio(this.ratio)
+    this.setValue(newValue)
+
+    if (currentValue !== newValue) {
+      this.onChange()
+    }
+  }
+
+  private setValue(value: string): void {
+    this.element.value = value
   }
 }
 
-class Breakpoint {
-  private element: HTMLElement
-  private ratioSelector: RatioSelector
-  private value: string
-  private order: number
+class BreakpointControl {
+  private readonly element: HTMLDivElement
+  private readonly breakpoint: string
+  private readonly ratioSelector: RatioSelector
 
   constructor(
-    value: string,
+    breakpoint: string,
     initialRatio: string,
     order: number,
     onDelete: () => void,
     onRatioChange: () => void,
   ) {
-    this.value = value
-    this.order = order
+    this.breakpoint = breakpoint
     this.ratioSelector = new RatioSelector(initialRatio, onRatioChange)
-    this.element = this.createContainer(onDelete)
+    this.element = this.createControl(order, onDelete)
   }
 
-  private createContainer(onDelete: () => void): HTMLElement {
+  private createControl(order: number, onDelete: () => void): HTMLDivElement {
     const container = document.createElement('div')
-    container.className = 'breakpoint-container'
-    container.setAttribute('data-breakpoint', this.value)
-    container.style.order = String(this.order)
+    container.className = 'aspectratio__breakpoint'
+    container.dataset.breakpoint = this.breakpoint
+    container.style.order = String(order)
 
-    const header = this.createHeader(onDelete)
-    container.appendChild(header)
-    container.appendChild(this.ratioSelector.getElement())
+    const template = `
+      <span class="aspectratio__breakpoint-label">${this.breakpoint}</span>
+      <span class="aspectratio__select"></span>
+      <button type="button" class="aspectratio__breakpoint-remove btn btn-default">×</button>
+      <button type="button" class="aspectratio__switch btn btn-default">⟷</button>
+    `
+    container.innerHTML = template
+
+    container.querySelector('.aspectratio__select')?.appendChild(this.ratioSelector.getElement())
+    container.querySelector('.aspectratio__breakpoint-remove')?.addEventListener('click', onDelete)
+    container.querySelector('.aspectratio__switch')?.addEventListener('click', () => this.ratioSelector.toggleOrientation())
 
     return container
   }
 
-  private createHeader(onDelete: () => void): HTMLElement {
-    const header = document.createElement('div')
-    header.className = 'breakpoint-header'
-
-    const title = document.createElement('h3')
-    title.textContent = this.value
-
-    const removeButton = document.createElement('button')
-    removeButton.textContent = '×'
-    removeButton.className = 'remove-breakpoint'
-    removeButton.type = 'button'
-    removeButton.addEventListener('click', onDelete)
-
-    header.appendChild(title)
-    header.appendChild(removeButton)
-    return header
-  }
-
   public getElement(): HTMLElement {
     return this.element
-  }
-
-  public getValue(): string {
-    return this.value
   }
 
   public getRatio(): string {
@@ -168,51 +169,44 @@ class Breakpoint {
   }
 }
 
-class BreakpointSelector {
-  private select: HTMLSelectElement
-  private breakpoints: string[]
-  private usedBreakpoints: Set<string>
-  private onSelect?: (value: string) => void
+class BreakpointManager {
+  private readonly element: HTMLSelectElement
+  private readonly availableBreakpoints: Set<string>
+  private readonly usedBreakpoints: Set<string>
 
-  constructor(breakpoints: string[], onSelect?: (value: string) => void) {
-    this.breakpoints = breakpoints
+  constructor(breakpoints: string[]) {
+    this.element = document.createElement('select')
+    this.element.className = 'aspectratio__breakpoint-select form-select form-control'
+    this.availableBreakpoints = new Set(breakpoints)
     this.usedBreakpoints = new Set<string>()
-    this.select = document.createElement('select')
-    this.onSelect = onSelect
-    this.select.className = 'breakpoint-select'
-    this.initializeSelect()
-  }
-
-  private initializeSelect(): void {
-    const defaultOption = document.createElement('option')
-    defaultOption.value = ''
-    defaultOption.textContent = 'Select breakpoint'
-    this.select.appendChild(defaultOption)
     this.updateOptions()
   }
 
   public getElement(): HTMLElement {
-    return this.select
+    return this.element
   }
 
-  public addBreakpoint(): Promise<string> {
-    return new Promise<string>(resolve => {
-      const handleChange = (event: Event): void => {
-        const target = event.target as HTMLSelectElement
-        const value = target.value
-        if (value) {
-          this.select.removeEventListener('change', handleChange)
-          this.select.value = ''
-          this.usedBreakpoints.add(value)
-          this.updateOptions()
-          if (this.onSelect) {
-            this.onSelect(value)
-          }
-          resolve(value)
-        }
+  public markBreakpointAsUsed(breakpoint: string): void {
+    if (this.availableBreakpoints.has(breakpoint)) {
+      this.usedBreakpoints.add(breakpoint)
+      this.updateOptions()
+    }
+  }
+
+  public async waitForSelection(): Promise<string> {
+    return new Promise(resolve => {
+      const handler = (): void => {
+        const value = this.element.value
+        if (!value) return
+
+        this.element.removeEventListener('change', handler)
+        this.element.value = ''
+        this.usedBreakpoints.add(value)
+        this.updateOptions()
+        resolve(value)
       }
 
-      this.select.addEventListener('change', handleChange)
+      this.element.addEventListener('change', handler)
     })
   }
 
@@ -222,112 +216,73 @@ class BreakpointSelector {
   }
 
   private updateOptions(): void {
-    while (this.select.options.length > 1) {
-      this.select.remove(1)
-    }
+    const available = Array.from(this.availableBreakpoints)
+      .filter(bp => !this.usedBreakpoints.has(bp))
 
-    const availableBreakpoints = this.breakpoints.filter(bp => !this.usedBreakpoints.has(bp))
-    availableBreakpoints.forEach(breakpoint => {
-      const option = document.createElement('option')
-      option.value = breakpoint
-      option.textContent = breakpoint
-      this.select.appendChild(option)
-    })
+    this.element.innerHTML = `
+      <option value="">Select breakpoint</option>
+      ${available.map(bp => `<option value="${bp}">${bp}</option>`).join('')}
+    `
 
-    this.select.disabled = availableBreakpoints.length === 0
+    this.element.disabled = available.length === 0
   }
 }
 
 export default class AspectRatio {
-  private wrapper: HTMLElement | null = null
-  private hiddenField: HTMLInputElement | null = null
-  private breakpointSelector: BreakpointSelector
-  private breakpointsList: HTMLElement
-  private breakpoints: Map<string, Breakpoint> = new Map()
-  private breakpointValues: string[]
+  private readonly wrapper: HTMLElement
+  private readonly hiddenField: HTMLInputElement
+  private readonly breakpointsList: HTMLElement
+  private readonly breakpointManager: BreakpointManager
+  private readonly breakpoints = new Map<string, BreakpointControl>()
+  private readonly orderedBreakpoints: string[]
 
-  constructor(fieldId: string, wrapperId: string, data: string, breakpointValues: string[] | string) {
-    this.wrapper = document.getElementById(wrapperId)
-    this.hiddenField = document.getElementById(fieldId) as HTMLInputElement
+  constructor(fieldId: string, wrapperId: string, data: string, breakpoints: string[] | string) {
+    const wrapperEl = document.getElementById(wrapperId)
+    const fieldEl = document.getElementById(fieldId)
 
-    if (!this.wrapper) {
-      throw new Error('Wrapper element not found')
+    if (!wrapperEl || !fieldEl) {
+      throw new Error('Required elements not found')
     }
 
-    this.breakpointValues = this.parseBreakpoints(breakpointValues)
-    this.breakpointSelector = new BreakpointSelector(
-      this.breakpointValues,
-      (value: string) => this.addBreakpoint(value),
-    )
-    this.breakpointsList = this.createBreakpointsList()
+    this.wrapper = wrapperEl
+    this.hiddenField = fieldEl as HTMLInputElement
+    this.orderedBreakpoints = parseBreakpoints(breakpoints)
+    this.breakpointManager = new BreakpointManager(this.orderedBreakpoints)
+    this.breakpointsList = document.createElement('div')
+    this.breakpointsList.className = 'aspectratio__breakpoint-list'
+
     this.initialize(data)
-    this.setupBreakpointListener()
-  }
-
-  private parseBreakpoints(breakpoints: string[] | string): string[] {
-    if (Array.isArray(breakpoints)) {
-      return breakpoints
-    }
-
-    if (typeof breakpoints === 'string') {
-      if (!breakpoints.trim()) {
-        return []
-      }
-
-      try {
-        const parsed = JSON.parse(breakpoints)
-        if (Array.isArray(parsed)) {
-          return parsed
-        }
-        if (typeof parsed === 'object' && parsed !== null) {
-          return Object.values(parsed)
-        }
-      } catch {
-        return breakpoints.split(',').map(b => b.trim()).filter(Boolean)
-      }
-    }
-
-    return []
   }
 
   private initialize(data: string): void {
-    this.wrapper?.appendChild(this.breakpointSelector.getElement())
-    this.wrapper?.appendChild(this.breakpointsList)
+    this.wrapper.className = 'aspectratio'
+    this.wrapper.append(this.breakpointManager.getElement(), this.breakpointsList)
 
-    if (!data?.trim()) return
-
-    try {
-      if (!data.trim().startsWith('{')) return
-
-      const savedData = JSON.parse(data)
-      Object.entries(savedData).forEach(([breakpoint, ratio]) => {
-        this.addBreakpoint(breakpoint, ratio as string)
-      })
-    } catch (error) {
-      console.error('Failed to parse saved aspect ratios:', error)
-    }
-  }
-
-  private setupBreakpointListener(): void {
-    const listenForBreakpoint = async (): Promise<void> => {
-      await this.breakpointSelector.addBreakpoint()
-      listenForBreakpoint()
+    if (data?.trim() && data.startsWith('{')) {
+      try {
+        const savedData = JSON.parse(data) as BreakpointData
+        Object.entries(savedData).forEach(([breakpoint, ratio]) => {
+          this.addBreakpoint(breakpoint, ratio)
+          this.breakpointManager.markBreakpointAsUsed(breakpoint)
+        })
+      } catch (error) {
+        console.error('Failed to parse saved aspect ratios:', error)
+      }
     }
 
-    listenForBreakpoint()
+    this.listenForBreakpoints()
   }
 
-  private createBreakpointsList(): HTMLElement {
-    const container = document.createElement('div')
-    container.className = 'breakpoints-list'
-    container.style.display = 'flex'
-    container.style.flexDirection = 'column'
-    return container
+  private async listenForBreakpoints(): Promise<void> {
+    while (true) {
+      const breakpoint = await this.breakpointManager.waitForSelection()
+      this.addBreakpoint(breakpoint)
+    }
   }
 
   private addBreakpoint(value: string, ratio: string = ''): void {
-    const order = this.breakpointValues.indexOf(value)
-    const breakpoint = new Breakpoint(
+    const order = this.orderedBreakpoints.indexOf(value)
+    const control = new BreakpointControl(
       value,
       ratio,
       order,
@@ -335,28 +290,26 @@ export default class AspectRatio {
       () => this.updateHiddenField(),
     )
 
-    this.breakpoints.set(value, breakpoint)
-    this.breakpointsList.appendChild(breakpoint.getElement())
+    this.breakpoints.set(value, control)
+    this.breakpointsList.appendChild(control.getElement())
     this.updateHiddenField()
   }
 
   private removeBreakpoint(value: string): void {
-    const breakpoint = this.breakpoints.get(value)
-    if (breakpoint) {
-      breakpoint.getElement().remove()
+    const control = this.breakpoints.get(value)
+    if (control) {
+      control.getElement().remove()
       this.breakpoints.delete(value)
-      this.breakpointSelector.removeBreakpoint(value)
+      this.breakpointManager.removeBreakpoint(value)
       this.updateHiddenField()
     }
   }
 
   private updateHiddenField(): void {
-    if (!this.hiddenField) return
-
-    const ratios: Record<string, string> = {}
-    this.breakpoints.forEach((breakpoint, key) => {
-      ratios[key] = breakpoint.getRatio()
-    })
+    const ratios = Array.from(this.breakpoints.entries()).reduce((acc, [key, control]) => {
+      acc[key] = control.getRatio()
+      return acc
+    }, {} as BreakpointData)
 
     this.hiddenField.value = JSON.stringify(ratios)
   }
