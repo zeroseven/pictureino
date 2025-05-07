@@ -220,7 +220,7 @@ class BreakpointManager {
       .filter(bp => !this.usedBreakpoints.has(bp))
 
     this.element.innerHTML = `
-      <option value="">Select breakpoint</option>
+      <option value="">Add aspect ratio</option>
       ${available.map(bp => `<option value="${bp}">${bp}</option>`).join('')}
     `
 
