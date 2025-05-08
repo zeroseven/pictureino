@@ -37,7 +37,7 @@ class AspectRatio
         return $this->x;
     }
 
-    public function setX(int $x = null): self
+    public function setX(?int $x = null): self
     {
         $this->x = $x;
 
@@ -49,7 +49,7 @@ class AspectRatio
         return $this->y;
     }
 
-    public function setY(int $y = null): self
+    public function setY(?int $y = null): self
     {
         $this->y = $y;
 

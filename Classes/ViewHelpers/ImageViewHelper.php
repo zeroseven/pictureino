@@ -11,7 +11,6 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractViewHelper;
 use Zeroseven\Pictureino\Entity\ConfigRequest;
 use Zeroseven\Pictureino\Utility\AspectRatioUtility;
-use Zeroseven\Pictureino\Utility\EncryptionUtility;
 use Zeroseven\Pictureino\Utility\ImageUtility;
 use Zeroseven\Pictureino\Utility\TagUtility;
 
