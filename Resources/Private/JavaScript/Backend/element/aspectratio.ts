@@ -1,3 +1,5 @@
+import Icons from "@typo3/backend/icons.js";
+
 // Types & Interfaces
 interface RatioConfig {
   width: number
@@ -9,10 +11,11 @@ type BreakpointData = Record<string, string>
 
 // Constants
 const PREDEFINED_RATIOS: [number, number][] = [
-  [1, 1],   // square
-  [16, 9],  // landscape/portrait 16:9
-  [5, 4],   // landscape/portrait 5:4
-  [4, 3],   // landscape/portrait 4:3
+  [1, 1],
+  [5, 4],
+  [4, 3],
+  [16, 9],
+  [21, 10],
 ]
 
 // Utility Functions
@@ -145,17 +148,21 @@ class BreakpointControl {
     container.dataset.breakpoint = this.breakpoint
     container.style.order = String(order)
 
-    const template = `
-      <span class="aspectratio__breakpoint-label">${this.breakpoint}</span>
-      <span class="aspectratio__select"></span>
-      <button type="button" class="aspectratio__breakpoint-remove btn btn-default">×</button>
-      <button type="button" class="aspectratio__switch btn btn-default">⟷</button>
-    `
-    container.innerHTML = template
+    Icons.getIcon('actions-delete', Icons.sizes.small).then(deleteIcon => {
+      Icons.getIcon('actions-exchange', Icons.sizes.small).then(switchIcon => {
+        const template = `
+          <span class="aspectratio__breakpoint-label">${this.breakpoint}</span>
+          <span class="aspectratio__select"></span>
+          <button type="button" class="aspectratio__breakpoint-remove btn btn-default">${deleteIcon}</button>
+          <button type="button" class="aspectratio__switch btn btn-default">${switchIcon}</button>
+        `
+        container.innerHTML = template
 
-    container.querySelector('.aspectratio__select')?.appendChild(this.ratioSelector.getElement())
-    container.querySelector('.aspectratio__breakpoint-remove')?.addEventListener('click', onDelete)
-    container.querySelector('.aspectratio__switch')?.addEventListener('click', () => this.ratioSelector.toggleOrientation())
+        container.querySelector('.aspectratio__select')?.appendChild(this.ratioSelector.getElement())
+        container.querySelector('.aspectratio__breakpoint-remove')?.addEventListener('click', onDelete)
+        container.querySelector('.aspectratio__switch')?.addEventListener('click', () => this.ratioSelector.toggleOrientation())
+      })
+    })
 
     return container
   }
