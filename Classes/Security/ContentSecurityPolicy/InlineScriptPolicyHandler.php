@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Zeroseven\Pictureino\Security\ContentSecurityPolicy;
 
 use TYPO3\CMS\Core\Security\ContentSecurityPolicy\Directive;
-use TYPO3\CMS\Core\Security\ContentSecurityPolicy\HashValue;
 use TYPO3\CMS\Core\Security\ContentSecurityPolicy\Event\PolicyMutatedEvent;
+use TYPO3\CMS\Core\Security\ContentSecurityPolicy\HashValue;
 use TYPO3\CMS\Core\Security\ContentSecurityPolicy\SourceKeyword;
 use Zeroseven\Pictureino\ViewHelpers\ImageViewHelper;
 

@@ -2,7 +2,8 @@ import {fileURLToPath, URL} from 'url'
 import {defineConfig} from 'vite'
 
 const entries = {
-  'JavaScript/main': '@/main'
+  'JavaScript/frontend/main': '@/main',
+  'JavaScript/backend/element/aspectratio': '@backend/element/aspectratio',
 }
 
 export default defineConfig({
@@ -10,7 +11,8 @@ export default defineConfig({
   plugins: [],
   resolve: {
     alias: [
-      {find: '@', replacement: fileURLToPath(new URL('./Resources/Private/JavaScript', import.meta.url))},
+      {find: '@', replacement: fileURLToPath(new URL('./Resources/Private/JavaScript/frontend', import.meta.url))},
+      {find: '@backend', replacement: fileURLToPath(new URL('./Resources/Private/JavaScript/backend', import.meta.url))}
     ]
   },
   build: {
@@ -23,6 +25,7 @@ export default defineConfig({
     emptyOutDir: false,
     rollupOptions: {
       input: entries,
+      external: [/@typo3\/backend\/.*/],
       output: {
         entryFileNames: `[name].js`,
         chunkFileNames: `[name].js`,

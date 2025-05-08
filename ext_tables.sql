@@ -23,3 +23,7 @@ CREATE TABLE tx_pictureino_request_processed (
 
 	PRIMARY KEY (request, processedfile)
 );
+
+CREATE TABLE tt_content (
+	aspect_ratio varchar(255) DEFAULT '' NOT NULL,
+);

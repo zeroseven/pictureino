@@ -17,14 +17,7 @@ class AspectRatioUtility
     public function __construct()
     {
         $this->aspectRatios = [0 => null];
-
-        if ($breakpoints = GeneralUtility::makeInstance(SettingsUtility::class)->get('breakpoints')) {
-            foreach ($breakpoints as $setup) {
-                if (preg_match('/(.+)\s*:\s*(\d+)/', $setup, $matches)) {
-                    $this->breakpointMap[$matches[1]] = (int) $matches[2];
-                }
-            }
-        }
+        $this->breakpointMap = GeneralUtility::makeInstance(SettingsUtility::class)->getBreakpoints();
     }
 
     /** @throws \Exception */
@@ -95,6 +88,10 @@ class AspectRatioUtility
             }
 
             return $this->sortAspectRatios();
+        }
+
+        if (is_string($input) && str_starts_with($input, '{') && $decoded = json_decode($input, true)) {
+            return $this->set($decoded);
         }
 
         $this->add($input, 0);

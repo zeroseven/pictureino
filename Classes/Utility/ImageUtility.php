@@ -29,7 +29,7 @@ class ImageUtility
 
     protected function isWebpSupported(): bool
     {
-        return $this->webpSupported ??= (bool)GeneralUtility::makeInstance(GraphicalFunctions::class)->webpSupportAvailable();
+        return $this->webpSupported ??= (bool) GeneralUtility::makeInstance(GraphicalFunctions::class)->webpSupportAvailable();
     }
 
     public function getFile(): FileInterface

@@ -21,13 +21,13 @@
 		"noUnusedParameters": true,
 		"noFallthroughCasesInSwitch": true,
 		"paths": {
-			"@/*": [
-				"./Resources/Private/JavaScript/*"
-			]
-		}
+			"@/*": ["./Resources/Private/JavaScript/*"],
+			"@backend/*": ["./Resources/Private/JavaScript/backend/*"]
+		},
 	},
 	"include": [
-		"Resources/Private/JavaScript/**/*.ts"
+		"Resources/Private/JavaScript/**/*.ts",
+		"Resources/Private/JavaScript/types/**/*.d.ts"
 	],
 	"exclude": [
 		"node_modules"

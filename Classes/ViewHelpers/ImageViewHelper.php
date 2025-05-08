@@ -127,9 +127,9 @@ class ImageViewHelper extends AbstractViewHelper
         }
         JS;
 
-        $this->assetCollector->addInlineJavaScript('pictureino-handle',$script,[],[
+        $this->assetCollector->addInlineJavaScript('pictureino-handle', $script, [], [
             'priority' => true,
-            'useNonce' => true
+            'useNonce' => true,
         ]);
     }
 
