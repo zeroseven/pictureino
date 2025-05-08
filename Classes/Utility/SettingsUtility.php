@@ -45,7 +45,7 @@ class SettingsUtility
         asort($breakpoints);
 
         // Add first breakpoint
-        if (reset($breakpoints) !== 0) {
+        if (0 !== reset($breakpoints)) {
             $breakpoints = ['_default' => 0] + $breakpoints;
         }
 

@@ -26,7 +26,7 @@ class AspectRatioElement extends AbstractFormElement
 
         $this->wrapperId = StringUtility::getUniqueId('id');
         $this->fieldName = StringUtility::getUniqueId('id');
-        $this->breakpoints = GeneralUtility::makeInstance(SettingsUtility::class, $site)->getBreakpoints() ?? [];
+        $this->breakpoints = GeneralUtility::makeInstance(SettingsUtility::class, $site)->getBreakpoints();
         $this->result = $this->initializeResultArray();
     }
 
@@ -65,7 +65,7 @@ class AspectRatioElement extends AbstractFormElement
             'id' => $this->fieldName,
             'name' => $parameterArray['itemFormElName'],
             'value' => htmlspecialchars($parameterArray['itemFormElValue']),
-            'data-type' => self::class
+            'data-type' => self::class,
         ]);
 
         $this->result['additionalHiddenFields'][] = $tag->render();
@@ -85,17 +85,17 @@ class AspectRatioElement extends AbstractFormElement
     public static function register(): void
     {
         $GLOBALS['TYPO3_CONF_VARS']['SYS']['formEngine']['nodeRegistry'][1746561328] = [
-            'nodeName' => static::RENDER_TYPE,
-            'class' => static::class,
-            'priority' => 40
+            'nodeName' => self::RENDER_TYPE,
+            'class' => self::class,
+            'priority' => 40,
         ];
     }
 
-    public static function addTCAConfig(array $override = null): array
+    public static function addTCAConfig(?array $override = null): array
     {
         return array_merge_recursive([
             'type' => 'user',
-            'renderType' => static::RENDER_TYPE,
+            'renderType' => self::RENDER_TYPE,
             'default' => '',
         ], $override ?? []);
     }

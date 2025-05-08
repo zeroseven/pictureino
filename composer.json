@@ -11,6 +11,7 @@
     ],
     "require": {
         "typo3/cms-core": "^13.0",
+        "typo3/cms-backend": "*",
         "typo3/cms-extbase": "*",
         "php": ">=8.3"
     },

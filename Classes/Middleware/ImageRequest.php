@@ -100,8 +100,8 @@ class ImageRequest implements MiddlewareInterface
 
         return [
             'img' . $pixelDensity . 'x' => $this->imageUtiltiy->getUrl(),
-            'width' => (int)$this->imageUtiltiy->getProperty('width') / $pixelDensity,
-            'height' => (int)$this->imageUtiltiy->getProperty('height') / $pixelDensity,
+            'width' => (int) $this->imageUtiltiy->getProperty('width') / $pixelDensity,
+            'height' => (int) $this->imageUtiltiy->getProperty('height') / $pixelDensity,
         ];
     }
 
