@@ -1,7 +1,7 @@
 {
     "name": "zeroseven/pictureino",
     "type": "typo3-cms-extension",
-    "description": "Pictureino – when your images size themselves",
+    "description": "Responsive images – fully automated. No setup required. Boost PageSpeed and SEO with lazy loading and modern WebP delivery",
     "license": "GPL-2.0-or-later",
     "authors": [
         {

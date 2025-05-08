@@ -50,7 +50,6 @@ class AspectRatioElement extends AbstractFormElement
         $wrap = GeneralUtility::makeInstance(TagBuilder::class, 'div');
         $wrap->addAttribute('id', $this->wrapperId);
 
-        // die(debug($this->breakpoints));
         $this->result['html'] .= $wrap->render();
     }
 

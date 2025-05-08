@@ -91,8 +91,6 @@ class ImageViewHelper extends AbstractViewHelper
             $configRequest->addConfig('cropVariant', $cropVariant);
         }
 
-        debug($configRequest->getConfig(), 'configRequest');
-
         return $configRequest->encryptConfig();
     }
 

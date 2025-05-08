@@ -1,6 +1,16 @@
-# Pictureiño
+# Pictureiño – when your images size themselves
 
-Pictureino is a zero-configuration TYPO3 extension that automatically optimizes image delivery. Without any manual setup, it intelligently calculates and delivers images in their optimal dimensions by analyzing viewport sizes and usage patterns. The extension learns from request patterns and automatically adapts its image size calculations, ensuring each image is delivered in the most efficient size for its specific use case. This fully automated approach eliminates the need for manual image size configurations while maintaining optimal performance and visual quality across all devices.
+**Responsive Images Done Right in TYPO3:**
+
+Pictureiño intelligently calculates the **ideal image dimensions** based on real viewport sizes and usage patterns. It learns from request data over time and adapts its sizing logic to serve only what’s needed – no more, no less. Images are delivered in **pixel-perfect dimensions**, as **modern WebP**, with **lazy loading** and **retina support** out of the box.
+
+This fully automated approach eliminates the need for manual configuration, **improves PageSpeed and Core Web Vitals**, and **boosts SEO** – all while maintaining maximum visual quality across devices.
+
+## How does it work?
+
+Responsive images that think for themselves: Instead of pre-calculating image sizes server-side, a small fallback image is delivered that analyzes the viewport size and device characteristics (like pixel density) in the frontend. Based on this data, the image sends a request to TYPO3, which calculates the optimal size. The image is then processed and seamlessly replaced with the correct size, ensuring optimal performance and visual quality on the fly.
+
+This entire process happens dynamically, without the need for any manual configuration, making it seamless for developers and highly efficient for end users.
 
 ## Usage Examples
 
@@ -9,16 +19,32 @@ Simple image integration in your fluid template.
 ```html
 <html xmlns:pictureino="http://typo3.org/ns/Zeroseven/Pictureino/ViewHelpers" data-namespace-typo3-fluid="true">
 
-<!-- Simple image in the orginal aspect ratio -->
-<pictureino:image src="{image}" />
+    <!-- Simple image in the orginal aspect ratio -->
+    <pictureino:image src="{image}" />
 
-<!-- Verious aspect ratios on different breakpoints -->
-<pictureino:image src="{image}" aspectRatio="{600:'16:9', 1200:'2:1'}" />
+    <!-- All image attributes are available -->
+    <pictureino:image src="{image}" class="image" alt="cute cats" style="width: 50%" title="😻" />
 
-<!-- The image will be delivered in any aspect ratio, depends on it's size in the frontend -->
-<pictureino:image src="{image}" freeAspectRatio="1" />
+    <!-- Use different aspect ratios on different breakpoints -->
+    <pictureino:image src="{image}" aspectRatio="{768: '4:3', 992: '16:9'}" />
+
+    <!-- … or use your defined breakpoint variabels instead -->
+    <pictureino:image src="{image}" aspectRatio="{'md': '4:3', lg: '16:9'}" />
+
+    <!-- The image will be delivered in any aspect ratio, depends on it's size in the frontend -->
+    <pictureino:image src="{image}" freeAspectRatio="1" />
 
 </html>
+```
+
+## Renderer example
+
+```html
+<!-- Initial in DOM -->
+<img src="cats-small.png" alt="cute cats" width="150" height="100" data-loaded="false" onload="Pictureiño.handle(this)" data-config="bHhHOXJqZXRzUDg5NVrbTdWQ1E1WFRoeHZuUnM4PQ==" />
+
+<!-- When the image has been loaded-->
+<img src="cats-large.webp" alt="cute cats" width="1200" height="800" data-loaded="true" />
 ```
 
 ## Installation
@@ -27,16 +53,30 @@ Simple image integration in your fluid template.
 composer require zeroseven/pictureino
 ```
 
-## Configuration
-
-...
-
 ## Commands
 
 ### Cleanup processed images
 
-Remove all images of dynamic image requests and cleanup the pictureino database entries:
+Remove all images of dynamic image requests and cleanup the pictureino database entries
 
 ```bash
 vendor/bin/typo3 pictureino:cleanup
 ```
+
+## Frequently Asked Questions
+
+### Is there a risk of too many images being generated?
+
+No, not at all. All image requests are stored and analyzed. Similar requests are automatically grouped without recalculating new images. Additionally, the processed files are logged. You can easily delete these images using a command, for example, through a regular cron job.
+
+### Does this have any disadvantages for SEO?
+
+No, quite the opposite! Pictureiño improves SEO. By serving WebP images, page load speeds are significantly reduced, which is a key ranking factor for Google. Additionally, with lazy loading, only visible images are loaded, optimizing the initial load time. Pictureiño also ensures that images are always delivered in their optimal size and quality across devices. Plus, structured data is automatically available, even while images are still loading. This helps search engines like Google understand the content and context of images right away, improving indexing.
+
+### Is no configuration necessary at all?
+
+No, the responsive image optimization starts immediately with no setup required. However, you can make manual adjustments if needed, such as defining maximum image sizes or setting breakpoints for different aspect ratios.
+
+### Are strict CSP header settings a problem?
+
+No, not at all. The extension automatically adjusts the CSP settings to ensure that all images load securely and without issues.

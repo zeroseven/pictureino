@@ -1,14 +1,14 @@
 <?php
 
 $EM_CONF[$_EXTKEY] = [
-    'title' => 'Pictureiño',
-    'description' => 'Automated responseive images for TYPO3. Get perfect images without any effort.',
+    'title' => 'Pictureiño (Responsive Images)',
+    'description' => 'Responsive images – fully automated. No setup required. Boost PageSpeed and SEO with lazy loading and modern WebP delivery',
     'category' => 'fe',
-    'version' => '0.11.0',
+    'version' => '0.12.0',
     'state' => 'beta',
     'author' => 'Raphael Thanner',
     'author_email' => '',
-    'author_company' => 'Zeroseven',
+    'author_company' => 'zeroseven design studios',
     'constraints' => [
         'depends' => [
             'typo3' => '13.0.0-13.99.99',
