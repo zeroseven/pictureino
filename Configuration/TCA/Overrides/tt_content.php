@@ -14,7 +14,7 @@ call_user_func(static function (string $table) {
     \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addFieldsToPalette(
         $table,
         'mediaAdjustments',
-        'aspect_ratio',
+        '--linebreak--,aspect_ratio',
         'after:imageborder'
     );
 }, 'tt_content');
