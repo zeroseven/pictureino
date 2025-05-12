@@ -21,7 +21,7 @@ class ImageViewHelper extends AbstractViewHelper
     protected AspectRatioUtility $aspectRatioUtiltiy;
     protected AssetCollector $assetCollector;
 
-    protected const FALLBACK_WIDTH = 150;
+    protected const FALLBACK_WIDTH = 80;
     protected const SEO_CONTENT_WIDTH = 1200;
     public const ON_LOAD_EVENT = 'Pictureiño.handle(this)';
 
