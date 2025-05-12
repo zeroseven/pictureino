@@ -14,13 +14,13 @@ use Zeroseven\Pictureino\Utility\SettingsUtility;
 
 class AspectRatioElement extends AbstractFormElement
 {
-    private const RENDER_TYPE = 'aspectRatio';
-    private string $wrapperId = '';
-    private string $fieldName = '';
-    private array $breakpoints = [];
-    private array $result = [];
+    protected const RENDER_TYPE = 'aspectRatio';
+    protected string $wrapperId = '';
+    protected string $fieldName = '';
+    protected array $breakpoints = [];
+    protected array $result = [];
 
-    private function initializeElement(): void
+    protected function initializeElement(): void
     {
         $site = GeneralUtility::makeInstance(SiteFinder::class)->getSiteByPageId(1);
 
@@ -30,12 +30,12 @@ class AspectRatioElement extends AbstractFormElement
         $this->result = $this->initializeResultArray();
     }
 
-    private function addStyles(): void
+    protected function addStyles(): void
     {
         $this->result['stylesheetFiles'][] = 'EXT:pictureino/Resources/Public/Css/backend/element/aspectratio.css';
     }
 
-    private function addJavaScript(): void
+    protected function addJavaScript(): void
     {
         $parameterArray = $this->data['parameterArray'];
         $value = $parameterArray['itemFormElValue'] ?? '';
@@ -45,7 +45,7 @@ class AspectRatioElement extends AbstractFormElement
         )->instance($this->fieldName, $this->wrapperId, $value, json_encode(array_keys($this->breakpoints)));
     }
 
-    private function addMarkup(): void
+    protected function addMarkup(): void
     {
         $wrap = GeneralUtility::makeInstance(TagBuilder::class, 'div');
         $wrap->addAttribute('id', $this->wrapperId);
@@ -53,7 +53,7 @@ class AspectRatioElement extends AbstractFormElement
         $this->result['html'] .= $wrap->render();
     }
 
-    private function addHiddenField(): void
+    protected function addHiddenField(): void
     {
         $parameterArray = $this->data['parameterArray'];
 
