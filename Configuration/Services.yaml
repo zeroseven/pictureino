@@ -12,9 +12,3 @@ services:
       - name: 'console.command'
         command: 'pictureino:cleanup'
         description: 'Cleanup all processed images'
-
-  Zeroseven\Pictureino\Security\ContentSecurityPolicy\InlineScriptPolicyHandler:
-    tags:
-      - name: event.listener
-        identifier: 'pictureino-inline-script'
-        event: TYPO3\CMS\Core\Security\ContentSecurityPolicy\Event\PolicyMutatedEvent
