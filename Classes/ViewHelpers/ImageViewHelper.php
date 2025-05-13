@@ -17,7 +17,7 @@ use Zeroseven\Pictureino\Utility\TagUtility;
 class ImageViewHelper extends AbstractViewHelper
 {
     protected $escapeOutput = false;
-    protected ImageUtility $imageUtiltiy;
+    protected ImageUtility $imageUtility;
     protected AspectRatioUtility $aspectRatioUtiltiy;
     protected AssetCollector $assetCollector;
 
@@ -27,7 +27,7 @@ class ImageViewHelper extends AbstractViewHelper
 
     public function __construct()
     {
-        $this->imageUtiltiy = GeneralUtility::makeInstance(ImageUtility::class);
+        $this->imageUtility = GeneralUtility::makeInstance(ImageUtility::class);
         $this->aspectRatioUtiltiy = GeneralUtility::makeInstance(AspectRatioUtility::class);
     }
 
@@ -64,7 +64,7 @@ class ImageViewHelper extends AbstractViewHelper
     protected function createEncryptionHash(): string
     {
         $configRequest = GeneralUtility::makeInstance(ConfigRequest::class);
-        $file = $this->imageUtiltiy->getFile();
+        $file = $this->imageUtility->getFile();
 
         if ($file instanceof FileReference) {
             $configRequest->addConfig('file', [
@@ -107,7 +107,7 @@ class ImageViewHelper extends AbstractViewHelper
             return $this->aspectRatioUtiltiy->add([$width, $height], 0);
         }
 
-        return $this->aspectRatioUtiltiy->add($this->imageUtiltiy->getFile(), 0);
+        return $this->aspectRatioUtiltiy->add($this->imageUtility->getFile(), 0);
     }
 
     protected function addInlineScript(): void
@@ -133,20 +133,20 @@ class ImageViewHelper extends AbstractViewHelper
     /** @throws \Exception */
     public function render(): string
     {
-        $this->imageUtiltiy->setFile(
+        $this->imageUtility->setFile(
             $this->arguments['src'],
             $this->arguments['image'],
             $this->arguments['treatIdAsReference'] ?? false
         );
 
         if ($cropVariant = $this->arguments['cropVariant']) {
-            $this->imageUtiltiy->setCropVariant($cropVariant);
+            $this->imageUtility->setCropVariant($cropVariant);
         }
 
         $this->determineAspectRatio();
         $this->addInlineScript();
 
-        $tagUtility = GeneralUtility::makeInstance(TagUtility::class, $this->imageUtiltiy, $this->aspectRatioUtiltiy)
+        $tagUtility = GeneralUtility::makeInstance(TagUtility::class, $this->imageUtility, $this->aspectRatioUtiltiy)
             ->addAttribute('data-config', $this->createEncryptionHash())
             ->addAttribute('data-loaded', 'false')
             ->addAttribute('title', $this->arguments['title'])

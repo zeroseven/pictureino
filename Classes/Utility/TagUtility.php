@@ -120,8 +120,7 @@ class TagUtility
             'contentUrl' => $this->imageUtility->getUrl(),
             'width' => $this->imageUtility->getProperty('width'),
             'height' => $this->imageUtility->getProperty('height'),
-            'caption' => $this->getAttribute('title') ?? $this->imageUtility->getProperty('title'),
-            'alt' => $this->getAttribute('alt') ?? $this->imageUtility->getProperty('alternative'),
+            'caption' => $this->getAttribute('title') ?? $this->getAttribute('alt') ?? $this->imageUtility->getProperty('title') ?? $this->imageUtility->getProperty('alternative'),
             'encodingFormat' => $processedFile->getMimeType(),
         ])));
 
