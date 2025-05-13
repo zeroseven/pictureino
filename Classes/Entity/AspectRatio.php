@@ -67,37 +67,21 @@ class AspectRatio
         return $this->setX($this->x / $gcdValue)->setY($this->y / $gcdValue);
     }
 
-    public function set(...$input): self
+    public function set(mixed $value = null): self
     {
-        if (1 === count($input)) {
-            $value = $input[0];
-
-            if (null === $value || '' === $value || is_array($value) && empty($value)) {
-                return $this->setX(null)->setY(null);
-            }
-
-            if (is_string($value) && $aspectRatio = self::splitString($value)) {
-                return $this->setX($aspectRatio[0])->setY($aspectRatio[1])->reduce();
-            }
-
-            if (is_string($value) && str_starts_with($value, '{') && ($decoded = json_decode($value, true)) !== null) {
-                return $this->set($decoded);
-            }
-
-            if (is_array($value)) {
-                return $this->set(...$value);
-            }
-
-            if ($value instanceof FileInterface) {
-                return $this->set($value->getProperty('width'), $value->getProperty('height'));
-            }
+        if (is_null($value) || '' === $value) {
+            return $this->setX(null)->setY(null);
         }
 
-        if (2 === count($input) && MathUtility::canBeInterpretedAsInteger($input[0]) && MathUtility::canBeInterpretedAsInteger($input[1])) {
-            return $this->setX((int) $input[0])->setY((int) $input[1])->reduce();
+        if (is_string($value) && $aspectRatio = self::splitString($value)) {
+            return $this->setX($aspectRatio[0])->setY($aspectRatio[1])->reduce();
         }
 
-        throw new \InvalidArgumentException('Use arguments like "set(\'16:9\')" or "set(\'400, 300\')"', 1382284106);
+        if (is_array($value) && 2 === count($value) && MathUtility::canBeInterpretedAsInteger($value[0] ?? null) && MathUtility::canBeInterpretedAsInteger($value[1] ?? null)) {
+            return $this->setX((int) $value[0])->setY((int) $value[1])->reduce();
+        }
+
+        throw new \InvalidArgumentException('Use arguments like "set(\'16:9\')" or "set([400, 300])"', 1382284106);
     }
 
     public function getHeight(int $width): int

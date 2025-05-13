@@ -10,7 +10,6 @@ use Zeroseven\Pictureino\Entity\AspectRatio;
 
 class AspectRatioUtility
 {
-    protected ?SettingsUtility $settingsUtility = null;
     protected array $aspectRatios = [];
     protected array $breakpointMap = [];
 
@@ -90,13 +89,17 @@ class AspectRatioUtility
             return $this->sortAspectRatios();
         }
 
+        if (is_string($input) && str_starts_with($input, '{') && ($decoded = json_decode($input, true)) !== null) {
+            return $this->set($decoded);
+        }
+
         $this->add($input, 0);
 
         return $this;
     }
 
     /** @throws \Exception */
-    public function add(mixed $asepectRatio, mixed $view = null, bool $sortAspectRatios = true): self
+    protected function add(mixed $asepectRatio, mixed $view = null, bool $sortAspectRatios = true): self
     {
         if (!empty($asepectRatio)) {
             $breakpoint = $this->mapBreakpoint($view ?? 0);
@@ -105,24 +108,6 @@ class AspectRatioUtility
         }
 
         return false === $sortAspectRatios ? $this : $this->sortAspectRatios();
-    }
-
-    /** @throws \Exception */
-    public function remove(mixed $view): self
-    {
-        $breakpoint = $this->mapBreakpoint($view);
-
-        if (0 === $breakpoint) {
-            $this->aspectRatios[0] = null;
-
-            return $this;
-        }
-
-        if (isset($this->aspectRatios[$breakpoint])) {
-            unset($this->aspectRatios[$breakpoint]);
-        }
-
-        return $this;
     }
 
     public function isEmpty(): bool
