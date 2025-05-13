@@ -50,7 +50,7 @@ class AspectRatioElement extends AbstractFormElement
         $wrap = GeneralUtility::makeInstance(TagBuilder::class, 'div');
         $wrap->addAttribute('id', $this->wrapperId);
 
-        $this->result['html'] .= $wrap->render();
+        $this->result['html'] .= $this->renderLabel($this->wrapperId) . $wrap->render();
     }
 
     protected function addHiddenField(): void
