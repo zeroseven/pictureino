@@ -90,10 +90,6 @@ class AspectRatioUtility
             return $this->sortAspectRatios();
         }
 
-        if (is_string($input) && str_starts_with($input, '{') && $decoded = json_decode($input, true)) {
-            return $this->set($decoded);
-        }
-
         $this->add($input, 0);
 
         return $this;

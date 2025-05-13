@@ -72,12 +72,16 @@ class AspectRatio
         if (1 === count($input)) {
             $value = $input[0];
 
-            if (null === $value || '' === $value) {
+            if (null === $value || '' === $value || is_array($value) && empty($value)) {
                 return $this->setX(null)->setY(null);
             }
 
             if (is_string($value) && $aspectRatio = self::splitString($value)) {
                 return $this->setX($aspectRatio[0])->setY($aspectRatio[1])->reduce();
+            }
+
+            if (is_string($value) && str_starts_with($value, '{') && ($decoded = json_decode($value, true)) !== null) {
+                return $this->set($decoded);
             }
 
             if (is_array($value)) {

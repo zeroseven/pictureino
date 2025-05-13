@@ -136,9 +136,15 @@ class ImageUtility
             throw new \Exception('No processed file. Please call "processImage" method, to process an image file', 1382284107);
         }
 
-        return $processedFile->hasProperty($property)
-            ? (string) $processedFile->getProperty($property)
-            : null;
+        if ($processedFile->hasProperty($property) && $value = $processedFile->getProperty($property)) {
+            return (string) $value;
+        }
+
+        if ($this->file->hasProperty($property) && $value = $this->file->getProperty($property)) {
+            return (string) $value;
+        }
+
+        return null;
     }
 
     public function getLastProcessedFile(): ?ProcessedFile
