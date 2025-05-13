@@ -17,7 +17,7 @@ settings:
     description: 'The maximum width or height of processed images. This is used to calculate the size of the image. The default value is 2000 (px).'
   pictureino.retina:
     type: bool
-    default: 0
+    default: 1
     category: Pictureino.settings
     label: 'Retina'
     description: 'Enable retina support. This will create images with double the resolution for retina displays. This is useful for high-resolution displays, but will increase the size of the images.'

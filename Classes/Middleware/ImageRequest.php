@@ -19,7 +19,7 @@ use Zeroseven\Pictureino\Utility\SettingsUtility;
 
 class ImageRequest implements MiddlewareInterface
 {
-    protected const array REQUEST_HEADERS = [
+    protected const REQUEST_HEADERS = [
         'cache-control' => 'no-store, no-cache, must-revalidate, max-age=0',
         'x-robots' => 'noindex, nofollow',
     ];
