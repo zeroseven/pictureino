@@ -1,5 +1,7 @@
 .aspectratio {
   --space: 1rem;
+
+  margin-bottom: var(--space);
 }
 
 .aspectratio__breakpoint-select {
