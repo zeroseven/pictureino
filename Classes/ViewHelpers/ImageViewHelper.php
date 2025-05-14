@@ -82,7 +82,7 @@ class ImageViewHelper extends AbstractViewHelper
             $configRequest->addConfig('retina', (bool) $this->arguments['retina']);
         }
 
-        if (!$this->aspectRatioUtiltiy->isEmpty()) {
+        if (!$this->aspectRatioUtiltiy->isEmpty() && empty($this->arguments['freeAspectRatio'])) {
             $configRequest->addConfig('aspectRatio', $this->aspectRatioUtiltiy->toArray());
         }
 
@@ -96,18 +96,20 @@ class ImageViewHelper extends AbstractViewHelper
     protected function determineAspectRatio(): AspectRatioUtility
     {
         if ($this->arguments['freeAspectRatio'] ?? false) {
-            return $this->aspectRatioUtiltiy->set('');
+            return $this->aspectRatioUtiltiy->add([1,1]);
         }
 
         if ($aspectRatio = $this->arguments['aspectRatio']) {
-            return $this->aspectRatioUtiltiy->set($aspectRatio);
+            return $this->aspectRatioUtiltiy->addList($aspectRatio);
         }
 
         if (($width = $this->arguments['width']) && $height = $this->arguments['height']) {
-            return $this->aspectRatioUtiltiy->add([$width, $height], 0);
+            return $this->aspectRatioUtiltiy->add([(int)$width, (int)$height]);
         }
 
-        return $this->aspectRatioUtiltiy->add($this->imageUtility->getFile(), 0);
+        if (($width = $this->imageUtility->getProperty('width')) && ($height = $this->imageUtility->getProperty('height'))) {
+            return $this->aspectRatioUtiltiy->add([(int)$width, (int)$height]);
+        }
     }
 
     protected function addInlineScript(): void

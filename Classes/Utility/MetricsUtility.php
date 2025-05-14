@@ -32,7 +32,7 @@ class MetricsUtility
         $this->imageUtility = $imageUtility;
         $this->settingsUtility = $settingsUtility;
         $this->aspectRatio = GeneralUtility::makeInstance(AspectRatioUtility::class)
-            ->set($configRequest->getConfig()['aspectRatio'] ?? null)
+            ->addList($configRequest->getConfig()['aspectRatio'] ?? null)
             ->getAspectForWidth($this->configRequest->getViewport());
         $this->connection = GeneralUtility::makeInstance(ConnectionPool::class)->getConnectionForTable(self::TABLE_NAME);
 

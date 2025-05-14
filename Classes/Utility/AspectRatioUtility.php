@@ -79,7 +79,7 @@ class AspectRatioUtility
     }
 
     /** @throws \Exception */
-    public function set(mixed $input): self
+    public function addList(mixed $input): self
     {
         if (is_array($input) && count($input) > 0) {
             foreach ($input as $view => $ratio) {
@@ -90,16 +90,14 @@ class AspectRatioUtility
         }
 
         if (is_string($input) && str_starts_with($input, '{') && ($decoded = json_decode($input, true)) !== null) {
-            return $this->set($decoded);
+            return $this->addList($decoded);
         }
 
-        $this->add($input, 0);
-
-        return $this;
+        return $this->add($input, 0);
     }
 
     /** @throws \Exception */
-    protected function add(mixed $asepectRatio, mixed $view = null, bool $sortAspectRatios = true): self
+    public function add(mixed $asepectRatio, mixed $view = null, bool $sortAspectRatios = true): self
     {
         if (!empty($asepectRatio)) {
             $breakpoint = $this->mapBreakpoint($view ?? 0);
