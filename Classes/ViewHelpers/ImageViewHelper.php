@@ -149,13 +149,17 @@ class ImageViewHelper extends AbstractViewHelper
         $this->addInlineScript();
 
         $tagUtility = GeneralUtility::makeInstance(TagUtility::class, $this->imageUtility, $this->aspectRatioUtiltiy)
-            ->addAttribute('data-config', $this->createEncryptionHash())
-            ->addAttribute('data-loaded', 'false')
             ->addAttribute('title', $this->arguments['title'])
             ->addAttribute('alt', $this->arguments['alt'])
             ->addAttribute('class', $this->arguments['class'])
-            ->addAttribute('style', $this->arguments['style'])
-            ->addAttribute('onload', static::ON_LOAD_EVENT);
+            ->addAttribute('style', $this->arguments['style']);
+
+        if ($this->imageUtility->getFile()->getExtension() !== 'svg') {
+            $tagUtility
+                ->addAttribute('data-config', $this->createEncryptionHash())
+                ->addAttribute('data-loaded', 'false')
+                ->addAttribute('onload', static::ON_LOAD_EVENT);
+            }
 
         return ($this->aspectRatioUtiltiy->count() <= 1
             ? $tagUtility->renderImg(static::FALLBACK_WIDTH)
