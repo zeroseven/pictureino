@@ -51,8 +51,8 @@ class ImageUtility
 
         $this->file = $this->imageService->getImage($src, $image, $treatIdAsReference);
 
-        if ($this->file instanceof FileReference && $this->file->hasProperty('crop')) {
-            $this->cropVariantCollection = CropVariantCollection::create($this->file->getProperty('crop'));
+        if ($this->file instanceof FileReference && $this->file->hasProperty('crop') && $crop = $this->file->getProperty('crop')) {
+            $this->cropVariantCollection = CropVariantCollection::create($crop);
         }
 
         return $this;
