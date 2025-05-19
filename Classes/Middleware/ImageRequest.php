@@ -47,7 +47,7 @@ class ImageRequest implements MiddlewareInterface
         $this->configRequest = ConfigRequest::parseRequest($request);
 
         if ($this->configRequest->isValid() && $config = $this->configRequest->getConfig()) {
-            $this->identifier = md5($request->getAttribute('site')?->getIdentifier() . ($config['cropVariant'] ?? '') . json_encode($config['file'] ?? []));
+            $this->identifier = md5($request->getAttribute('site')?->getIdentifier() . ($config['pid'] ?? '') . ($config['cropVariant'] ?? '') . json_encode($config['file'] ?? []));
 
             $this->settingsUtility = GeneralUtility::makeInstance(SettingsUtility::class, $request->getAttribute('site'));
 
@@ -120,7 +120,7 @@ class ImageRequest implements MiddlewareInterface
 
             if ($this->initializeConfig($request)) {
                 if ($this->tooManyRequests()) {
-                    return $this->returnErrorResponse('Too many requests', 1310, 429);
+                    return $this->returnErrorResponse('Too many requests', 1747665064, 429);
                 }
 
                 $data = [
@@ -128,7 +128,7 @@ class ImageRequest implements MiddlewareInterface
                     'view' => $this->configRequest->getViewport(),
                 ];
 
-                if ($this->settingsUtility->get('debug')) {
+                if ($this->settingsUtility->isDebug()) {
                     $data['debug'] = [
                         'request' => $this->configRequest->toArray(),
                         'metrics' => $this->metricsUtility->toArray(),

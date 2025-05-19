@@ -1,5 +1,6 @@
 CREATE TABLE tx_pictureino_request (
 	uid int(11) unsigned NOT NULL auto_increment,
+	pid int(11) DEFAULT '0' NOT NULL,
 	identifier varchar(255) DEFAULT '' NOT NULL,
 	width int(11) DEFAULT '0' NOT NULL,
 	height int(11) DEFAULT '0' NOT NULL,

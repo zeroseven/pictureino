@@ -103,6 +103,7 @@ class LogUtility
         $queryBuilder
             ->insert(self::TABLE_REQUEST)
             ->values([
+                'pid' => $this->configRequest->getConfig()['pid'] ?? 0,
                 'identifier' => $this->identifier,
                 'width' => $this->configRequest->getWidth() ?? 0,
                 'height' => $this->configRequest->getHeight() ?? 0,

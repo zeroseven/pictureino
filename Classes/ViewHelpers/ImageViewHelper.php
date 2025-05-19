@@ -8,6 +8,7 @@ use TYPO3\CMS\Core\Page\AssetCollector;
 use TYPO3\CMS\Core\Resource\File;
 use TYPO3\CMS\Core\Resource\FileReference;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController;
 use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractViewHelper;
 use Zeroseven\Pictureino\Entity\ConfigRequest;
 use Zeroseven\Pictureino\Utility\AspectRatioUtility;
@@ -61,6 +62,20 @@ class ImageViewHelper extends AbstractViewHelper
         $this->registerArgument('style', 'string', 'Inline styles');
     }
 
+    public function getPageUid(): ?int
+    {
+        if ($pageInformation =$this->renderingContext->getRequest()->getAttribute('frontend.page.information')) {
+            return $pageInformation->getId();
+        }
+
+        // Fallback for TYPO3 12.4
+        if ($GLOBALS['TSFE'] ?? null instanceof TypoScriptFrontendController) {
+            return $GLOBALS['TSFE']->id;
+        }
+
+        return null;
+    }
+
     protected function createEncryptionHash(): string
     {
         $configRequest = GeneralUtility::makeInstance(ConfigRequest::class);
@@ -90,6 +105,10 @@ class ImageViewHelper extends AbstractViewHelper
             $configRequest->addConfig('cropVariant', $cropVariant);
         }
 
+        if ($pageUid = $this->getPageUid()) {
+            $configRequest->addConfig('pid', $pageUid);
+        }
+
         return $configRequest->encryptConfig();
     }
 
@@ -110,6 +129,8 @@ class ImageViewHelper extends AbstractViewHelper
         if (($width = $this->imageUtility->getProperty('width')) && ($height = $this->imageUtility->getProperty('height'))) {
             return $this->aspectRatioUtiltiy->add([(int)$width, (int)$height]);
         }
+
+        return $this->aspectRatioUtiltiy;
     }
 
     protected function addInlineScript(): void
@@ -132,8 +153,7 @@ class ImageViewHelper extends AbstractViewHelper
         ]);
     }
 
-    /** @throws \Exception */
-    public function render(): string
+    protected function initializeImage(): void
     {
         $this->imageUtility->setFile(
             $this->arguments['src'],
@@ -147,6 +167,12 @@ class ImageViewHelper extends AbstractViewHelper
 
         $this->determineAspectRatio();
         $this->addInlineScript();
+    }
+
+    /** @throws \Exception */
+    public function render(): string
+    {
+        $this->initializeImage();
 
         $tagUtility = GeneralUtility::makeInstance(TagUtility::class, $this->imageUtility, $this->aspectRatioUtiltiy)
             ->addAttribute('title', $this->arguments['title'])
