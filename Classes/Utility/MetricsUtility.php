@@ -24,6 +24,7 @@ class MetricsUtility
     protected Connection $connection;
     protected ?int $width = null;
     protected ?int $height = null;
+    protected ?bool $existingFormat = null;
 
     public function __construct(string $identifier, ConfigRequest $configRequest, ImageUtility $imageUtility, SettingsUtility $settingsUtility)
     {
@@ -107,9 +108,11 @@ class MetricsUtility
         if ($result && isset($result['width'], $result['height'])) {
             $this->width = (int) $result['width'];
             $this->height = (int) $result['height'];
+            $this->existingFormat = true;
         } else {
             $this->width = (int) (ceil($requestedWidth / self::STEP_SIZE) * self::STEP_SIZE);
             $this->height = $this->aspectRatio?->getHeight($this->width) ?? (int) (ceil($requestedHeight / self::STEP_SIZE) * self::STEP_SIZE);
+            $this->existingFormat = false;
         }
     }
 
@@ -133,6 +136,11 @@ class MetricsUtility
         return $this->aspectRatio;
     }
 
+    public function isExistingFormat(): bool
+    {
+        return $this->existingFormat ?? false;
+    }
+
     public function toArray(): array
     {
         return [
@@ -140,6 +148,7 @@ class MetricsUtility
             'aspectRatio' => $this->getAspectRatio()?->toArray(),
             'width' => $this->getWidth(),
             'height' => $this->getHeight(),
+            'existingFormat' => $this->isExistingFormat(),
         ];
     }
 }
