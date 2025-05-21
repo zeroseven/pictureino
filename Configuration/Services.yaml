@@ -7,11 +7,6 @@ services:
   Zeroseven\Pictureino\:
     resource: '../Classes/*'
 
-  cache.pictureino:
-    class: TYPO3\CMS\Core\Cache\Frontend\FrontendInterface
-    factory: ['@TYPO3\CMS\Core\Cache\CacheManager', 'getCache']
-    arguments: ['pictureino']
-
   Zeroseven\Pictureino\Command\CleanupCommand:
     tags:
       - name: 'console.command'
