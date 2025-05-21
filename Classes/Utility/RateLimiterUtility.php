@@ -14,7 +14,7 @@ class RateLimiterUtility
 {
     private const IP_REQUEST_LIMIT = 100;
     private const IP_REQUEST_TIME = '1 hour';
-    private const IMAGE_REQUEST_LIMIT = 20;
+    private const IMAGE_REQUEST_LIMIT = 50;
     private const IMAGE_REQUEST_TIME = '1 hour';
 
     private string $identifier;

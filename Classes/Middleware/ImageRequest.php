@@ -29,7 +29,6 @@ class ImageRequest implements MiddlewareInterface
     protected ?MetricsUtility $metricsUtility = null;
     protected ?SettingsUtility $settingsUtility = null;
     protected ?LogUtility $logUtility = null;
-    protected ?RateLimiterUtility $rateLimiterUtility = null;
 
     protected function isRetina(): bool
     {
@@ -63,7 +62,6 @@ class ImageRequest implements MiddlewareInterface
 
             $this->metricsUtility = GeneralUtility::makeInstance(MetricsUtility::class, $identifier, $this->configRequest, $this->imageUtiltiy, $this->settingsUtility);
             $this->logUtility = GeneralUtility::makeInstance(LogUtility::class, $identifier, $this->configRequest, $this->imageUtiltiy, $this->metricsUtility);
-            $this->rateLimiterUtility = GeneralUtility::makeInstance(RateLimiterUtility::class, $identifier);
 
             return $this->metricsUtility->validate();
         }
@@ -98,10 +96,6 @@ class ImageRequest implements MiddlewareInterface
             $requestStartTime = microtime(true);
 
             if ($this->initializeConfig($request)) {
-                if (!$this->metricsUtility->isExistingFormat() && $this->rateLimiterUtility->limitExceeded()) {
-                    return $this->returnErrorResponse('Request blocked.', 1745092980, 403);
-                }
-
                 $data = [
                     'processed' => $this->processImage(),
                     'view' => $this->configRequest->getViewport(),

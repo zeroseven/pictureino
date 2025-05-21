@@ -14,7 +14,8 @@ class MetricsUtility
 {
     protected const TABLE_NAME = 'tx_pictureino_request';
     protected const SIMILAR_SIZE_RANGE = [-5, 30];
-    protected const STEP_SIZE = 50;
+    protected const STEP_SIZE = 100;
+    protected const ASPECT_RATIO_TOLERANCE = 0.05;
 
     protected string $identifier;
     protected ConfigRequest $configRequest;
@@ -24,7 +25,6 @@ class MetricsUtility
     protected Connection $connection;
     protected ?int $width = null;
     protected ?int $height = null;
-    protected ?bool $existingFormat = null;
 
     public function __construct(string $identifier, ConfigRequest $configRequest, ImageUtility $imageUtility, SettingsUtility $settingsUtility)
     {
@@ -43,8 +43,14 @@ class MetricsUtility
     /** @throws \InvalidArgumentException */
     public function validate(): bool
     {
-        if ($this->aspectRatio && abs($this->aspectRatio->getHeight($this->configRequest->getWidth()) - $this->configRequest->getHeight()) > $this->configRequest->getHeight() * 0.03) {
-            throw new \InvalidArgumentException('The aspect ratio is invalid.', 1745092982);
+        if ($this->aspectRatio) {
+            $expectedHeight = $this->aspectRatio->getHeight($this->configRequest->getWidth());
+            $actualHeight = $this->configRequest->getHeight();
+            $heightDiff = abs($expectedHeight - $actualHeight);
+
+            if ($heightDiff > self::ASPECT_RATIO_TOLERANCE) {
+                throw new \InvalidArgumentException('The aspect ratio is invalid.', 1745092982);
+            }
         }
 
         if ($this->configRequest->getWidth() > $this->configRequest->getViewport()) {
@@ -64,37 +70,34 @@ class MetricsUtility
         return true;
     }
 
-    protected function evaluate(): void
+    protected function getMatches(int $requestedWidth, int $requestedHeight): array|false
     {
-        $requestedWidth = $this->configRequest->getWidth();
-        $requestedHeight = $this->configRequest->getHeight();
-
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
             ->getQueryBuilderForTable(self::TABLE_NAME);
 
-        $result = $queryBuilder
+        return $queryBuilder
             ->select('width', 'height')
             ->addSelectLiteral(
                 'SUM(count) as total_count',
-                'ABS(width - ' . $queryBuilder->createNamedParameter($requestedWidth) . ') AS width_diff',
-                'ABS(height - ' . $queryBuilder->createNamedParameter($requestedHeight) . ') AS height_diff'
+                'ABS(width - ' . $queryBuilder->createNamedParameter($requestedWidth, Connection::PARAM_INT) . ') AS width_diff',
+                'ABS(height - ' . $queryBuilder->createNamedParameter($requestedHeight, Connection::PARAM_INT) . ') AS height_diff'
             )
             ->from(self::TABLE_NAME)
             ->where(
-                $queryBuilder->expr()->eq('identifier', $queryBuilder->createNamedParameter($this->identifier))
+                $queryBuilder->expr()->eq('identifier', $queryBuilder->createNamedParameter($this->identifier, Connection::PARAM_STR))
             )
             ->andWhere(
-                'width - ' . $queryBuilder->createNamedParameter($requestedWidth) . ' BETWEEN ' .
-                $queryBuilder->createNamedParameter(self::SIMILAR_SIZE_RANGE[0]) . ' AND ' .
-                $queryBuilder->createNamedParameter(self::SIMILAR_SIZE_RANGE[1])
+                'width - ' . $queryBuilder->createNamedParameter($requestedWidth, Connection::PARAM_INT) . ' BETWEEN ' .
+                $queryBuilder->createNamedParameter(self::SIMILAR_SIZE_RANGE[0], Connection::PARAM_INT) . ' AND ' .
+                $queryBuilder->createNamedParameter(self::SIMILAR_SIZE_RANGE[1], Connection::PARAM_INT)
             )
             ->andWhere(
-                'height - ' . $queryBuilder->createNamedParameter($requestedHeight) . ' BETWEEN ' .
-                $queryBuilder->createNamedParameter(self::SIMILAR_SIZE_RANGE[0]) . ' AND ' .
-                $queryBuilder->createNamedParameter(self::SIMILAR_SIZE_RANGE[1])
+                'height - ' . $queryBuilder->createNamedParameter($requestedHeight, Connection::PARAM_INT) . ' BETWEEN ' .
+                $queryBuilder->createNamedParameter(self::SIMILAR_SIZE_RANGE[0], Connection::PARAM_INT) . ' AND ' .
+                $queryBuilder->createNamedParameter(self::SIMILAR_SIZE_RANGE[1], Connection::PARAM_INT)
             )
             ->andWhere(
-                $queryBuilder->expr()->eq('aspect_ratio', $queryBuilder->createNamedParameter((string) $this->aspectRatio))
+                $queryBuilder->expr()->eq('aspect_ratio', $queryBuilder->createNamedParameter((string) $this->aspectRatio, Connection::PARAM_STR))
             )
             ->groupBy('width', 'height', 'width_diff', 'height_diff')
             ->orderBy('total_count', 'DESC')
@@ -103,16 +106,68 @@ class MetricsUtility
             ->setMaxResults(1)
             ->executeQuery()
             ->fetchAssociative();
+    }
+
+    public function getClosestMatch(int $requestedWidth, int $requestedHeight): array|false
+    {
+        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
+            ->getQueryBuilderForTable(self::TABLE_NAME);
+
+        $requestedRatio = $requestedWidth / $requestedHeight;
+        $ratioMin = $requestedRatio * (1 - self::ASPECT_RATIO_TOLERANCE);
+        $ratioMax = $requestedRatio * (1 + self::ASPECT_RATIO_TOLERANCE);
+
+        return $queryBuilder
+            ->select('width', 'height')
+            ->addSelectLiteral(
+                'SUM(count) as total_count',
+                '(width * 1.0) / height AS aspect_ratio',
+                'ABS(((width * 1.0) / height) - ' . $queryBuilder->createNamedParameter($requestedRatio, Connection::PARAM_STR) . ') AS ratio_diff',
+                'ABS(width - ' . $queryBuilder->createNamedParameter($requestedWidth, Connection::PARAM_INT) . ') AS width_diff',
+                'ABS(height - ' . $queryBuilder->createNamedParameter($requestedHeight, Connection::PARAM_INT) . ') AS height_diff'
+            )
+            ->from(self::TABLE_NAME)
+            ->where(
+                $queryBuilder->expr()->eq('identifier', $queryBuilder->createNamedParameter($this->identifier, Connection::PARAM_STR))
+            )
+            ->andWhere(
+                $queryBuilder->expr()->gte('aspect_ratio',
+                    $queryBuilder->createNamedParameter($ratioMin, Connection::PARAM_STR)
+                )
+            )
+            ->andWhere(
+                $queryBuilder->expr()->lte('aspect_ratio',
+                    $queryBuilder->createNamedParameter($ratioMax, Connection::PARAM_STR)
+                )
+            )
+            ->groupBy('width', 'height', 'ratio_diff', 'width_diff', 'height_diff')
+            ->orderBy('ratio_diff', 'ASC')
+            ->addOrderBy('width_diff', 'ASC')
+            ->addOrderBy('height_diff', 'ASC')
+            ->setMaxResults(1)
+            ->executeQuery()
+            ->fetchAssociative();
+    }
+
+    protected function evaluate(): void
+    {
+        $requestedWidth = $this->configRequest->getWidth();
+        $requestedHeight = $this->configRequest->getHeight();
+
+        $result = $this->getMatches($requestedWidth, $requestedHeight);
 
         // Use found metrics or calculate new sizes
         if ($result && isset($result['width'], $result['height'])) {
             $this->width = (int) $result['width'];
             $this->height = (int) $result['height'];
-            $this->existingFormat = true;
         } else {
-            $this->width = (int) (ceil($requestedWidth / self::STEP_SIZE) * self::STEP_SIZE);
-            $this->height = $this->aspectRatio?->getHeight($this->width) ?? (int) (ceil($requestedHeight / self::STEP_SIZE) * self::STEP_SIZE);
-            $this->existingFormat = false;
+            if (GeneralUtility::makeInstance(RateLimiterUtility::class, $this->identifier)->limitExceeded() && $result = $this->getClosestMatch($requestedWidth, $requestedHeight)) {
+                $this->width = (int) $result['width'];
+                $this->height = (int) $result['height'];
+            } else {
+                $this->width = (int) (ceil($requestedWidth / self::STEP_SIZE) * self::STEP_SIZE);
+                $this->height = $this->aspectRatio?->getHeight($this->width) ?? (int) (ceil($requestedHeight / self::STEP_SIZE) * self::STEP_SIZE);
+            }
         }
     }
 
@@ -136,11 +191,6 @@ class MetricsUtility
         return $this->aspectRatio;
     }
 
-    public function isExistingFormat(): bool
-    {
-        return $this->existingFormat ?? false;
-    }
-
     public function toArray(): array
     {
         return [
@@ -148,7 +198,6 @@ class MetricsUtility
             'aspectRatio' => $this->getAspectRatio()?->toArray(),
             'width' => $this->getWidth(),
             'height' => $this->getHeight(),
-            'existingFormat' => $this->isExistingFormat(),
         ];
     }
 }
