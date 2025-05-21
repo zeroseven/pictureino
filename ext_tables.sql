@@ -4,7 +4,6 @@ CREATE TABLE tx_pictureino_request (
 	identifier varchar(255) DEFAULT '' NOT NULL,
 	width int(11) DEFAULT '0' NOT NULL,
 	height int(11) DEFAULT '0' NOT NULL,
-	viewport int(11) DEFAULT '0' NOT NULL,
 	aspect_ratio varchar(255) DEFAULT '' NOT NULL,
 	width_evaluated int(11) DEFAULT '0' NOT NULL,
 	height_evaluated int(11) DEFAULT '0' NOT NULL,
