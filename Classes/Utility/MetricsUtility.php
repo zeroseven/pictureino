@@ -108,42 +108,24 @@ class MetricsUtility
             ->fetchAssociative();
     }
 
-    public function getClosestMatch(int $requestedWidth, int $requestedHeight): array|false
+    public function getAlternativeMatch(int $requestedWidth): array|false
     {
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
             ->getQueryBuilderForTable(self::TABLE_NAME);
 
-        $requestedRatio = $requestedWidth / $requestedHeight;
-        $ratioMin = $requestedRatio * (1 - self::ASPECT_RATIO_TOLERANCE);
-        $ratioMax = $requestedRatio * (1 + self::ASPECT_RATIO_TOLERANCE);
-
         return $queryBuilder
             ->select('width', 'height')
-            ->addSelectLiteral(
-                'SUM(count) as total_count',
-                '(width * 1.0) / height AS aspect_ratio',
-                'ABS(((width * 1.0) / height) - ' . $queryBuilder->createNamedParameter($requestedRatio, Connection::PARAM_STR) . ') AS ratio_diff',
-                'ABS(width - ' . $queryBuilder->createNamedParameter($requestedWidth, Connection::PARAM_INT) . ') AS width_diff',
-                'ABS(height - ' . $queryBuilder->createNamedParameter($requestedHeight, Connection::PARAM_INT) . ') AS height_diff'
-            )
             ->from(self::TABLE_NAME)
             ->where(
                 $queryBuilder->expr()->eq('identifier', $queryBuilder->createNamedParameter($this->identifier, Connection::PARAM_STR))
             )
             ->andWhere(
-                $queryBuilder->expr()->gte('aspect_ratio',
-                    $queryBuilder->createNamedParameter($ratioMin, Connection::PARAM_STR)
-                )
+                $queryBuilder->expr()->eq('aspect_ratio', $queryBuilder->createNamedParameter((string) $this->aspectRatio, Connection::PARAM_STR))
             )
             ->andWhere(
-                $queryBuilder->expr()->lte('aspect_ratio',
-                    $queryBuilder->createNamedParameter($ratioMax, Connection::PARAM_STR)
-                )
+                $queryBuilder->expr()->gte('width', $queryBuilder->createNamedParameter($requestedWidth, Connection::PARAM_INT))
             )
-            ->groupBy('width', 'height', 'ratio_diff', 'width_diff', 'height_diff')
-            ->orderBy('ratio_diff', 'ASC')
-            ->addOrderBy('width_diff', 'ASC')
-            ->addOrderBy('height_diff', 'ASC')
+            ->orderBy('width', 'ASC')
             ->setMaxResults(1)
             ->executeQuery()
             ->fetchAssociative();
@@ -161,7 +143,7 @@ class MetricsUtility
             $this->width = (int) $result['width'];
             $this->height = (int) $result['height'];
         } else {
-            if (GeneralUtility::makeInstance(RateLimiterUtility::class, $this->identifier)->limitExceeded() && $result = $this->getClosestMatch($requestedWidth, $requestedHeight)) {
+            if (GeneralUtility::makeInstance(RateLimiterUtility::class, $this->identifier)->limitExceeded() && $result = $this->getAlternativeMatch($requestedWidth)) {
                 $this->width = (int) $result['width'];
                 $this->height = (int) $result['height'];
             } else {
