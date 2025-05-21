@@ -4,8 +4,19 @@ services:
     autoconfigure: true
     public: false
 
+  cache.pictureino:
+    class: TYPO3\CMS\Core\Cache\Frontend\FrontendInterface
+    factory: ['@TYPO3\CMS\Core\Cache\CacheManager', 'getCache']
+    arguments: ['pictureino']
+
   Zeroseven\Pictureino\:
     resource: '../Classes/*'
+
+  Zeroseven\Pictureino\Utility\RateLimiterUtility:
+    calls:
+      - method: 'injectCache'
+        arguments:
+          - '@cache.pictureino'
 
   Zeroseven\Pictureino\Command\CleanupCommand:
     tags:
