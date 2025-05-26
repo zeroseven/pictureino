@@ -15,7 +15,6 @@ class MetricsUtility
     protected const TABLE_NAME = 'tx_pictureino_request';
     protected const SIMILAR_SIZE_RANGE = [-5, 30];
     protected const STEP_SIZE = 100;
-    protected const ASPECT_RATIO_TOLERANCE = 0.05;
 
     protected string $identifier;
     protected ConfigRequest $configRequest;
@@ -43,14 +42,8 @@ class MetricsUtility
     /** @throws \InvalidArgumentException */
     public function validate(): bool
     {
-        if ($this->aspectRatio) {
-            $expectedHeight = $this->aspectRatio->getHeight($this->configRequest->getWidth());
-            $actualHeight = $this->configRequest->getHeight();
-            $heightDiff = abs($expectedHeight - $actualHeight);
-
-            if ($heightDiff > self::ASPECT_RATIO_TOLERANCE) {
-                throw new \InvalidArgumentException('The aspect ratio is invalid.', 1745092982);
-            }
+        if ($this->aspectRatio && abs($this->aspectRatio->getHeight($this->configRequest->getWidth()) - $this->configRequest->getHeight()) > $this->configRequest->getHeight() * 0.03) {
+            throw new \InvalidArgumentException('The aspect ratio is invalid.', 1745092982);
         }
 
         if ($this->configRequest->getWidth() > $this->configRequest->getViewport()) {
