@@ -20,10 +20,11 @@ class MetricsUtility
     protected ConfigRequest $configRequest;
     protected ImageUtility $imageUtility;
     protected SettingsUtility $settingsUtility;
-    protected ?AspectRatio $aspectRatio = null;
     protected Connection $connection;
+    protected ?AspectRatio $aspectRatio = null;
     protected ?int $width = null;
     protected ?int $height = null;
+    protected ?bool $limitExceeded = null;
 
     public function __construct(string $identifier, ConfigRequest $configRequest, ImageUtility $imageUtility, SettingsUtility $settingsUtility)
     {
@@ -31,10 +32,10 @@ class MetricsUtility
         $this->configRequest = $configRequest;
         $this->imageUtility = $imageUtility;
         $this->settingsUtility = $settingsUtility;
+        $this->connection = GeneralUtility::makeInstance(ConnectionPool::class)->getConnectionForTable(self::TABLE_NAME);
         $this->aspectRatio = GeneralUtility::makeInstance(AspectRatioUtility::class)
             ->addList($configRequest->getConfig()['aspectRatio'] ?? null)
             ->getAspectForWidth($this->configRequest->getViewport());
-        $this->connection = GeneralUtility::makeInstance(ConnectionPool::class)->getConnectionForTable(self::TABLE_NAME);
 
         $this->evaluate();
     }
@@ -124,6 +125,11 @@ class MetricsUtility
             ->fetchAssociative();
     }
 
+    protected function checkRequestLimit(): bool
+    {
+        return $this->limitExceeded ??= GeneralUtility::makeInstance(RateLimiterUtility::class, $this->identifier)->limitExceeded();
+    }
+
     protected function evaluate(): void
     {
         $requestedWidth = $this->configRequest->getWidth();
@@ -131,14 +137,18 @@ class MetricsUtility
 
         $result = $this->getMatches($requestedWidth, $requestedHeight);
 
-        // Use found metrics or calculate new sizes
         if ($result && isset($result['width'], $result['height'])) {
             $this->width = (int) $result['width'];
             $this->height = (int) $result['height'];
         } else {
-            if (GeneralUtility::makeInstance(RateLimiterUtility::class, $this->identifier)->limitExceeded() && $result = $this->getAlternativeMatch($requestedWidth)) {
-                $this->width = (int) $result['width'];
-                $this->height = (int) $result['height'];
+            if ($this->checkRequestLimit()) {
+                if ($result = $this->getAlternativeMatch($requestedWidth)) {
+                    $this->width = (int) $result['width'];
+                    $this->height = (int) $result['height'];
+                } else {
+                    $this->width = 1000;
+                    $this->height = $this->aspectRatio?->getHeight(1000) ?? 1000;
+                }
             } else {
                 $this->width = (int) (ceil($requestedWidth / self::STEP_SIZE) * self::STEP_SIZE);
                 $this->height = $this->aspectRatio?->getHeight($this->width) ?? (int) (ceil($requestedHeight / self::STEP_SIZE) * self::STEP_SIZE);
@@ -146,9 +156,9 @@ class MetricsUtility
         }
     }
 
-    public function getIdentifier(): string
+    public function getAspectRatio(): ?AspectRatio
     {
-        return $this->identifier;
+        return $this->aspectRatio;
     }
 
     public function getWidth(): ?int
@@ -161,18 +171,18 @@ class MetricsUtility
         return $this->height;
     }
 
-    public function getAspectRatio(): ?AspectRatio
+    public function limitExceeded(): bool
     {
-        return $this->aspectRatio;
+        return (bool) $this->limitExceeded;
     }
 
     public function toArray(): array
     {
         return [
-            'identifier' => $this->getIdentifier(),
             'aspectRatio' => $this->getAspectRatio()?->toArray(),
             'width' => $this->getWidth(),
             'height' => $this->getHeight(),
+            'limitExceeded' => $this->limitExceeded(),
         ];
     }
 }

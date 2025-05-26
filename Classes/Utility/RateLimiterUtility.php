@@ -12,9 +12,9 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 class RateLimiterUtility
 {
-    private const IP_REQUEST_LIMIT = 120;
+    private const IP_REQUEST_LIMIT = 100;
     private const IP_REQUEST_TIME = '1 hour';
-    private const IMAGE_REQUEST_LIMIT = 30;
+    private const IMAGE_REQUEST_LIMIT = 4;
     private const IMAGE_REQUEST_TIME = '1 hour';
 
     private string $identifier;

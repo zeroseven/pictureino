@@ -14,7 +14,6 @@ use Zeroseven\Pictureino\Entity\ConfigRequest;
 use Zeroseven\Pictureino\Utility\ImageUtility;
 use Zeroseven\Pictureino\Utility\LogUtility;
 use Zeroseven\Pictureino\Utility\MetricsUtility;
-use Zeroseven\Pictureino\Utility\RateLimiterUtility;
 use Zeroseven\Pictureino\Utility\SettingsUtility;
 
 class ImageRequest implements MiddlewareInterface
@@ -27,8 +26,8 @@ class ImageRequest implements MiddlewareInterface
     protected ?ConfigRequest $configRequest = null;
     protected ?ImageUtility $imageUtiltiy = null;
     protected ?MetricsUtility $metricsUtility = null;
-    protected ?SettingsUtility $settingsUtility = null;
     protected ?LogUtility $logUtility = null;
+    protected ?SettingsUtility $settingsUtility = null;
 
     protected function isRetina(): bool
     {
@@ -61,7 +60,7 @@ class ImageRequest implements MiddlewareInterface
             }
 
             $this->metricsUtility = GeneralUtility::makeInstance(MetricsUtility::class, $identifier, $this->configRequest, $this->imageUtiltiy, $this->settingsUtility);
-            $this->logUtility = GeneralUtility::makeInstance(LogUtility::class, $identifier, $this->configRequest, $this->imageUtiltiy, $this->metricsUtility);
+            $this->logUtility = GeneralUtility::makeInstance(LogUtility::class, $identifier, $this->metricsUtility, $this->configRequest, $this->imageUtiltiy);
 
             return $this->metricsUtility->validate();
         }
@@ -107,12 +106,9 @@ class ImageRequest implements MiddlewareInterface
                         'metrics' => $this->metricsUtility->toArray(),
                         'time' => round((microtime(true) - $requestStartTime) * 1000, 2) . 'ms',
                     ];
-
-                    // Override the file config with the identifier
-                    $data['debug']['request']['config']['file'] = $this->metricsUtility->getIdentifier();
                 }
 
-                $this->logUtility->log();
+                $this->metricsUtility->limitExceeded() || $this->logUtility->log();
 
                 return new JsonResponse($data, 200, static::REQUEST_HEADERS);
             }

@@ -17,18 +17,18 @@ class LogUtility
     protected const TABLE_REQUEST_PROCESSED = 'tx_pictureino_request_processed';
 
     protected string $identifier;
+    protected MetricsUtility $metricsUtility;
     protected ConfigRequest $configRequest;
     protected ImageUtility $imageUtility;
-    protected MetricsUtility $metricsUtility;
     protected ConnectionPool $connectionPool;
     protected ?array $existingEntry = null;
 
-    public function __construct(string $identifier, ConfigRequest $configRequest, ImageUtility $imageUtility, MetricsUtility $metricsUtility)
+    public function __construct(string $identifier, MetricsUtility $metricsUtility, ConfigRequest $configRequest, ImageUtility $imageUtility)
     {
         $this->identifier = $identifier;
+        $this->metricsUtility = $metricsUtility;
         $this->configRequest = $configRequest;
         $this->imageUtility = $imageUtility;
-        $this->metricsUtility = $metricsUtility;
         $this->connectionPool = GeneralUtility::makeInstance(ConnectionPool::class);
         $this->existingEntry = $this->getExistingEntry();
     }
@@ -110,7 +110,6 @@ class LogUtility
                 'aspect_ratio' => $this->metricsUtility->getAspectRatio() ?? '',
                 'width_evaluated' => $this->metricsUtility->getWidth() ?? 0,
                 'height_evaluated' => $this->metricsUtility->getHeight() ?? 0,
-                'file' => $this->imageUtility->getFile()->getIdentifier(),
                 'count' => 1,
                 'version' => $this->getExtensionVersion(),
                 'tstamp' => time(),
