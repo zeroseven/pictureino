@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Zeroseven\Pictureino\Entity;
 
-use TYPO3\CMS\Core\Resource\FileInterface;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\MathUtility;
 

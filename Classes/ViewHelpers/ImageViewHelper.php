@@ -64,7 +64,7 @@ class ImageViewHelper extends AbstractViewHelper
 
     public function getPageUid(): ?int
     {
-        if ($pageInformation =$this->renderingContext->getRequest()->getAttribute('frontend.page.information')) {
+        if ($pageInformation = $this->renderingContext->getRequest()->getAttribute('frontend.page.information')) {
             return $pageInformation->getId();
         }
 
@@ -115,7 +115,7 @@ class ImageViewHelper extends AbstractViewHelper
     protected function determineAspectRatio(): AspectRatioUtility
     {
         if ($this->arguments['freeAspectRatio'] ?? false) {
-            return $this->aspectRatioUtiltiy->add([1,1]);
+            return $this->aspectRatioUtiltiy->add([1, 1]);
         }
 
         if ($aspectRatio = $this->arguments['aspectRatio']) {
@@ -123,11 +123,11 @@ class ImageViewHelper extends AbstractViewHelper
         }
 
         if (($width = $this->arguments['width']) && $height = $this->arguments['height']) {
-            return $this->aspectRatioUtiltiy->add([(int)$width, (int)$height]);
+            return $this->aspectRatioUtiltiy->add([(int) $width, (int) $height]);
         }
 
         if (($width = $this->imageUtility->getProperty('width')) && ($height = $this->imageUtility->getProperty('height'))) {
-            return $this->aspectRatioUtiltiy->add([(int)$width, (int)$height]);
+            return $this->aspectRatioUtiltiy->add([(int) $width, (int) $height]);
         }
 
         return $this->aspectRatioUtiltiy;
@@ -180,12 +180,12 @@ class ImageViewHelper extends AbstractViewHelper
             ->addAttribute('class', $this->arguments['class'])
             ->addAttribute('style', $this->arguments['style']);
 
-        if ($this->imageUtility->getFile()->getExtension() !== 'svg') {
+        if ('svg' !== $this->imageUtility->getFile()->getExtension()) {
             $tagUtility
                 ->addAttribute('data-config', $this->createEncryptionHash())
                 ->addAttribute('data-loaded', 'false')
                 ->addAttribute('onload', static::ON_LOAD_EVENT);
-            }
+        }
 
         return ($this->aspectRatioUtiltiy->count() <= 1
             ? $tagUtility->renderImg(static::FALLBACK_WIDTH)

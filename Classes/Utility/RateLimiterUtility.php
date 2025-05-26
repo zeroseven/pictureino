@@ -34,7 +34,7 @@ class RateLimiterUtility
 
     protected function loggedIn(): bool
     {
-        return (bool)(GeneralUtility::makeInstance(Context::class)->getPropertyFromAspect('backend.user', 'isLoggedIn') ?? false);
+        return (bool) (GeneralUtility::makeInstance(Context::class)->getPropertyFromAspect('backend.user', 'isLoggedIn') ?? false);
     }
 
     protected function ipLimitExceeded(): bool
