@@ -8,6 +8,7 @@ use TYPO3\CMS\Core\Page\AssetCollector;
 use TYPO3\CMS\Core\Resource\File;
 use TYPO3\CMS\Core\Resource\FileReference;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController;
 use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractViewHelper;
 use Zeroseven\Pictureino\Entity\ConfigRequest;
 use Zeroseven\Pictureino\Utility\AspectRatioUtility;
@@ -61,6 +62,20 @@ class ImageViewHelper extends AbstractViewHelper
         $this->registerArgument('style', 'string', 'Inline styles');
     }
 
+    public function getPageUid(): ?int
+    {
+        if ($pageInformation = $this->renderingContext->getRequest()->getAttribute('frontend.page.information')) {
+            return $pageInformation->getId();
+        }
+
+        // Fallback for TYPO3 12.4
+        if ($GLOBALS['TSFE'] ?? null instanceof TypoScriptFrontendController) {
+            return $GLOBALS['TSFE']->id;
+        }
+
+        return null;
+    }
+
     protected function createEncryptionHash(): string
     {
         $configRequest = GeneralUtility::makeInstance(ConfigRequest::class);
@@ -90,13 +105,17 @@ class ImageViewHelper extends AbstractViewHelper
             $configRequest->addConfig('cropVariant', $cropVariant);
         }
 
+        if ($pageUid = $this->getPageUid()) {
+            $configRequest->addConfig('pid', $pageUid);
+        }
+
         return $configRequest->encryptConfig();
     }
 
     protected function determineAspectRatio(): AspectRatioUtility
     {
         if ($this->arguments['freeAspectRatio'] ?? false) {
-            return $this->aspectRatioUtiltiy->add([1,1]);
+            return $this->aspectRatioUtiltiy->add([1, 1]);
         }
 
         if ($aspectRatio = $this->arguments['aspectRatio']) {
@@ -104,12 +123,14 @@ class ImageViewHelper extends AbstractViewHelper
         }
 
         if (($width = $this->arguments['width']) && $height = $this->arguments['height']) {
-            return $this->aspectRatioUtiltiy->add([(int)$width, (int)$height]);
+            return $this->aspectRatioUtiltiy->add([(int) $width, (int) $height]);
         }
 
         if (($width = $this->imageUtility->getProperty('width')) && ($height = $this->imageUtility->getProperty('height'))) {
-            return $this->aspectRatioUtiltiy->add([(int)$width, (int)$height]);
+            return $this->aspectRatioUtiltiy->add([(int) $width, (int) $height]);
         }
+
+        return $this->aspectRatioUtiltiy;
     }
 
     protected function addInlineScript(): void
@@ -132,8 +153,7 @@ class ImageViewHelper extends AbstractViewHelper
         ]);
     }
 
-    /** @throws \Exception */
-    public function render(): string
+    protected function initializeImage(): void
     {
         $this->imageUtility->setFile(
             $this->arguments['src'],
@@ -147,6 +167,12 @@ class ImageViewHelper extends AbstractViewHelper
 
         $this->determineAspectRatio();
         $this->addInlineScript();
+    }
+
+    /** @throws \Exception */
+    public function render(): string
+    {
+        $this->initializeImage();
 
         $tagUtility = GeneralUtility::makeInstance(TagUtility::class, $this->imageUtility, $this->aspectRatioUtiltiy)
             ->addAttribute('title', $this->arguments['title'])
@@ -154,12 +180,12 @@ class ImageViewHelper extends AbstractViewHelper
             ->addAttribute('class', $this->arguments['class'])
             ->addAttribute('style', $this->arguments['style']);
 
-        if ($this->imageUtility->getFile()->getExtension() !== 'svg') {
+        if ('svg' !== $this->imageUtility->getFile()->getExtension()) {
             $tagUtility
                 ->addAttribute('data-config', $this->createEncryptionHash())
                 ->addAttribute('data-loaded', 'false')
                 ->addAttribute('onload', static::ON_LOAD_EVENT);
-            }
+        }
 
         return ($this->aspectRatioUtiltiy->count() <= 1
             ? $tagUtility->renderImg(static::FALLBACK_WIDTH)
