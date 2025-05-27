@@ -63,11 +63,17 @@ Remove all images of dynamic image requests and cleanup the pictureino database 
 vendor/bin/typo3 pictureino:cleanup
 ```
 
+## Security
+
+Pictureiño includes several mechanisms to ensure secure and efficient image processing:
+
+- **Rate Limiter**: A built-in rate limiter monitors the number of image requests for new image sizes. This prevents abuse through excessive requests and protects server resources.
+- **Request Optimization**: Similar image requests are automatically grouped to avoid generating too many images in close proximity. This reduces server load and improves performance.
+- **Cleanup Task**: Additionally, the processed files are logged along with information about image requests. You can easily delete these images via command, for example, via a regular cron job.
+
+These features make Pictureiño a reliable and secure solution for dynamic image generation in production environments.
+
 ## Frequently Asked Questions
-
-### Is there a risk of too many images being generated?
-
-No, not at all. All image requests are stored and analyzed. Similar requests are automatically grouped without recalculating new images. Additionally, the processed files are logged. You can easily delete these images using a command, for example, through a regular cron job.
 
 ### Does this have any disadvantages for SEO?
 
