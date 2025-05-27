@@ -91,6 +91,16 @@ export class Image {
   }
 
   private updateSource(): void {
+    const loaded = (): void => {
+      this.element.dataset.loaded = 'true'
+      setTimeout(this.observeElement, 1000)
+    }
+
+    // If the image is narrower than 50px or has no height, we can keeep its fallback image
+    if (this.size.width <= 50 || this.size.height <= 0) {
+      return loaded()
+    }
+
     this.element.dataset.loaded = 'false'
 
     this.loader.requestImage(this.getRequestUri())
@@ -98,14 +108,8 @@ export class Image {
         const sourceKey = this.getSourceKey(result.view)
         sourceKey ? this.updateSourceTag(sourceKey, result) : this.updateImage(result)
 
-        this.element.addEventListener('load', () =>{
-          this.element.dataset.loaded = 'true'
-          setTimeout(this.observeElement, 1000)
-        }, {once: true})
-      }).catch(() => {
-        this.element.dataset.loaded = 'true'
-        setTimeout(this.observeElement, 1000)
-      })
+        this.element.addEventListener('load', loaded, {once: true})
+      }).catch(() => loaded)
   }
 
   private observeElement(): void {
