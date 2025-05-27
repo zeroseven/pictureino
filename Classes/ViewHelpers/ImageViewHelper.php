@@ -135,16 +135,20 @@ class ImageViewHelper extends AbstractViewHelper
 
     protected function addInlineScript(): void
     {
+        // Uncompressed:
+        //
+        // if (typeof Pictureiño === 'undefined') {
+        //     Pictureiño = {
+        //         handle: function (config) {
+        //             window.addEventListener('load', function () {
+        //                 Pictureiño.handle(config);
+        //             });
+        //         }
+        //     }
+        // }
+
         $script = <<< JS
-        if (typeof Pictureiño === 'undefined') {
-            Pictureiño = {
-                handle: function (c) {
-                    window.addEventListener('load', function () {
-                        Pictureiño.handle(c);
-                    });
-                }
-            }
-        }
+        "undefined"==typeof Pictureiño&&(Pictureiño={handle:function(e){window.addEventListener("load",function(){Pictureiño.handle(e)})}});
         JS;
 
         $this->assetCollector->addInlineJavaScript('pictureino-handle', $script, [], [
