@@ -5,7 +5,7 @@
 
 # Publishes a tag/branch to Composer Packages of the current project
 publish:
-  image: curlimages/curl:latest
+  image: kevinswiber/curl-jq
   stage: build
   variables:
     URL: "$CI_SERVER_PROTOCOL://$CI_SERVER_HOST:$CI_SERVER_PORT/api/v4/projects/$CI_PROJECT_ID/packages/composer?job_token=$CI_JOB_TOKEN"
