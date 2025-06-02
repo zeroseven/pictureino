@@ -13,7 +13,7 @@
         "typo3/cms-core": "^12.4 || ^13.0",
         "typo3/cms-backend": "*",
         "typo3/cms-extbase": "*",
-		"symfony/rate-limiter": "^6.4 || ^7.0",
+        "symfony/rate-limiter": "^6.4 || ^7.0",
         "php": ">=8.1"
     },
     "require-dev": {
