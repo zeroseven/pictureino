@@ -191,9 +191,9 @@ class ImageViewHelper extends AbstractViewHelper
                 ->addAttribute('onload', static::ON_LOAD_EVENT);
         }
 
-        return ($this->aspectRatioUtiltiy->count() <= 1
+        return '<pictureino-wrap>' . (($this->aspectRatioUtiltiy->count() <= 1
             ? $tagUtility->renderImg(static::FALLBACK_WIDTH)
             : $tagUtility->renderPicture(static::FALLBACK_WIDTH))
-            . "\n" . $tagUtility->structuredData(static::SEO_CONTENT_WIDTH);
+            . "\n" . $tagUtility->structuredData(static::SEO_CONTENT_WIDTH)) . '</pictureino-wrap>';
     }
 }

@@ -65,14 +65,6 @@ class TagUtility
         return $source->render();
     }
 
-    protected function renderWrap(TagBuilder $content): string
-    {
-        $wrap = GeneralUtility::makeInstance(TagBuilder::class, 'pictureino-wrap');
-        $wrap->setContent($content->render());
-
-        return $wrap->render();
-    }
-
     public function renderImg(int $width): string
     {
         $firstAspect = $this->aspectRatioUtility->getFirstAspectRatio();
@@ -94,7 +86,7 @@ class TagUtility
             null === $value || $img->addAttribute($key, $value);
         }
 
-        return $this->renderWrap($img);
+        return $img->render();
     }
 
     public function renderPicture(int $width): string
@@ -113,7 +105,7 @@ class TagUtility
 
         $tag->setContent(implode("\n", $children));
 
-        return $this->renderWrap(content: $tag);
+        return $tag->render();
     }
 
     public function structuredData(int $width): string
