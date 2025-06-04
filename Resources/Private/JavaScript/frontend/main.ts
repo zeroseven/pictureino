@@ -1,4 +1,5 @@
 import {Image} from './image'
+import './wrap'
 
 declare global {
   interface Window {
