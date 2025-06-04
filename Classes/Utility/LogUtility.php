@@ -62,19 +62,6 @@ class LogUtility
         return $this->existingEntry;
     }
 
-    protected function getExtensionVersion(): string
-    {
-        $_EXTKEY = 'pictureino';
-
-        if (($path = ExtensionManagementUtility::extPath($_EXTKEY, 'ext_emconf.php')) && file_exists($path)) {
-            include $path;
-
-            return $EM_CONF[$_EXTKEY]['version'] ?? '';
-        }
-
-        return '';
-    }
-
     protected function countRequest(): void
     {
         if ($this->hasExistingEntry()) {
@@ -111,7 +98,7 @@ class LogUtility
                 'width_evaluated' => $this->metricsUtility->getWidth() ?? 0,
                 'height_evaluated' => $this->metricsUtility->getHeight() ?? 0,
                 'count' => 1,
-                'version' => $this->getExtensionVersion(),
+                'version' => ExtensionManagementUtility::getExtensionVersion('pictureino'),
                 'tstamp' => time(),
                 'crdate' => time(),
             ])->executeStatement();
