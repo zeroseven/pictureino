@@ -94,7 +94,7 @@ export class Image {
 
   private updateSource(): void {
     const loaded = (): void => {
-      this.wrap.dataset.loaded = 'true'
+      delete this.wrap.dataset.loading
       setTimeout(this.observeElement, 1000)
     }
 
@@ -103,7 +103,7 @@ export class Image {
       return loaded()
     }
 
-    this.wrap.dataset.loaded = 'false'
+    this.wrap.dataset.loading = ''
 
     this.loader.requestImage(this.getRequestUri())
       .then((result: ImageResponse) => {

@@ -106,7 +106,7 @@ class TagUtility
     {
         $tag = GeneralUtility::makeInstance(TagBuilder::class, 'pictureino-wrap');
         $tag->setContent($content);
-        $tag->addAttribute('data-loaded', 'false');
+        $tag->addAttribute('data-loading', null);
         $tag->addAttribute('data-config', $this->config);
 
         return $tag->render();
