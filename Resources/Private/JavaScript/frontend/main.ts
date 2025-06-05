@@ -148,10 +148,19 @@ class PictureinoWrap extends HTMLElement {
     const images: HTMLCollectionOf<HTMLImageElement>  = this.getElementsByTagName('img')
     const config: string = this.getAttribute('data-config') || ''
 
-    if (images.length === 1 && config) {
-      this.init(images[0], config)
+    if (config) {
+      if (images.length === 0) {
+        const observer = new MutationObserver((_mutations: MutationRecord[], o: MutationObserver) => {
+          o.disconnect()
+          this.connectedCallback()
+        })
+
+        observer.observe(this, {childList: true, subtree: true})
+      } else {
+        this.init(images[0], config)
+      }
     } else {
-      console.warn('PictureinoWrap: Invalid configuration. Expected one <img> element and a "data-config" attribute.')
+      console.warn('PictureinoWrap: Missing "data-config" attribute.')
     }
   }
 
@@ -162,4 +171,4 @@ class PictureinoWrap extends HTMLElement {
   }
 }
 
-document.addEventListener('DOMContentLoaded', () => customElements.define('pictureino-wrap', PictureinoWrap))
+customElements.define('pictureino-wrap', PictureinoWrap)
