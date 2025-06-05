@@ -3,17 +3,19 @@ import {Observer} from './observer'
 import {Loader} from './loader'
 
 export class Image {
-  private element: HTMLImageElement
-  private config: string
+  private readonly element: HTMLImageElement
+  private readonly config: string
+  private readonly wrap: HTMLElement
   private observer: Observer
   private loader: Loader
   private sources: SourceMap
   private webpSupport: boolean
   private size: ElementSize
 
-  constructor(element: HTMLImageElement, config: string) {
+  constructor(element: HTMLImageElement, config: string, wrap: HTMLElement) {
     this.element = element
     this.config = config
+    this.wrap = wrap
     this.observer = new Observer(this.element)
     this.loader = new Loader()
     this.sources = {}
@@ -92,7 +94,7 @@ export class Image {
 
   private updateSource(): void {
     const loaded = (): void => {
-      this.element.dataset.loaded = 'true'
+      this.wrap.dataset.loaded = 'true'
       setTimeout(this.observeElement, 1000)
     }
 
@@ -101,7 +103,7 @@ export class Image {
       return loaded()
     }
 
-    this.element.dataset.loaded = 'false'
+    this.wrap.dataset.loaded = 'false'
 
     this.loader.requestImage(this.getRequestUri())
       .then((result: ImageResponse) => {

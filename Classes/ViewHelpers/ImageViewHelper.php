@@ -24,7 +24,6 @@ class ImageViewHelper extends AbstractViewHelper
 
     protected const FALLBACK_WIDTH = 80;
     protected const SEO_CONTENT_WIDTH = 1200;
-    public const ON_LOAD_EVENT = 'Pictureiño.handle(this)';
 
     public function __construct()
     {
@@ -133,30 +132,6 @@ class ImageViewHelper extends AbstractViewHelper
         return $this->aspectRatioUtiltiy;
     }
 
-    protected function addInlineScript(): void
-    {
-        // Uncompressed:
-        //
-        // if (typeof Pictureiño === 'undefined') {
-        //     Pictureiño = {
-        //         handle: function (config) {
-        //             window.addEventListener('load', function () {
-        //                 Pictureiño.handle(config);
-        //             });
-        //         }
-        //     }
-        // }
-
-        $script = <<< JS
-        "undefined"==typeof Pictureiño&&(Pictureiño={handle:function(e){window.addEventListener("load",function(){Pictureiño.handle(e)})}});
-        JS;
-
-        $this->assetCollector->addInlineJavaScript('pictureino-handle', $script, [], [
-            'priority' => true,
-            'useNonce' => true,
-        ]);
-    }
-
     protected function initializeImage(): void
     {
         $this->imageUtility->setFile(
@@ -170,7 +145,6 @@ class ImageViewHelper extends AbstractViewHelper
         }
 
         $this->determineAspectRatio();
-        $this->addInlineScript();
     }
 
     /** @throws \Exception */
@@ -178,22 +152,21 @@ class ImageViewHelper extends AbstractViewHelper
     {
         $this->initializeImage();
 
-        $tagUtility = GeneralUtility::makeInstance(TagUtility::class, $this->imageUtility, $this->aspectRatioUtiltiy)
+        $tagUtility = GeneralUtility::makeInstance(TagUtility::class, $this->createEncryptionHash(), $this->imageUtility, $this->aspectRatioUtiltiy)
             ->addAttribute('title', $this->arguments['title'])
             ->addAttribute('alt', $this->arguments['alt'])
             ->addAttribute('class', $this->arguments['class'])
             ->addAttribute('style', $this->arguments['style']);
 
-        if ('svg' !== $this->imageUtility->getFile()->getExtension()) {
-            $tagUtility
-                ->addAttribute('data-config', $this->createEncryptionHash())
-                ->addAttribute('data-loaded', 'false')
-                ->addAttribute('onload', static::ON_LOAD_EVENT);
-        }
-
-        return '<pictureino-wrap>' . (($this->aspectRatioUtiltiy->count() <= 1
+        $content = ($this->aspectRatioUtiltiy->count() <= 1
             ? $tagUtility->renderImg(static::FALLBACK_WIDTH)
             : $tagUtility->renderPicture(static::FALLBACK_WIDTH))
-            . "\n" . $tagUtility->structuredData(static::SEO_CONTENT_WIDTH)) . '</pictureino-wrap>';
+            . "\n" . $tagUtility->structuredData(static::SEO_CONTENT_WIDTH);
+
+        if ('svg' === $this->imageUtility->getFile()->getExtension()) {
+            return $content;
+        }
+
+        return $tagUtility->renderWrap($content);
     }
 }

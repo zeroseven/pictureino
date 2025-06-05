@@ -1,1 +1,209 @@
-var __defProp=Object.defineProperty,__defNormalProp=(e,t,i)=>t in e?__defProp(e,t,{enumerable:!0,configurable:!0,writable:!0,value:i}):e[t]=i,__publicField=(e,t,i)=>__defNormalProp(e,"symbol"!=typeof t?t+"":t,i);class Observer{constructor(e){__publicField(this,"element"),__publicField(this,"resizeObserver",null),__publicField(this,"intersectionObserver",null),__publicField(this,"resizeTimeout",null),this.element=e}onResize(i,s){var e;null!=(e=this.resizeObserver)&&e.disconnect(),this.resizeObserver=new ResizeObserver(e=>{this.resizeTimeout&&window.clearTimeout(this.resizeTimeout);let t=e[0];this.resizeTimeout=window.setTimeout(()=>{var e;s&&Math.abs(s.width-t.contentRect.width)/s.width<=.02&&Math.abs(s.height-t.contentRect.height)/s.height<=.02||(i({width:t.contentRect.width,height:t.contentRect.height},this),null!=(e=this.resizeObserver)&&e.disconnect())},150)}),this.resizeObserver.observe(this.element)}inView(t){var e;null!=(e=this.intersectionObserver)&&e.disconnect(),this.intersectionObserver=new IntersectionObserver(e=>{e[0].isIntersecting&&(t(this),null!=(e=this.intersectionObserver))&&e.disconnect()},{threshold:.1,rootMargin:"0px"}),this.intersectionObserver.observe(this.element)}disconnect(){var e;this.resizeTimeout&&(window.clearTimeout(this.resizeTimeout),this.resizeTimeout=null),null!=(e=this.resizeObserver)&&e.disconnect(),null!=(e=this.intersectionObserver)&&e.disconnect()}}class Loader{requestImage(e){return fetch(e).then(async e=>{var t=await e.json();return e.ok?t:t.error?Promise.reject(t.error):Promise.reject({error:{message:e.statusText,code:e.status}})})}}class Image{constructor(e,t){__publicField(this,"element"),__publicField(this,"config"),__publicField(this,"observer"),__publicField(this,"loader"),__publicField(this,"sources"),__publicField(this,"webpSupport"),__publicField(this,"size"),this.element=e,this.config=t,this.observer=new Observer(this.element),this.loader=new Loader,this.sources={},this.webpSupport=!1,this.size={width:this.element.offsetWidth,height:this.element.offsetHeight},this.observeElement=this.observeElement.bind(this),this.init()}checkWebpSupport(){let e=document.createElement("img");e.onload=()=>{this.webpSupport=0<e.width&&0<e.height},e.src="data:image/webp;base64,UklGRkoAAABXRUJQVlA4WAoAAAAQAAAAAAAAAAAAQUxQSAwAAAARBxAR/Q9ERP8DAABWUDggGAAAABQBAJ0BKgEAAQAAAP4AAA3AAP7mtQAAAA=="}getRequestUri(){var e=this.webpSupport?"webp/":"",t=parseInt(this.size.width.toString(),10),i=parseInt(this.size.height.toString(),10);return`/-/pictureino/img/${Math.round(window.innerWidth)}${1<window.devicePixelRatio?2:1}x${this.config}/${e}${t}x${i}/`}updateImage(e){this.element.width=e.processed.width,this.element.height=e.processed.height,e.processed.img1x&&(this.element.src=e.processed.img1x),e.processed.img2x?(this.element.src=e.processed.img2x,this.element.srcset=e.processed.img2x+" 2x"):this.element.removeAttribute("srcset")}updateSourceTag(e,t){e=this.sources[e];e&&(e.width=t.processed.width,e.height=t.processed.height,t.processed.img1x&&(e.srcset=t.processed.img1x),t.processed.img2x)&&(e.srcset=t.processed.img2x+" 2x")}getSourceKey(t){var e=Object.keys(this.sources).map(Number);return e.length&&(e=e.filter(e=>e<=t)).length?Math.max(...e):0}updateSource(){let i=()=>{this.element.dataset.loaded="true",setTimeout(this.observeElement,1e3)};if(this.size.width<=50||this.size.height<=0)return i();this.element.dataset.loaded="false",this.loader.requestImage(this.getRequestUri()).then(e=>{var t=this.getSourceKey(e.view);t?this.updateSourceTag(t,e):this.updateImage(e),this.element.addEventListener("load",i,{once:!0})}).catch(()=>i)}observeElement(){this.observer.onResize(e=>{this.size=e,this.updateSource()},this.size)}init(){this.checkWebpSupport(),["onload","srcset"].forEach(e=>{this.element.removeAttribute(e)});var e=this.element.closest("picture");e&&Array.prototype.slice.call(e.getElementsByTagName("source")).forEach(e=>{var t=e.getAttribute("media");t&&(t=t.match(/\d+/))&&t[0]&&(t=parseInt(t[0],10))&&(this.sources[t]=e)}),this.observer.inView(()=>this.updateSource())}}class PictureinoWrap extends HTMLElement{constructor(){super()}}customElements.define("pictureino-wrap",PictureinoWrap);class Pictureiño{static getConfig(e){return e.getAttribute("data-config")}static handle(e){var t=Pictureiño.getConfig(e);t?new Image(e,t):console.warn("No config found for the provided element.")}}window.Pictureiño={handle:e=>Pictureiño.handle(e)};
+var __defProp = Object.defineProperty;
+var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
+var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
+class Observer {
+  constructor(element) {
+    __publicField(this, "element");
+    __publicField(this, "resizeObserver", null);
+    __publicField(this, "intersectionObserver", null);
+    __publicField(this, "resizeTimeout", null);
+    this.element = element;
+  }
+  onResize(callback, size) {
+    var _a;
+    (_a = this.resizeObserver) == null ? void 0 : _a.disconnect();
+    this.resizeObserver = new ResizeObserver((entries) => {
+      if (this.resizeTimeout) {
+        window.clearTimeout(this.resizeTimeout);
+      }
+      const entry = entries[0];
+      this.resizeTimeout = window.setTimeout(() => {
+        var _a2;
+        if (size && Math.abs(size.width - entry.contentRect.width) / size.width <= 0.02 && Math.abs(size.height - entry.contentRect.height) / size.height <= 0.02) {
+          return;
+        }
+        callback({
+          width: entry.contentRect.width,
+          height: entry.contentRect.height
+        }, this);
+        (_a2 = this.resizeObserver) == null ? void 0 : _a2.disconnect();
+      }, 150);
+    });
+    this.resizeObserver.observe(this.element);
+  }
+  inView(callback) {
+    var _a;
+    (_a = this.intersectionObserver) == null ? void 0 : _a.disconnect();
+    this.intersectionObserver = new IntersectionObserver(
+      (entries) => {
+        var _a2;
+        if (entries[0].isIntersecting) {
+          callback(this);
+          (_a2 = this.intersectionObserver) == null ? void 0 : _a2.disconnect();
+        }
+      },
+      { threshold: 0.1, rootMargin: "0px" }
+    );
+    this.intersectionObserver.observe(this.element);
+  }
+  disconnect() {
+    var _a, _b;
+    if (this.resizeTimeout) {
+      window.clearTimeout(this.resizeTimeout);
+      this.resizeTimeout = null;
+    }
+    (_a = this.resizeObserver) == null ? void 0 : _a.disconnect();
+    (_b = this.intersectionObserver) == null ? void 0 : _b.disconnect();
+  }
+}
+class Loader {
+  requestImage(url) {
+    return fetch(url).then(async (response) => {
+      const data = await response.json();
+      if (!response.ok) {
+        if (data.error) {
+          return Promise.reject(data.error);
+        } else {
+          return Promise.reject({
+            error: {
+              message: response.statusText,
+              code: response.status
+            }
+          });
+        }
+      }
+      return data;
+    });
+  }
+}
+class Image {
+  constructor(element, config, wrap) {
+    __publicField(this, "element");
+    __publicField(this, "config");
+    __publicField(this, "wrap");
+    __publicField(this, "observer");
+    __publicField(this, "loader");
+    __publicField(this, "sources");
+    __publicField(this, "webpSupport");
+    __publicField(this, "size");
+    this.element = element;
+    this.config = config;
+    this.wrap = wrap;
+    this.observer = new Observer(this.element);
+    this.loader = new Loader();
+    this.sources = {};
+    this.webpSupport = false;
+    this.size = {
+      width: this.element.offsetWidth,
+      height: this.element.offsetHeight
+    };
+    this.observeElement = this.observeElement.bind(this);
+    this.init();
+  }
+  checkWebpSupport() {
+    const source = "data:image/webp;base64,UklGRkoAAABXRUJQVlA4WAoAAAAQAAAAAAAAAAAAQUxQSAwAAAARBxAR/Q9ERP8DAABWUDggGAAAABQBAJ0BKgEAAQAAAP4AAA3AAP7mtQAAAA==";
+    const img = document.createElement("img");
+    img.onload = () => {
+      this.webpSupport = img.width > 0 && img.height > 0;
+    };
+    img.src = source;
+  }
+  getRequestUri() {
+    const webp = this.webpSupport ? "webp/" : "";
+    const width = parseInt(this.size.width.toString(), 10);
+    const height = parseInt(this.size.height.toString(), 10);
+    const view = Math.round(window.innerWidth);
+    const retina = window.devicePixelRatio > 1 ? 2 : 1;
+    return `/-/pictureino/img/${view}${retina}x${this.config}/${webp}${width}x${height}/`;
+  }
+  updateImage(imageResponse) {
+    this.element.width = imageResponse.processed.width;
+    this.element.height = imageResponse.processed.height;
+    if (imageResponse.processed.img1x) {
+      this.element.src = imageResponse.processed.img1x;
+    }
+    if (imageResponse.processed.img2x) {
+      this.element.src = imageResponse.processed.img2x;
+      this.element.srcset = imageResponse.processed.img2x + " 2x";
+    } else {
+      this.element.removeAttribute("srcset");
+    }
+  }
+  updateSourceTag(view, imageResponse) {
+    const source = this.sources[view];
+    if (source) {
+      source.width = imageResponse.processed.width;
+      source.height = imageResponse.processed.height;
+      if (imageResponse.processed.img1x) {
+        source.srcset = imageResponse.processed.img1x;
+      }
+      if (imageResponse.processed.img2x) {
+        source.srcset = imageResponse.processed.img2x + " 2x";
+      }
+    }
+  }
+  getSourceKey(view) {
+    const views = Object.keys(this.sources).map(Number);
+    if (views.length) {
+      const lowerViews = views.filter((value) => value <= view);
+      return lowerViews.length ? Math.max(...lowerViews) : 0;
+    }
+    return 0;
+  }
+  updateSource() {
+    const loaded = () => {
+      this.wrap.dataset.loaded = "true";
+      setTimeout(this.observeElement, 1e3);
+    };
+    if (this.size.width <= 50 || this.size.height <= 0) {
+      return loaded();
+    }
+    this.wrap.dataset.loaded = "false";
+    this.loader.requestImage(this.getRequestUri()).then((result) => {
+      const sourceKey = this.getSourceKey(result.view);
+      sourceKey ? this.updateSourceTag(sourceKey, result) : this.updateImage(result);
+      this.element.addEventListener("load", loaded, { once: true });
+    }).catch(() => loaded);
+  }
+  observeElement() {
+    this.observer.onResize((size) => {
+      this.size = size;
+      this.updateSource();
+    }, this.size);
+  }
+  init() {
+    this.checkWebpSupport();
+    ["onload", "srcset"].forEach((attr) => {
+      this.element.removeAttribute(attr);
+    });
+    const picture = this.element.closest("picture");
+    if (picture) {
+      Array.prototype.slice.call(picture.getElementsByTagName("source")).forEach((source) => {
+        const mediaAttr = source.getAttribute("media");
+        if (mediaAttr) {
+          const matches = mediaAttr.match(/\d+/);
+          if (matches && matches[0]) {
+            const view = parseInt(matches[0], 10);
+            if (view) {
+              this.sources[view] = source;
+            }
+          }
+        }
+      });
+    }
+    this.observer.inView(() => this.updateSource());
+  }
+}
+class PictureinoWrap extends HTMLElement {
+  constructor() {
+    super();
+  }
+  connectedCallback() {
+    const images = this.getElementsByTagName("img");
+    const config = this.getAttribute("data-config") || "";
+    if (images.length === 1 && config) {
+      new Image(images[0], config, this);
+    }
+  }
+}
+customElements.define("pictureino-wrap", PictureinoWrap);

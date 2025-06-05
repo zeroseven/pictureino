@@ -1,30 +1,18 @@
 import {Image} from './image'
-import './wrap'
 
-declare global {
-  interface Window {
-    Pictureiño: {
-      handle: (element: HTMLImageElement) => void;
-    };
-  }
-}
-
-class Pictureiño {
-  public static getConfig(element: HTMLImageElement): string {
-    return element.getAttribute('data-config') as string
+class PictureinoWrap extends HTMLElement {
+  constructor() {
+    super()
   }
 
-  public static handle(element: HTMLImageElement): void {
-    const config = Pictureiño.getConfig(element)
+  connectedCallback(): void {
+    const images: HTMLCollectionOf<HTMLImageElement>  = this.getElementsByTagName('img')
+    const config: string = this.getAttribute('data-config') || ''
 
-    if (config) {
-      new Image(element, config)
-    } else {
-      console.warn('No config found for the provided element.')
+    if (images.length === 1 && config) {
+      new Image(images[0], config, this)
     }
   }
 }
 
-window.Pictureiño = {
-  handle: (element: HTMLImageElement): void => Pictureiño.handle(element),
-}
+customElements.define('pictureino-wrap', PictureinoWrap)
