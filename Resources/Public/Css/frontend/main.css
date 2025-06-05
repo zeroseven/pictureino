@@ -1,5 +1,4 @@
-pictureino-wrap{container-type:inline-size;overflow:hidden}
-pictureino-wrap,
+pictureino-wrap{display:block;container-type:inline-size;overflow:hidden}
 pictureino-wrap img{display:block!important;width:100%!important;height:auto!important;transition:filter 0.25s}
 
 @container(min-width:80px){pictureino-wrap[data-loading] img{filter:blur(2px)}}
@@ -10,3 +9,4 @@ pictureino-wrap img{display:block!important;width:100%!important;height:auto!imp
 @container(min-width:1200px){pictureino-wrap[data-loading] img{filter:blur(12px)}}
 @container(min-width:1400px){pictureino-wrap[data-loading] img{filter:blur(14px)}}
 @container(min-width:1600px){pictureino-wrap[data-loading] img{filter:blur(16px)}}
+@container(min-width:1800px){pictureino-wrap[data-loading] img{filter:blur(18px)}}

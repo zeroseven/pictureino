@@ -129,7 +129,7 @@ class PictureinoWrap extends HTMLElement {
   init(image: HTMLImageElement, config: string): void {
     this.image = image
     this.config = config
-    this.observer = new Observer(image)
+    this.observer = new Observer(this)
     this.loader = new Loader()
     this.sources = {}
     this.size = {
@@ -162,4 +162,4 @@ class PictureinoWrap extends HTMLElement {
   }
 }
 
-customElements.define('pictureino-wrap', PictureinoWrap)
+document.addEventListener('DOMContentLoaded', () => customElements.define('pictureino-wrap', PictureinoWrap))
