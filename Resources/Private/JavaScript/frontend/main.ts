@@ -26,8 +26,8 @@ class PictureinoWrap extends HTMLElement {
     this.observeElement = this.observeElement.bind(this)
   }
 
-  private getRequestUri(): string {
-    const webp = webpSupport ? 'webp/' : ''
+  private async getRequestUri(): Promise<string> {
+    const webp = await webpSupport ? 'webp/' : ''
     const width = parseInt(this.size.width.toString(), 10)
     const height = parseInt(this.size.height.toString(), 10)
     const view = Math.round(window.innerWidth)
@@ -94,13 +94,14 @@ class PictureinoWrap extends HTMLElement {
 
     this.dataset.loading = ''
 
-    this.loader.requestImage(this.getRequestUri())
-      .then((result: ImageResponse) => {
+    this.getRequestUri().then((uri: string) => {
+      this.loader.requestImage(uri).then((result: ImageResponse) => {
         const sourceKey = this.getSourceKey(result.view)
         sourceKey ? this.updateSourceTag(sourceKey, result) : this.updateImage(result)
 
         this.image.addEventListener('load', loaded, {once: true})
       }).catch(() => loaded)
+    })
   }
 
   private observeElement(): void {
@@ -112,17 +113,15 @@ class PictureinoWrap extends HTMLElement {
 
   private collectSources(): void {
     const picture = this.image.closest('picture') as HTMLPictureElement
+
     if (picture) {
-      Array.prototype.slice.call(picture.getElementsByTagName('source')).forEach((source: HTMLSourceElement) => {
+      Array.from(picture.getElementsByTagName('source')).forEach((source: HTMLSourceElement) => {
         const mediaAttr = source.getAttribute('media')
-        if (mediaAttr) {
-          const matches = mediaAttr.match(/\d+/)
-          if (matches && matches[0]) {
-            const view = parseInt(matches[0], 10)
-            if (view) {
-              this.sources[view] = source
-            }
-          }
+        const matches = mediaAttr?.match(/\d+/)
+        const view = matches ? parseInt(matches[0], 10) : null
+
+        if (view) {
+          this.sources[view] = source
         }
       })
     }
@@ -157,7 +156,7 @@ class PictureinoWrap extends HTMLElement {
     }
   }
 
-  disconectedCallback(): void {
+  disconnectedCallback(): void {
     if (this.observer) {
       this.observer.disconnect()
     }
