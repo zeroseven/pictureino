@@ -41,10 +41,14 @@ Simple image integration in your fluid template.
 
 ```html
 <!-- Initial in DOM -->
-<img src="cats-small.png" alt="cute cats" width="150" height="100" data-loaded="false" onload="Pictureiño.handle(this)" data-config="bHhHOXJqZXRzUDg5NVrbTdWQ1E1WFRoeHZuUnM4PQ==" />
+<pictureino-wrap data-loading data-config="bHhHOXJqZXRzUDg5NVrbTdWQ1E1WFRoeHZuUnM4PQ">
+    <img src="cats-small.png" alt="cute cats" width="80" height="50"/>
+</pictureino-wrap>
 
 <!-- When the image has been loaded-->
-<img src="cats-large.webp" alt="cute cats" width="1200" height="800" data-loaded="true" />
+<pictureino-wrap>
+    <img src="cats-large.webp" alt="cute cats" width="1200" height="800"/>
+</pictureino-wrap>
 ```
 
 ## Installation
@@ -83,6 +87,6 @@ No, quite the opposite! Pictureiño improves SEO. By serving WebP images, page l
 
 No, the responsive image optimization starts immediately with no setup required. However, you can make manual adjustments if needed, such as defining maximum image sizes or setting breakpoints for different aspect ratios.
 
-### Are strict CSP header settings a problem?
+### Do I need JavaScript?
 
-No, not at all. The extension automatically adjusts the CSP settings to ensure that all images load securely and without issues.
+Yes, JavaScript is required. The concept is designed so that images dynamically report their optimal size to TYPO3 directly from the frontend. Without JavaScript, this functionality cannot be achieved.
