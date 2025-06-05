@@ -10,19 +10,19 @@ use Zeroseven\Pictureino\Entity\AspectRatio;
 
 class TagUtility
 {
+    protected string $config;
     protected ImageUtility $imageUtility;
     protected AspectRatioUtility $aspectRatioUtility;
-    protected bool $debugMode;
     protected array $attributes = [];
     protected ?string $title = null;
     protected ?string $alt = null;
     protected ?string $class = null;
 
-    public function __construct(ImageUtility $imageUtility, AspectRatioUtility $aspectRatioUtility)
+    public function __construct(string $config, ImageUtility $imageUtility, AspectRatioUtility $aspectRatioUtility)
     {
+        $this->config = $config;
         $this->imageUtility = $imageUtility;
         $this->aspectRatioUtility = $aspectRatioUtility;
-        $this->debugMode = (bool) GeneralUtility::makeInstance(SettingsUtility::class)->isDebug();
     }
 
     public function addAttribute(string $attribute, ?string $value = null): self
@@ -54,10 +54,6 @@ class TagUtility
         $source->addAttribute('width', $this->imageUtility->getProperty('width'));
         $source->addAttribute('height', $this->imageUtility->getProperty('height'));
 
-        if ($this->debugMode) {
-            $source->addAttribute('data-aspact-ratio', (string) $ratio);
-        }
-
         if ($mimetype = $this->imageUtility->getProperty('mimetype')) {
             $source->addAttribute('type', $mimetype);
         }
@@ -79,8 +75,6 @@ class TagUtility
 
         $this->getAttribute('title') || $this->addAttribute('title', $this->imageUtility->getProperty('title'));
         $this->getAttribute('alt') || $this->addAttribute('alt', $this->imageUtility->getProperty('alternative') ?? '');
-
-        $this->debugMode && $this->addAttribute('data-aspect-ratio', (string) $firstAspect);
 
         foreach ($this->attributes as $key => $value) {
             null === $value || $img->addAttribute($key, $value);
@@ -104,6 +98,16 @@ class TagUtility
         $children[] = $this->renderImg($width);
 
         $tag->setContent(implode("\n", $children));
+
+        return $tag->render();
+    }
+
+    public function renderWrap(string $content): string
+    {
+        $tag = GeneralUtility::makeInstance(TagBuilder::class, 'pictureino-wrap');
+        $tag->setContent($content);
+        $tag->addAttribute('data-loading', null);
+        $tag->addAttribute('data-config', $this->config);
 
         return $tag->render();
     }

@@ -1,3 +1,12 @@
-img[data-config]{width:100%;height:auto}
-img[data-loaded=false]{filter:blur(4px);transition:filter 0.25s}
-img[data-loaded=true]{filter:none;transition:filter 0.25s}
+pictureino-wrap{container-type:inline-size;overflow:hidden}
+pictureino-wrap,
+pictureino-wrap img{display:block!important;width:100%!important;height:auto!important;transition:filter 0.25s}
+
+@container(min-width:80px){pictureino-wrap[data-loading] img{filter:blur(2px)}}
+@container(min-width:400px){pictureino-wrap[data-loading] img{filter:blur(4px)}}
+@container(min-width:600px){pictureino-wrap[data-loading] img{filter:blur(6px)}}
+@container(min-width:800px){pictureino-wrap[data-loading] img{filter:blur(8px)}}
+@container(min-width:1000px){pictureino-wrap[data-loading] img{filter:blur(10px)}}
+@container(min-width:1200px){pictureino-wrap[data-loading] img{filter:blur(12px)}}
+@container(min-width:1400px){pictureino-wrap[data-loading] img{filter:blur(14px)}}
+@container(min-width:1600px){pictureino-wrap[data-loading] img{filter:blur(16px)}}
