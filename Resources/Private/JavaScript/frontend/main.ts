@@ -23,7 +23,6 @@ class PictureinoWrap extends HTMLElement {
     super()
 
     this.updateSource = this.updateSource.bind(this)
-    this.observeElement = this.observeElement.bind(this)
   }
 
   private async getRequestUri(): Promise<string> {
@@ -84,7 +83,11 @@ class PictureinoWrap extends HTMLElement {
   private updateSource(): void {
     const loaded = (): void => {
       delete this.dataset.loading
-      setTimeout(this.observeElement, 1000)
+
+      this.observer.onResize(size => {
+        this.size = size
+        this.updateSource()
+      }, this.size)
     }
 
     // If the image is narrower than 50px or has no height, we can keeep its fallback image
@@ -100,15 +103,11 @@ class PictureinoWrap extends HTMLElement {
         sourceKey ? this.updateSourceTag(sourceKey, result) : this.updateImage(result)
 
         this.image.addEventListener('load', loaded, {once: true})
-      }).catch(() => loaded)
+      }).catch(error => {
+        console.info('Pictureino error (retry after 1s)', error)
+        setTimeout(loaded, 1000)
+      })
     })
-  }
-
-  private observeElement(): void {
-    this.observer.onResize(size => {
-      this.size = size
-      this.updateSource()
-    }, this.size)
   }
 
   private collectSources(): void {

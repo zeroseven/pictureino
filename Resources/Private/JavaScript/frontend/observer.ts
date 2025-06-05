@@ -32,12 +32,12 @@ export class Observer {
           return
         }
 
-        callback({
+        this.resizeObserver?.disconnect()
+
+        typeof callback === 'function' && callback({
           width: entry.contentRect.width,
           height: entry.contentRect.height,
         }, this)
-
-        this.resizeObserver?.disconnect()
       }, 150)
     })
 
