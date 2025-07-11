@@ -42,7 +42,7 @@ Simple image integration in your fluid template.
 ```html
 <!-- Initial in DOM -->
 <pictureino-wrap data-loading data-config="bHhHOXJqZXRzUDg5NVrbTdWQ1E1WFRoeHZuUnM4PQ">
-    <img src="cats-small.png" alt="cute cats" width="80" height="50"/>
+    <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD/2wBDABQODxIPDRQ..." alt="cute cats" width="80" height="50"/>
 </pictureino-wrap>
 
 <!-- When the image has been loaded-->
