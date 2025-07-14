@@ -31,7 +31,7 @@ class SettingsUtility
 
     protected function getSite(): ?Site
     {
-        return $GLOBALS['TYPO3_REQUEST']?->getAttribute('site');
+        return ($GLOBALS['TYPO3_REQUEST'] ?? null)?->getAttribute('site');
     }
 
     protected function sanitizeBreakpointSettings(): void
