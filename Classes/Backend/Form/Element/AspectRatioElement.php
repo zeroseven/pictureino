@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Zeroseven\Pictureino\Backend\Form\Element;
 
 use TYPO3\CMS\Backend\Form\Element\AbstractFormElement;
+use TYPO3\CMS\Core\Exception\SiteNotFoundException;
 use TYPO3\CMS\Core\Page\JavaScriptModuleInstruction;
 use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -22,7 +23,11 @@ class AspectRatioElement extends AbstractFormElement
 
     protected function initializeElement(): void
     {
-        $site = GeneralUtility::makeInstance(SiteFinder::class)->getSiteByPageId(1);
+        try {
+            $site = $this->data['site'] ?? GeneralUtility::makeInstance(SiteFinder::class)->getSiteByPageId($this->data['effectivePid'] ?? 0);
+        } catch (SiteNotFoundException) {
+            $site = null;
+        }
 
         $this->wrapperId = StringUtility::getUniqueId('id');
         $this->fieldName = StringUtility::getUniqueId('id');
