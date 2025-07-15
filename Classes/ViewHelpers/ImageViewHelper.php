@@ -152,13 +152,15 @@ class ImageViewHelper extends AbstractViewHelper
     {
         $this->initializeImage();
 
+        $aspectRatioCount = $this->aspectRatioUtiltiy->count();
         $tagUtility = GeneralUtility::makeInstance(TagUtility::class, $this->createEncryptionHash(), $this->imageUtility, $this->aspectRatioUtiltiy)
             ->addAttribute('title', $this->arguments['title'])
             ->addAttribute('alt', $this->arguments['alt'])
             ->addAttribute('class', $this->arguments['class'])
-            ->addAttribute('style', $this->arguments['style']);
+            ->addAttribute('style', $this->arguments['style'])
+            ->setInlineSources($aspectRatioCount <= 2);
 
-        $content = ($this->aspectRatioUtiltiy->count() <= 1
+        $content = ($aspectRatioCount <= 1
             ? $tagUtility->renderImg(static::FALLBACK_WIDTH)
             : $tagUtility->renderPicture(static::FALLBACK_WIDTH))
             . "\n" . $tagUtility->structuredData(static::SEO_CONTENT_WIDTH);
