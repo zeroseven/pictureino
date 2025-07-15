@@ -13,8 +13,7 @@ use Zeroseven\Pictureino\Entity\ConfigRequest;
 class MetricsUtility
 {
     protected const TABLE_NAME = 'tx_pictureino_request';
-    protected const SIMILAR_SIZE_RANGE = [-10, 40];
-    protected const STEP_SIZE = 100;
+    protected const TOLERANCE = [-10, 50];
 
     protected string $identifier;
     protected ConfigRequest $configRequest;
@@ -82,13 +81,13 @@ class MetricsUtility
             )
             ->andWhere(
                 'width - ' . $queryBuilder->createNamedParameter($requestedWidth, Connection::PARAM_INT) . ' BETWEEN ' .
-                $queryBuilder->createNamedParameter(self::SIMILAR_SIZE_RANGE[0], Connection::PARAM_INT) . ' AND ' .
-                $queryBuilder->createNamedParameter(self::SIMILAR_SIZE_RANGE[1], Connection::PARAM_INT)
+                $queryBuilder->createNamedParameter(self::TOLERANCE[0], Connection::PARAM_INT) . ' AND ' .
+                $queryBuilder->createNamedParameter(self::TOLERANCE[1], Connection::PARAM_INT)
             )
             ->andWhere(
                 'height - ' . $queryBuilder->createNamedParameter($requestedHeight, Connection::PARAM_INT) . ' BETWEEN ' .
-                $queryBuilder->createNamedParameter(self::SIMILAR_SIZE_RANGE[0], Connection::PARAM_INT) . ' AND ' .
-                $queryBuilder->createNamedParameter(self::SIMILAR_SIZE_RANGE[1], Connection::PARAM_INT)
+                $queryBuilder->createNamedParameter(self::TOLERANCE[0], Connection::PARAM_INT) . ' AND ' .
+                $queryBuilder->createNamedParameter(self::TOLERANCE[1], Connection::PARAM_INT)
             )
             ->andWhere(
                 $queryBuilder->expr()->eq('aspect_ratio', $queryBuilder->createNamedParameter((string) $this->aspectRatio, Connection::PARAM_STR))
@@ -150,8 +149,8 @@ class MetricsUtility
                     $this->height = $this->aspectRatio?->getHeight(1000) ?? 1000;
                 }
             } else {
-                $this->width = (int) (ceil($requestedWidth / self::STEP_SIZE) * self::STEP_SIZE);
-                $this->height = $this->aspectRatio?->getHeight($this->width) ?? (int) (ceil($requestedHeight / self::STEP_SIZE) * self::STEP_SIZE);
+                $this->width = $requestedWidth;
+                $this->height = $this->aspectRatio?->getHeight($requestedWidth) ?? $requestedHeight;
             }
         }
     }
