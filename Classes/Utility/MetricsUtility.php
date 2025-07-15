@@ -60,7 +60,7 @@ class MetricsUtility
 
         if ($maxImageDimensions = (int) ($this->configRequest->getConfig()['maxImageDimensions'] ?? $this->settingsUtility->get('maxImageDimensions'))) {
             if ($this->configRequest->getWidth() > $maxImageDimensions || $this->configRequest->getHeight() > $maxImageDimensions) {
-                throw new InvalidArgumentException('Dimensions exceeds the maximum lenght.', 1745092985);
+                throw new InvalidArgumentException('Dimensions exceed the maximum length.', 1745092985);
             }
         }
 
