@@ -10,6 +10,8 @@ use Zeroseven\Pictureino\Entity\AspectRatio;
 
 class TagUtility
 {
+    protected const PLACEHOLDER_PARAMETERS = '-quality 40';
+
     protected string $config;
     protected ImageUtility $imageUtility;
     protected AspectRatioUtility $aspectRatioUtility;
@@ -17,12 +19,20 @@ class TagUtility
     protected ?string $title = null;
     protected ?string $alt = null;
     protected ?string $class = null;
+    protected bool $inlineSources = false;
 
     public function __construct(string $config, ImageUtility $imageUtility, AspectRatioUtility $aspectRatioUtility)
     {
         $this->config = $config;
         $this->imageUtility = $imageUtility;
         $this->aspectRatioUtility = $aspectRatioUtility;
+    }
+
+    public function setInlineSources(bool $value): self
+    {
+        $this->inlineSources = $value;
+
+        return $this;
     }
 
     public function addAttribute(string $attribute, ?string $value = null): self
@@ -42,15 +52,23 @@ class TagUtility
         return array_filter($this->attributes, fn ($key) => str_starts_with($key, 'data-'), ARRAY_FILTER_USE_KEY);
     }
 
+    protected function renderImageUrl(): string
+    {
+        return $this->inlineSources && ($processedFile = $this->imageUtility->getLastProcessedFile()) && ($mimetype = $processedFile->getMimeType())
+            ? sprintf('data:%s;base64,%s', $mimetype , base64_encode($processedFile->getContents()))
+            : $this->imageUtility->getUrl();
+    }
+
     protected function renderSource(int $breakpoint, AspectRatio $ratio, int $width): string
     {
         $height = $width ? $ratio->getHeight($width) : null;
-
-        $this->imageUtility->processImage($width, $height);
+        $this->imageUtility->processImage($width, $height, null, [
+            'additionalParameters' => self::PLACEHOLDER_PARAMETERS
+        ]);
 
         $source = GeneralUtility::makeInstance(TagBuilder::class, 'source');
         $source->addAttribute('media', '(min-width: ' . $breakpoint . 'px)');
-        $source->addAttribute('srcset', $this->imageUtility->getUrl());
+        $source->addAttribute('srcset', $this->renderImageUrl());
         $source->addAttribute('width', $this->imageUtility->getProperty('width'));
         $source->addAttribute('height', $this->imageUtility->getProperty('height'));
 
@@ -66,12 +84,12 @@ class TagUtility
         $firstAspect = $this->aspectRatioUtility->getFirstAspectRatio();
         $height = $width && $firstAspect ? $firstAspect->getHeight($width) : null;
 
-        $processedFile = $this->imageUtility->processImage($width, $height, null, [
-            'additionalParameters' => '-quality 40'
+        $this->imageUtility->processImage($width, $height, null, [
+            'additionalParameters' => self::PLACEHOLDER_PARAMETERS
         ]);
 
         $img = GeneralUtility::makeInstance(TagBuilder::class, 'img');
-        $img->addAttribute('src', sprintf('data:%s;base64,%s', $processedFile->getMimeType(), base64_encode($processedFile->getContents())));
+        $img->addAttribute('src', $this->renderImageUrl());
         $img->addAttribute('width', $this->imageUtility->getProperty('width'));
         $img->addAttribute('height', $this->imageUtility->getProperty('height'));
 
