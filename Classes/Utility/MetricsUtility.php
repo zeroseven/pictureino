@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Zeroseven\Pictureino\Utility;
 
+use Doctrine\DBAL\Exception as DBALException;
+use Exception;
+use InvalidArgumentException;
 use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -25,6 +28,7 @@ class MetricsUtility
     protected ?int $height = null;
     protected ?bool $limitExceeded = null;
 
+    /** @throws Exception */
     public function __construct(string $identifier, ConfigRequest $configRequest, ImageUtility $imageUtility, SettingsUtility $settingsUtility)
     {
         $this->identifier = $identifier;
@@ -39,24 +43,24 @@ class MetricsUtility
         $this->evaluate();
     }
 
-    /** @throws \InvalidArgumentException */
+    /** @throws InvalidArgumentException */
     public function validate(): bool
     {
         if ($this->aspectRatio && abs($this->aspectRatio->getHeight($this->configRequest->getWidth()) - $this->configRequest->getHeight()) > $this->configRequest->getHeight() * 0.03) {
-            throw new \InvalidArgumentException('The aspect ratio is invalid.', 1745092982);
+            throw new InvalidArgumentException('The aspect ratio is invalid.', 1745092982);
         }
 
         if ($this->configRequest->getWidth() > $this->configRequest->getViewport()) {
-            throw new \InvalidArgumentException('Width exceeds the viewport.', 1745092983);
+            throw new InvalidArgumentException('Width exceeds the viewport.', 1745092983);
         }
 
         if ($this->configRequest->getWidth() <= 0 || $this->configRequest->getHeight() <= 0) {
-            throw new \InvalidArgumentException('Width or height must be greater than zero.', 1745092984);
+            throw new InvalidArgumentException('Width or height must be greater than zero.', 1745092984);
         }
 
         if ($maxImageDimensions = (int) ($this->configRequest->getConfig()['maxImageDimensions'] ?? $this->settingsUtility->get('maxImageDimensions'))) {
             if ($this->configRequest->getWidth() > $maxImageDimensions || $this->configRequest->getHeight() > $maxImageDimensions) {
-                throw new \InvalidArgumentException('Dimensions exceeds the maximum lenght.', 1745092985);
+                throw new InvalidArgumentException('Dimensions exceeds the maximum lenght.', 1745092985);
             }
         }
 
@@ -71,7 +75,7 @@ class MetricsUtility
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
             ->getQueryBuilderForTable(self::TABLE_NAME);
 
-        return $queryBuilder
+        $result = $queryBuilder
             ->select('width_evaluated', 'height_evaluated')
             ->addSelectLiteral('ABS(width_evaluated - ' . $queryBuilder->createNamedParameter($requestedWidth, Connection::PARAM_INT) . ') AS diff')
             ->from(self::TABLE_NAME)
@@ -91,8 +95,13 @@ class MetricsUtility
             )
             ->orderBy('diff', 'ASC')
             ->setMaxResults(1)
-            ->executeQuery()
-            ->fetchAssociative();
+            ->executeQuery();
+
+        try {
+            return $result->fetchAssociative();
+        } catch (DBALException) {
+            return false;
+        }
     }
 
     public function getAlternativeMatch(): array|false
@@ -100,7 +109,7 @@ class MetricsUtility
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
             ->getQueryBuilderForTable(self::TABLE_NAME);
 
-        return $queryBuilder
+        $result = $queryBuilder
             ->select('width_evaluated', 'height_evaluated')
             ->from(self::TABLE_NAME)
             ->where(
@@ -114,8 +123,13 @@ class MetricsUtility
             )
             ->orderBy('width_evaluated', 'ASC')
             ->setMaxResults(1)
-            ->executeQuery()
-            ->fetchAssociative();
+            ->executeQuery();
+
+        try {
+            return $result->fetchAssociative();
+        } catch (DBALException) {
+            return false;
+        }
     }
 
     protected function checkRequestLimit(): bool
