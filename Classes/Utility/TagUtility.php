@@ -10,6 +10,8 @@ use Zeroseven\Pictureino\Entity\AspectRatio;
 
 class TagUtility
 {
+    protected const PLACEHOLDER_PARAMETERS = '-quality 40';
+
     protected string $config;
     protected ImageUtility $imageUtility;
     protected AspectRatioUtility $aspectRatioUtility;
@@ -61,7 +63,7 @@ class TagUtility
     {
         $height = $width ? $ratio->getHeight($width) : null;
         $this->imageUtility->processImage($width, $height, null, [
-            'additionalParameters' => '-quality 40'
+            'additionalParameters' => self::PLACEHOLDER_PARAMETERS
         ]);
 
         $source = GeneralUtility::makeInstance(TagBuilder::class, 'source');
@@ -83,7 +85,7 @@ class TagUtility
         $height = $width && $firstAspect ? $firstAspect->getHeight($width) : null;
 
         $this->imageUtility->processImage($width, $height, null, [
-            'additionalParameters' => '-quality 40'
+            'additionalParameters' => self::PLACEHOLDER_PARAMETERS
         ]);
 
         $img = GeneralUtility::makeInstance(TagBuilder::class, 'img');
