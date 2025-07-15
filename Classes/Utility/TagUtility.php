@@ -66,10 +66,12 @@ class TagUtility
         $firstAspect = $this->aspectRatioUtility->getFirstAspectRatio();
         $height = $width && $firstAspect ? $firstAspect->getHeight($width) : null;
 
-        $this->imageUtility->processImage($width, $height);
+        $processedFile = $this->imageUtility->processImage($width, $height, null, [
+            'additionalParameters' => '-quality 40'
+        ]);
 
         $img = GeneralUtility::makeInstance(TagBuilder::class, 'img');
-        $img->addAttribute('src', $this->imageUtility->getUrl());
+        $img->addAttribute('src', sprintf('data:%s;base64,%s', $processedFile->getMimeType(), base64_encode($processedFile->getContents())));
         $img->addAttribute('width', $this->imageUtility->getProperty('width'));
         $img->addAttribute('height', $this->imageUtility->getProperty('height'));
 
