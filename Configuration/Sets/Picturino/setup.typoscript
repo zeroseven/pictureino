@@ -1,2 +1,8 @@
 page.includeJS.pictureino = EXT:pictureino/Resources/Public/JavaScript/frontend/main.js
 page.includeCSS.pictureino = EXT:pictureino/Resources/Public/Css/frontend/main.css
+
+page.cssInline.1758224496 = TEXT
+page.cssInline.1758224496 {
+    value = pictureino-wrap{max-width:{$pictureino.maxImageDimensions}px;max-height:{$pictureino.maxImageDimensions}px}
+    if.isPositive = {$pictureino.maxImageDimensions}
+}
