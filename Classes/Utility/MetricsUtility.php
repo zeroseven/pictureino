@@ -58,9 +58,17 @@ class MetricsUtility
             throw new InvalidArgumentException('Width or height must be greater than zero.', 1745092984);
         }
 
-        if ($maxImageDimensions = (int) ($this->configRequest->getConfig()['maxImageDimensions'] ?? $this->settingsUtility->get('maxImageDimensions'))) {
+        if ($maxImageDimensions = (int)($this->configRequest->getConfig()['maxImageDimensions'] ?? $this->settingsUtility->get('maxImageDimensions'))) {
             if ($this->configRequest->getWidth() > $maxImageDimensions || $this->configRequest->getHeight() > $maxImageDimensions) {
-                throw new InvalidArgumentException('Dimensions exceed the maximum length.', 1745092985);
+                if ($this->configRequest->getWidth() > $this->configRequest->getHeight()) {
+                    $this->configRequest->setWidth($maxImageDimensions);
+                    $this->configRequest->setHeight($this->aspectRatio->getHeight($maxImageDimensions));
+                } else {
+                    $this->configRequest->setHeight($maxImageDimensions);
+                    $this->configRequest->setWidth($this->aspectRatio->getWidth($maxImageDimensions));
+                }
+                // reevaluate with new sizes
+                $this->evaluate();
             }
         }
 
