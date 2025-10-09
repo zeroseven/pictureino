@@ -90,3 +90,23 @@ No, the responsive image optimization starts immediately with no setup required.
 ### Do I need JavaScript?
 
 Yes, JavaScript is required. The concept is designed so that images dynamically report their optimal size to TYPO3 directly from the frontend. Without JavaScript, this functionality cannot be achieved.
+
+### Can I use this with content blocks?
+
+Yes, you can add the custom TCA field `aspect_ratio` to your content blocks.
+
+```yaml
+name: vendor/element
+typeName: vendor_element
+group: default
+prefixFields: true
+prefixType: vendor
+fields:
+  # Use the existing field
+  - identifier: aspect_ratio
+    useExistingField: true
+    type: AspectRatio
+  # Add a new field of type AspectRatio
+  - identifier: foo_bar
+    type: AspectRatio
+```
