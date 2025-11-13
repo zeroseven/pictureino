@@ -141,6 +141,12 @@ class ImageUtility
             return (string) $value;
         }
 
+        if (($cropArea = $this->getCropArea())
+            && ($absoluteCropArea = $cropArea->makeAbsoluteBasedOnFile($this->file)->asArray())
+            && !empty($absoluteCropArea[$property])) {
+            return (string) $absoluteCropArea[$property];
+        }
+
         if ($this->file->hasProperty($property) && $value = $this->file->getProperty($property)) {
             return (string) $value;
         }
