@@ -85,12 +85,12 @@ class AspectRatio
 
     public function getHeight(int $width): int
     {
-        return (int) floor($width / $this->getX() * $this->getY());
+        return (int) round($width / $this->getX() * $this->getY());
     }
 
     public function getWidth(int $height): int
     {
-        return (int) floor($height / $this->getY() * $this->getX());
+        return (int) round($height / $this->getY() * $this->getX());
     }
 
     public function toArray(): array
