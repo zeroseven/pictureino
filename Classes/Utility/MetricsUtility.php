@@ -60,6 +60,9 @@ class MetricsUtility
 
         if ($maxImageDimensions = (int)($this->configRequest->getConfig()['maxImageDimensions'] ?? $this->settingsUtility->get('maxImageDimensions'))) {
             if ($this->configRequest->getWidth() > $maxImageDimensions || $this->configRequest->getHeight() > $maxImageDimensions) {
+                if (!$this->aspectRatio) {
+                    $this->aspectRatio = new AspectRatio($this->configRequest->getWidth(), $this->configRequest->getHeight());
+                }
                 if ($this->configRequest->getWidth() > $this->configRequest->getHeight()) {
                     $this->configRequest->setWidth($maxImageDimensions);
                     $this->configRequest->setHeight($this->aspectRatio->getHeight($maxImageDimensions));
