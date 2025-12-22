@@ -22,7 +22,7 @@ class PictureinoWrap extends HTMLElement {
   constructor() {
     super()
 
-    this.updateSource = this.updateSource.bind(this)
+    this.handleResize = this.handleResize.bind(this)
   }
 
   private async getRequestUri(): Promise<string> {
@@ -80,22 +80,21 @@ class PictureinoWrap extends HTMLElement {
     return 0
   }
 
+  private handleResize(size: ElementSize): void {
+    this.size = size
+    this.updateSource()
+  }
+
   private updateSource(): void {
     const loaded = (): void => {
       delete this.dataset.loading
-
-      this.observer.onResize(size => {
-        this.size = size
-        this.updateSource()
-      }, this.size)
     }
 
-    // If the image is narrower than 50px or has no height, we can keeep its fallback image
+    // If the image is narrower than 50px or has no height, we can keep its fallback image.
+    // The persistent ResizeObserver will still be active and will trigger a load if the element grows later.
     if (this.size.width <= 50 || this.size.height <= 0) {
-      return loaded()
+      return
     }
-
-    this.dataset.loading = ''
 
     this.getRequestUri().then((uri: string) => {
       this.loader.requestImage(uri).then((result: ImageResponse) => {
@@ -141,7 +140,11 @@ class PictureinoWrap extends HTMLElement {
     delete this.dataset.config
 
     this.collectSources()
-    this.observer.inView(this.updateSource)
+
+    // When in view, set up the persistent resize observer
+    this.observer.inView(() => {
+      this.observer.onResize(this.handleResize)
+    })
   }
 
   connectedCallback(): void {
