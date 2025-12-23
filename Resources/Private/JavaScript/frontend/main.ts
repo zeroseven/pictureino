@@ -19,6 +19,7 @@ class PictureinoWrap extends HTMLElement {
   private sources!: SourceMap
   private size!: ElementSize
   private cache: { [key: string]: ImageResponse } = {}
+  private abortController: AbortController | null = null
 
   constructor() {
     super()
@@ -28,8 +29,8 @@ class PictureinoWrap extends HTMLElement {
 
   private async getRequestUri(): Promise<string> {
     const webp = await webpSupport ? 'webp/' : ''
-    const width = parseInt(this.size.width.toString(), 10)
-    const height = parseInt(this.size.height.toString(), 10)
+    const width = Math.round(this.size.width)
+    const height = Math.round(this.size.height)
     const view = Math.round(window.innerWidth)
     const retina = window.devicePixelRatio > 1 ? 2 : 1
 
@@ -94,7 +95,7 @@ class PictureinoWrap extends HTMLElement {
     // If the image is narrower than 50px or has no height, we can keep its fallback image.
     // The persistent ResizeObserver will still be active and will trigger a load if the element grows later.
     if (this.size.width <= 50 || this.size.height <= 0) {
-      return
+        return
     }
 
     this.getRequestUri().then((uri: string) => {
@@ -105,15 +106,21 @@ class PictureinoWrap extends HTMLElement {
         return
       }
 
-      this.loader.requestImage(uri).then((result: ImageResponse) => {
+      if (this.abortController) {
+        this.abortController.abort()
+      }
+      this.abortController = new AbortController()
+
+      this.loader.requestImage(uri, this.abortController.signal).then((result: ImageResponse) => {
         this.cache[uri] = result; // Store result in cache
         const sourceKey = this.getSourceKey(result.view)
         sourceKey ? this.updateSourceTag(sourceKey, result) : this.updateImage(result)
 
         this.image.addEventListener('load', loaded, {once: true})
       }).catch(error => {
-        console.info('Pictureino error (retry after 1s)', error)
-        setTimeout(loaded, 1000)
+        if (error.name !== 'AbortError') {
+          setTimeout(loaded, 1000)
+        }
       })
     })
   }
@@ -144,6 +151,7 @@ class PictureinoWrap extends HTMLElement {
       width: image.offsetWidth,
       height: image.offsetHeight,
     }
+    this.abortController = null
 
     this.dataset.loading = ''
     delete this.dataset.config
@@ -179,6 +187,9 @@ class PictureinoWrap extends HTMLElement {
   disconnectedCallback(): void {
     if (this.observer) {
       this.observer.disconnect()
+    }
+    if (this.abortController) {
+      this.abortController.abort()
     }
   }
 }
