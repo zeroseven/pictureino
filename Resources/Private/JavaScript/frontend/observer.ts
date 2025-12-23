@@ -1,7 +1,7 @@
 import {ElementSize} from './types'
 
 type ResizeCallback = (size: ElementSize, observer: Observer) => void;
-type ViewCallback = (observer: Observer) => void;
+type ViewCallback = (isIntersecting: boolean, observer: Observer) => void;
 
 export class Observer {
   private element: Element
@@ -45,12 +45,19 @@ export class Observer {
     }, 150)
   }
 
+  public pause(): void {
+    this.resizeObserver?.disconnect()
+  }
+
+  public resume(): void {
+    this.resizeObserver?.observe(this.element)
+  }
+
   public onResize(callback: ResizeCallback): void {
     this.resizeCallback = callback
 
     if (!this.resizeObserver) {
       this.resizeObserver = new ResizeObserver(this._handleResize)
-      this.resizeObserver.observe(this.element)
     }
   }
 
@@ -59,10 +66,7 @@ export class Observer {
 
     this.intersectionObserver = new IntersectionObserver(
       entries => {
-        if (entries[0].isIntersecting) {
-          callback(this)
-          this.intersectionObserver?.disconnect()
-        }
+        callback(entries[0].isIntersecting, this)
       },
       {threshold: 0.1, rootMargin: '0px'},
     )

@@ -159,8 +159,13 @@ class PictureinoWrap extends HTMLElement {
     this.collectSources()
 
     // When in view, set up the persistent resize observer
-    this.observer.inView(() => {
-      this.observer.onResize(this.handleResize)
+    this.observer.onResize(this.handleResize)
+    this.observer.inView(isIntersecting => {
+      if (isIntersecting) {
+        this.observer.resume()
+      } else {
+        this.observer.pause()
+      }
     })
   }
 
