@@ -18,6 +18,7 @@ class PictureinoWrap extends HTMLElement {
   private loader!: Loader
   private sources!: SourceMap
   private size!: ElementSize
+  private cache: { [key: string]: ImageResponse } = {}
 
   constructor() {
     super()
@@ -97,7 +98,15 @@ class PictureinoWrap extends HTMLElement {
     }
 
     this.getRequestUri().then((uri: string) => {
+      if (this.cache[uri]) {
+        const result = this.cache[uri];
+        const sourceKey = this.getSourceKey(result.view)
+        sourceKey ? this.updateSourceTag(sourceKey, result) : this.updateImage(result)
+        return
+      }
+
       this.loader.requestImage(uri).then((result: ImageResponse) => {
+        this.cache[uri] = result; // Store result in cache
         const sourceKey = this.getSourceKey(result.view)
         sourceKey ? this.updateSourceTag(sourceKey, result) : this.updateImage(result)
 
