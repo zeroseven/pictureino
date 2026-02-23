@@ -2,6 +2,24 @@ import {ElementSize, ImageResponse, SourceMap} from './types'
 import {Observer} from './observer'
 import {Loader} from './loader'
 
+const script = document.getElementById('pictureino-js')
+
+function isValidRootMargin(margin: string | null | undefined): string {
+  // A simple regex to check for valid CSS margin values for IntersectionObserver.
+  // This is not exhaustive but covers common cases. It checks for numbers
+  // followed by 'px' or '%' units, or '0', allowing for up to four space-separated values.
+  // Examples: "10px", "5%", "10px 20%", "0 0 10px 0", etc.
+  const cssMarginRegex = /^(0|(-?\d*\.?\d+(px|%)))(\s+(0|(-?\d*\.?\d+(px|%)))){0,3}$/i
+
+  if (!margin || !cssMarginRegex.test(margin.trim())) {
+    console.warn(`Pictureino: Invalid data-rootmargin value "${margin}". Falling back to "0px".`)
+    return '0px'
+  }
+  return margin.trim()
+}
+
+const rootMargin = isValidRootMargin(script?.getAttribute('data-rootmargin'))
+
 const webpSupport= (() : Promise<boolean> => {
   return new Promise<boolean>(resolve => {
     const img = new Image()
@@ -129,7 +147,7 @@ class PictureinoWrap extends HTMLElement {
   init(image: HTMLImageElement, config: string): void {
     this.image = image
     this.config = config
-    this.observer = new Observer(this)
+    this.observer = new Observer(this, rootMargin)
     this.loader = new Loader()
     this.sources = {}
     this.size = {

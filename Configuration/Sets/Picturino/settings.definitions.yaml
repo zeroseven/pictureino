@@ -27,3 +27,9 @@ settings:
     category: Pictureino.settings
     label: 'Debug'
     description: 'Enable debug mode. This will output additional information in data attributes and ajax requests. This is useful for debugging purposes, but should be disabled in production.'
+  pictureino.rootMargin:
+    type: string
+    default: '0px'
+    category: Pictureino.settings
+    label: 'Root Margin'
+    description: 'The rootMargin of the IntersectionObserver. This is used to load images before they enter the viewport. The default value is "0px".  (Unit: px or %)'

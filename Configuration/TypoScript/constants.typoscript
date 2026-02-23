@@ -21,5 +21,8 @@ plugin.tx_pictureino {
 
   # cat=Pictureiño/dims/010; type=int+; label=Maximum image dimensions
   maxImageDimensions = 2000
+
+  # cat=Pictureiño/settings/010; type=string; label=The rootMargin of the IntersectionObserver. This is used to load images before they enter the viewport. The default value is "0px".  (Unit: px or %)
+  rootMargin = 0px
 }
 [END]

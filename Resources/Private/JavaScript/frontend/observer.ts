@@ -8,9 +8,11 @@ export class Observer {
   private resizeObserver: ResizeObserver | null = null
   private intersectionObserver: IntersectionObserver | null = null
   private resizeTimeout: number | null = null
+  private readonly rootMargin: string
 
-  constructor(element: Element) {
+  constructor(element: Element, rootMargin = '0px') {
     this.element = element
+    this.rootMargin = rootMargin
   }
 
   public onResize(callback: ResizeCallback, size?: ElementSize): void {
@@ -54,7 +56,7 @@ export class Observer {
           this.intersectionObserver?.disconnect()
         }
       },
-      {threshold: 0.1, rootMargin: '0px'},
+      {threshold: 0.1, rootMargin: this.rootMargin},
     )
 
     this.intersectionObserver.observe(this.element)

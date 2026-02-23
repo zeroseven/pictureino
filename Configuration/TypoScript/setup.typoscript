@@ -15,4 +15,5 @@ plugin.tx_pictureino {
   debug = {$plugin.tx_pictureino.debug}
   maxImageDimensions = {$plugin.tx_pictureino.maxImageDimensions}
 }
+page.includeJS.pictureino.data.data-rootmargin = {$plugin.tx_pictureino.rootMargin}
 [END]
