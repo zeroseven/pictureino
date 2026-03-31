@@ -1,47 +1,64 @@
 import {ElementSize} from './types'
 
 type ResizeCallback = (size: ElementSize, observer: Observer) => void;
-type ViewCallback = (observer: Observer) => void;
+type ViewCallback = (isIntersecting: boolean, observer: Observer) => void;
 
 export class Observer {
   private element: Element
   private resizeObserver: ResizeObserver | null = null
   private intersectionObserver: IntersectionObserver | null = null
   private resizeTimeout: number | null = null
+  private lastSize: ElementSize | null = null
+  private resizeCallback: ResizeCallback | null = null
 
   constructor(element: Element) {
     this.element = element
+    this._handleResize = this._handleResize.bind(this)
   }
 
-  public onResize(callback: ResizeCallback, size?: ElementSize): void {
-    this.resizeObserver?.disconnect()
+  private _handleResize(entries: ResizeObserverEntry[]): void {
+    if (!this.resizeCallback) return
 
-    this.resizeObserver = new ResizeObserver(entries => {
-      if (this.resizeTimeout) {
-        window.clearTimeout(this.resizeTimeout)
+    const entry = entries[0]
+    const newSize: ElementSize = {
+      width: entry.contentRect.width,
+      height: entry.contentRect.height,
+    }
+
+    if (this.resizeTimeout) {
+      window.clearTimeout(this.resizeTimeout)
+    }
+
+    this.resizeTimeout = window.setTimeout(() => {
+      if (
+        this.lastSize &&
+        this.lastSize.width > 0 &&
+        this.lastSize.height > 0 &&
+        Math.abs(this.lastSize.width - newSize.width) / this.lastSize.width <= 0.02 &&
+        Math.abs(this.lastSize.height - newSize.height) / this.lastSize.height <= 0.02
+      ) {
+        return
       }
 
-      const entry = entries[0]
+      this.lastSize = newSize
+      this.resizeCallback!(newSize, this)
+    }, 150)
+  }
 
-      this.resizeTimeout = window.setTimeout(() => {
-        if (
-          size &&
-          Math.abs(size.width - entry.contentRect.width) / size.width <= 0.02 &&
-          Math.abs(size.height - entry.contentRect.height) / size.height <= 0.02
-        ) {
-          return
-        }
+  public pause(): void {
+    this.resizeObserver?.disconnect()
+  }
 
-        this.resizeObserver?.disconnect()
+  public resume(): void {
+    this.resizeObserver?.observe(this.element)
+  }
 
-        typeof callback === 'function' && callback({
-          width: entry.contentRect.width,
-          height: entry.contentRect.height,
-        }, this)
-      }, 150)
-    })
+  public onResize(callback: ResizeCallback): void {
+    this.resizeCallback = callback
 
-    this.resizeObserver.observe(this.element)
+    if (!this.resizeObserver) {
+      this.resizeObserver = new ResizeObserver(this._handleResize)
+    }
   }
 
   public inView(callback: ViewCallback): void {
@@ -49,10 +66,7 @@ export class Observer {
 
     this.intersectionObserver = new IntersectionObserver(
       entries => {
-        if (entries[0].isIntersecting) {
-          callback(this)
-          this.intersectionObserver?.disconnect()
-        }
+        callback(entries[0].isIntersecting, this)
       },
       {threshold: 0.1, rootMargin: '0px'},
     )
@@ -67,5 +81,7 @@ export class Observer {
     }
     this.resizeObserver?.disconnect()
     this.intersectionObserver?.disconnect()
+    this.lastSize = null
+    this.resizeCallback = null
   }
 }
