@@ -1,8 +1,8 @@
 import {ImageResponse} from './types'
 
 export class Loader {
-  public requestImage(url: string): Promise<ImageResponse> {
-    return fetch(url)
+  public requestImage(url: string, signal: AbortSignal): Promise<ImageResponse> {
+    return fetch(url, { signal })
       .then(async response => {
         const data = await response.json()
 

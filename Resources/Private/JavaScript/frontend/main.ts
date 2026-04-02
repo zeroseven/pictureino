@@ -36,17 +36,19 @@ class PictureinoWrap extends HTMLElement {
   private loader!: Loader
   private sources!: SourceMap
   private size!: ElementSize
+  private cache: { [key: string]: ImageResponse } = {}
+  private abortController: AbortController | null = null
 
   constructor() {
     super()
 
-    this.updateSource = this.updateSource.bind(this)
+    this.handleResize = this.handleResize.bind(this)
   }
 
   private async getRequestUri(): Promise<string> {
     const webp = await webpSupport ? 'webp/' : ''
-    const width = parseInt(this.size.width.toString(), 10)
-    const height = parseInt(this.size.height.toString(), 10)
+    const width = Math.round(this.size.width)
+    const height = Math.round(this.size.height)
     const view = Math.round(window.innerWidth)
     const retina = window.devicePixelRatio > 1 ? 2 : 1
 
@@ -98,32 +100,45 @@ class PictureinoWrap extends HTMLElement {
     return 0
   }
 
+  private handleResize(size: ElementSize): void {
+    this.size = size
+    this.updateSource()
+  }
+
   private updateSource(): void {
     const loaded = (): void => {
       delete this.dataset.loading
-
-      this.observer.onResize(size => {
-        this.size = size
-        this.updateSource()
-      }, this.size)
     }
 
-    // If the image is narrower than 50px or has no height, we can keeep its fallback image
+    // If the image is narrower than 50px or has no height, we can keep its fallback image.
+    // The persistent ResizeObserver will still be active and will trigger a load if the element grows later.
     if (this.size.width <= 50 || this.size.height <= 0) {
-      return loaded()
+        return
     }
-
-    this.dataset.loading = ''
 
     this.getRequestUri().then((uri: string) => {
-      this.loader.requestImage(uri).then((result: ImageResponse) => {
+      if (this.cache[uri]) {
+        const result = this.cache[uri];
+        const sourceKey = this.getSourceKey(result.view)
+        sourceKey ? this.updateSourceTag(sourceKey, result) : this.updateImage(result)
+        return
+      }
+
+      if (this.abortController) {
+        this.abortController.abort()
+      }
+      this.abortController = new AbortController()
+
+      this.loader.requestImage(uri, this.abortController.signal).then((result: ImageResponse) => {
+        this.cache[uri] = result; // Store result in cache
         const sourceKey = this.getSourceKey(result.view)
         sourceKey ? this.updateSourceTag(sourceKey, result) : this.updateImage(result)
 
         this.image.addEventListener('load', loaded, {once: true})
       }).catch(error => {
-        console.info('Pictureino error (retry after 1s)', error)
-        setTimeout(loaded, 1000)
+        if (error.name !== 'AbortError') {
+          setTimeout(loaded, 1000)
+        }
       })
     })
   }
@@ -154,12 +169,22 @@ class PictureinoWrap extends HTMLElement {
       width: image.offsetWidth,
       height: image.offsetHeight,
     }
+    this.abortController = null
 
     this.dataset.loading = ''
     delete this.dataset.config
 
     this.collectSources()
-    this.observer.inView(this.updateSource)
+
+    // When in view, set up the persistent resize observer
+    this.observer.onResize(this.handleResize)
+    this.observer.inView(isIntersecting => {
+      if (isIntersecting) {
+        this.observer.resume()
+      } else {
+        this.observer.pause()
+      }
+    })
   }
 
   connectedCallback(): void {
@@ -185,6 +210,9 @@ class PictureinoWrap extends HTMLElement {
   disconnectedCallback(): void {
     if (this.observer) {
       this.observer.disconnect()
+    }
+    if (this.abortController) {
+      this.abortController.abort()
     }
   }
 }
