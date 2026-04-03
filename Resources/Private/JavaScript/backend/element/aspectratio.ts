@@ -96,14 +96,19 @@ class RatioSelector {
   }
 
   public getValue(): string {
-    return formatRatio(this.ratio)
+    return this.element.value
   }
 
   public toggleOrientation(): void {
     if (this.ratio.width === 1 && this.ratio.height === 1) return
 
-    const currentValue = this.getValue()
+    const currentValue = formatRatio(this.ratio)
     this.ratio = {...this.ratio, isPortrait: !this.ratio.isPortrait}
+
+    // normalize ratio for toggle
+    if (this.ratio.height > this.ratio.width) {
+      this.ratio = {...this.ratio, width: this.ratio.height, height: this.ratio.width}
+    }
 
     // Regenerate all options with new orientation
     const options = this.generateOptions()
