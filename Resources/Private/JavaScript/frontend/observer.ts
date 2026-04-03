@@ -8,11 +8,13 @@ export class Observer {
   private resizeObserver: ResizeObserver | null = null
   private intersectionObserver: IntersectionObserver | null = null
   private resizeTimeout: number | null = null
+  private readonly rootMargin: string
   private lastSize: ElementSize | null = null
   private resizeCallback: ResizeCallback | null = null
 
-  constructor(element: Element) {
+  constructor(element: Element, rootMargin = '0px') {
     this.element = element
+    this.rootMargin = rootMargin
     this._handleResize = this._handleResize.bind(this)
   }
 
@@ -68,7 +70,7 @@ export class Observer {
       entries => {
         callback(entries[0].isIntersecting, this)
       },
-      {threshold: 0.1, rootMargin: '0px'},
+      {threshold: 0.1, rootMargin: this.rootMargin},
     )
 
     this.intersectionObserver.observe(this.element)

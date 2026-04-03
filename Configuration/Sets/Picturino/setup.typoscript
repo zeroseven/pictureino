@@ -1,2 +1,5 @@
 page.includeJS.pictureino = EXT:pictureino/Resources/Public/JavaScript/frontend/main.js
+page.includeJS.pictureino.data.id = pictureino-js
+page.includeJS.pictureino.data.data-rootmargin = {$pictureino.rootMargin}
+
 page.includeCSS.pictureino = EXT:pictureino/Resources/Public/Css/frontend/main.css
