@@ -135,7 +135,7 @@ class ImageViewHelper extends AbstractViewHelper
     protected function initializeImage(): void
     {
         $this->imageUtility->setFile(
-            $this->arguments['src'],
+            is_int($this->arguments['src']) ? (string)$this->arguments['src'] : $this->arguments['src'],
             $this->arguments['image'],
             $this->arguments['treatIdAsReference'] ?? false
         );
