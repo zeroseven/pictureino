@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Zeroseven\Pictureino\Utility;
 
+use Exception;
+use BadMethodCallException;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\Entity\SiteSettings;
 use TYPO3\CMS\Core\TypoScript\TemplateService;
@@ -39,12 +41,18 @@ class SettingsUtility
         $breakpoints = [];
 
         foreach ($this->get('breakpoints') ?? [] as $key => $value) {
-            if (is_string($key) && preg_match('/^\d+\:\d+$/', $value)) {
+            // Site Settings format: ['sm' => 576, 'md' => 768, ...]
+            if (is_string($key) && (is_int($value) || ctype_digit((string) $value))) {
+                $breakpoints[$key] = (int) $value;
+                continue;
+            }
+
+            if (is_string($key) && is_string($value) && preg_match('/^\d+\:\d+$/', $value)) {
                 $breakpoints[$key] = $value;
                 break;
             }
 
-            if (is_int($key) && preg_match('/(.+)\s*:\s*(\d+)/', $value, $matches)) {
+            if (is_int($key) && is_string($value) && preg_match('/(.+)\s*:\s*(\d+)/', $value, $matches)) {
                 $breakpoints[$matches[1]] = (int) $matches[2];
             }
         }
@@ -71,7 +79,7 @@ class SettingsUtility
                     ->getConfiguration(ConfigurationManagerInterface::CONFIGURATION_TYPE_FULL_TYPOSCRIPT)['plugin.']['tx_pictureino.'] ?? null;
 
                 // @see https://buergel.dev/blog/post/typo3-middleware-typoscript-konfiguration
-                if (null === $pluginConfiguration && $rootPage = ($request ?? $this->getRequest())?->getAttribute('site')?->getRootPageId()) {
+                if (null === $pluginConfiguration && $rootPage = ($GLOBALS['TYPO3_REQUEST'] ?? null)?->getAttribute('site')?->getRootPageId()) {
                     $rootlineUtility = GeneralUtility::makeInstance(RootlineUtility::class, $rootPage);
 
                     // @phpstan-ignore-next-line
@@ -94,7 +102,7 @@ class SettingsUtility
                     $this->settings = $siteSettings->get('pictureino') ?? [];
                 }
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->settings = [];
         }
 
@@ -125,6 +133,6 @@ class SettingsUtility
             return (bool) $this->get($key);
         }
 
-        throw new \BadMethodCallException("Method {$method} does not exist.");
+        throw new BadMethodCallException("Method {$method} does not exist.");
     }
 }

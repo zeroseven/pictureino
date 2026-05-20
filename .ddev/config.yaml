@@ -1,0 +1,9 @@
+name: pictureino
+type: typo3
+docroot: .build/public
+php_version: "8.3"
+webserver_type: nginx-fpm
+database:
+  type: mariadb
+  version: "10.11"
+composer_root: /var/www/html

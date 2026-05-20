@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace Zeroseven\Pictureino\Command;
 
+use Exception;
+use TYPO3\CMS\Core\Core\Environment;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use TYPO3\CMS\Core\Database\ConnectionPool;
-use TYPO3\CMS\Core\Resource\ProcessedFile;
 use TYPO3\CMS\Core\Resource\ProcessedFileRepository;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
@@ -18,15 +19,13 @@ class CleanupCommand extends Command
     private const TABLE_REQUEST = 'tx_pictureino_request';
     private const TABLE_REQUEST_PROCESSED = 'tx_pictureino_request_processed';
 
-    protected ProcessedFileRepository $processedFileRepository;
-    protected ConnectionPool $connectionPool;
     protected SymfonyStyle $io;
 
-    public function __construct()
-    {
+    public function __construct(
+        private readonly ProcessedFileRepository $processedFileRepository,
+        private readonly ConnectionPool $connectionPool,
+    ) {
         parent::__construct();
-        $this->processedFileRepository = GeneralUtility::makeInstance(ProcessedFileRepository::class);
-        $this->connectionPool = GeneralUtility::makeInstance(ConnectionPool::class);
     }
 
     protected function configure(): void
@@ -76,11 +75,9 @@ class CleanupCommand extends Command
         foreach ($processedFileIds as $processedFileId) {
             try {
                 $processedFile = $this->processedFileRepository->findByUid((int) $processedFileId);
-                if ($processedFile instanceof ProcessedFile) {
-                    $processedFile->delete(true);
-                    ++$result['success'];
-                }
-            } catch (\Exception $e) {
+                $processedFile->delete(true);
+                ++$result['success'];
+            } catch (Exception $e) {
                 $this->io->warning(sprintf('Could not delete processed file with ID %d: %s', $processedFileId, $e->getMessage()));
             }
             $this->io->progressAdvance();
@@ -101,7 +98,7 @@ class CleanupCommand extends Command
 
     protected function removePhysicalFiles(): void
     {
-        $storagePath = \TYPO3\CMS\Core\Core\Environment::getVarPath() . '/storage';
+        $storagePath = Environment::getVarPath() . '/storage';
         if (is_dir($storagePath)) {
             GeneralUtility::rmdir($storagePath, true);
         }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Zeroseven\Pictureino\Utility;
 
+use Exception;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 class EncryptionUtility
@@ -22,7 +23,7 @@ class EncryptionUtility
             return hash('sha256', $encryptionKey . '¯\_(ツ)_/¯');
         }
 
-        throw new \Exception('No encryptionKey given.', 1667886790);
+        throw new Exception('No encryptionKey given.', 1667886790);
     }
 
     protected function getInitializationVector(): string
@@ -52,6 +53,10 @@ class EncryptionUtility
     public function decryptArray(string $string): ?array
     {
         $json = $this->decryptString($string);
+
+        if ($json === null) {
+            return null;
+        }
 
         return json_decode($json, true);
     }

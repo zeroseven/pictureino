@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Zeroseven\Pictureino\Entity;
 
+use InvalidArgumentException;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\MathUtility;
 
@@ -80,7 +81,7 @@ class AspectRatio
             return $this->setX((int) $value[0])->setY((int) $value[1])->reduce();
         }
 
-        throw new \InvalidArgumentException('Use arguments like "set(\'16:9\')" or "set([400, 300])"', 1382284106);
+        throw new InvalidArgumentException('Use arguments like "set(\'16:9\')" or "set([400, 300])"', 1382284106);
     }
 
     public function getHeight(int $width): int

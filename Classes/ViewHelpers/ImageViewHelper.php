@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace Zeroseven\Pictureino\ViewHelpers;
 
+use Exception;
 use TYPO3\CMS\Core\Page\AssetCollector;
 use TYPO3\CMS\Core\Resource\File;
 use TYPO3\CMS\Core\Resource\FileReference;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController;
+use Psr\Http\Message\ServerRequestInterface;
 use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractViewHelper;
 use Zeroseven\Pictureino\Entity\ConfigRequest;
 use Zeroseven\Pictureino\Utility\AspectRatioUtility;
@@ -63,13 +64,18 @@ class ImageViewHelper extends AbstractViewHelper
 
     public function getPageUid(): ?int
     {
-        if ($pageInformation = $this->renderingContext->getRequest()->getAttribute('frontend.page.information')) {
-            return $pageInformation->getId();
+        $request = $GLOBALS['TYPO3_REQUEST'] ?? null;
+        if ($request instanceof ServerRequestInterface) {
+            $pageInformation = $request->getAttribute('frontend.page.information');
+            if ($pageInformation) {
+                return $pageInformation->getId();
+            }
         }
 
         // Fallback for TYPO3 12.4
-        if ($GLOBALS['TSFE'] ?? null instanceof TypoScriptFrontendController) {
-            return $GLOBALS['TSFE']->id;
+        $tsfe = $GLOBALS['TSFE'] ?? null;
+        if (is_object($tsfe) && property_exists($tsfe, 'id')) {
+            return (int) $tsfe->id;
         }
 
         return null;
@@ -147,7 +153,7 @@ class ImageViewHelper extends AbstractViewHelper
         $this->determineAspectRatio();
     }
 
-    /** @throws \Exception */
+    /** @throws Exception */
     public function render(): string
     {
         $this->initializeImage();

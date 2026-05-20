@@ -3,4 +3,4 @@ parameters:
 	paths:
 		- Classes
 	bootstrapFiles:
-		- %rootDir%/../../../vendor/autoload.php
+		- .build/vendor/autoload.php

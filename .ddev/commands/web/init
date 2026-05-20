@@ -1,0 +1,213 @@
+#!/usr/bin/env bash
+
+## Description: Initialize TYPO3 for local development
+## Usage: init [flags]
+## Example: "ddev init" or "ddev init --force"
+## ProjectTypes: typo3
+## ExecRaw: true
+
+set -Eeuo pipefail
+
+if [ -z "${IS_DDEV_PROJECT:-}" ]; then
+    if command -v ddev >/dev/null 2>&1 && [ -d ".ddev" ]; then
+        ddev exec /var/www/html/.ddev/commands/web/init "$@"
+        exit $?
+    fi
+fi
+
+GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; BLUE='\033[0;34m'; NC='\033[0m'
+info()   { echo -e "${YELLOW}$*${NC}"; }
+ok()     { echo -e "${GREEN}✓ $*${NC}"; }
+err()    { echo -e "${RED}✗ $*${NC}"; }
+header() { echo -e "\n${BLUE}━━━ $* ━━━${NC}"; }
+
+FORCE=false
+for arg in "$@"; do
+    case $arg in
+        --force) FORCE=true ;;
+    esac
+done
+
+TYPO3_BIN="/var/www/html/.build/bin/typo3"
+
+# ─── Step 1: Dependencies ─────────────────────────────────────────────────────
+header "Step 1: Dependencies"
+if [ -f "/var/www/html/.build/vendor/autoload.php" ] && ! $FORCE; then
+    ok "Dependencies already installed"
+else
+    cd /var/www/html && composer install --no-interaction 2>&1
+    if [ $? -ne 0 ]; then
+        err "Composer install failed"; exit 1
+    fi
+    ok "Dependencies installed"
+fi
+
+# ─── Step 2: Database ─────────────────────────────────────────────────────────
+header "Step 2: Database"
+
+info "Waiting for database..."
+for i in $(seq 1 30); do
+    if mysqladmin ping -h db -u root -proot --silent 2>/dev/null; then break; fi
+    sleep 1
+done
+
+TABLE_COUNT=$(mysql -h db -u root -proot db -ss \
+    -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'db';" 2>/dev/null || echo "0")
+
+if [ "$TABLE_COUNT" -gt 0 ]; then
+    if ! $FORCE; then
+        err "Database is not empty ($TABLE_COUNT tables). Use --force to drop and reinitialize."
+        exit 1
+    fi
+    info "Found $TABLE_COUNT existing tables — dropping for clean init..."
+    DROPS=$(mysql -h db -u root -proot db -ss \
+        -e "SELECT CONCAT('DROP TABLE IF EXISTS \`', table_name, '\`;') FROM information_schema.tables WHERE table_schema='db';" 2>/dev/null)
+    mysql -h db -u root -proot db -e "SET FOREIGN_KEY_CHECKS=0; $DROPS SET FOREIGN_KEY_CHECKS=1;" 2>/dev/null
+    ok "Database cleaned"
+else
+    ok "Database is empty"
+fi
+
+# ─── Step 3: TYPO3 Setup ──────────────────────────────────────────────────────
+header "Step 3: TYPO3 Setup"
+info "Running TYPO3 setup..."
+"$TYPO3_BIN" setup \
+    --no-interaction \
+    --driver=mysqli \
+    --host=db \
+    --port=3306 \
+    --dbname=db \
+    --username=root \
+    --password=root \
+    --admin-username=admin \
+    --admin-user-password='Admin1234!' \
+    --admin-email=admin@example.com \
+    --project-name="Pictureino Development" \
+    --server-type=other \
+    --force
+ok "TYPO3 setup complete"
+
+# Trust ddev hostname
+php -r "
+    \$file = '/var/www/html/config/system/settings.php';
+    \$settings = require \$file;
+    \$settings['SYS']['trustedHostsPattern'] = '.*';
+    file_put_contents(\$file, '<?php' . PHP_EOL . 'return ' . var_export(\$settings, true) . ';' . PHP_EOL);
+"
+
+# ─── Step 4: Site config & test content ───────────────────────────────────────
+header "Step 4: Site & Content"
+
+rm -rf /var/www/html/config/sites
+mkdir -p /var/www/html/config/sites/default
+cat > /var/www/html/config/sites/default/config.yaml << 'SITECONFIG'
+base: 'https://pictureino.ddev.site/'
+languages:
+  -
+    title: English
+    enabled: true
+    languageId: 0
+    base: /
+    locale: en_US.UTF-8
+    navigationTitle: English
+    flag: us
+rootPageId: 1
+settings:
+  pictureino:
+    breakpoints:
+      sm: 576
+      md: 768
+      lg: 992
+      xl: 1200
+SITECONFIG
+
+# Create root page with sys_template including pictureino
+mysql -h db -u root -proot db << 'SQL'
+INSERT INTO pages (uid, pid, title, slug, doktype, is_siteroot, tstamp, crdate, sorting)
+  VALUES (1, 0, 'Pictureino Demo', '/', 1, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP(), 128);
+INSERT INTO pages (uid, pid, title, slug, doktype, tstamp, crdate, sorting)
+  VALUES (2, 1, 'Image Test', '/image-test', 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP(), 256);
+INSERT INTO sys_template (pid, title, root, clear, constants, config, tstamp, crdate)
+  VALUES (1, 'Main', 1, 3, '', '
+@import "EXT:pictureino/Configuration/TypoScript/setup.typoscript"
+page = PAGE
+page.10 = FLUIDTEMPLATE
+page.10 {
+  file = EXT:pictureino/Resources/Private/Testing/Templates/TestPage.html
+}
+', UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
+SQL
+ok "Root page, subpage, and TypoScript created"
+
+# ─── Step 4b: Test image & content ───────────────────────────────────────────
+header "Step 4b: Test Image"
+
+# Generate a test image with visible detail (checkerboard + grid + text)
+mkdir -p /var/www/html/.build/public/fileadmin
+php -r "
+\$w = 1920; \$h = 1080;
+\$img = imagecreatetruecolor(\$w, \$h);
+
+// Checkerboard background (shows blur clearly)
+\$light = imagecolorallocate(\$img, 220, 220, 220);
+\$dark = imagecolorallocate(\$img, 40, 40, 40);
+\$cellSize = 40;
+for (\$y = 0; \$y < \$h; \$y += \$cellSize) {
+    for (\$x = 0; \$x < \$w; \$x += \$cellSize) {
+        \$color = ((\$x / \$cellSize + \$y / \$cellSize) % 2 === 0) ? \$light : \$dark;
+        imagefilledrectangle(\$img, \$x, \$y, \$x + \$cellSize - 1, \$y + \$cellSize - 1, \$color);
+    }
+}
+
+// Colored center area for contrast
+\$blue = imagecolorallocate(\$img, 30, 100, 200);
+imagefilledrectangle(\$img, (int)(\$w * 0.25), (int)(\$h * 0.3), (int)(\$w * 0.75), (int)(\$h * 0.7), \$blue);
+
+// Fine grid lines (1px - most affected by scaling)
+\$red = imagecolorallocate(\$img, 255, 60, 60);
+for (\$x = 0; \$x < \$w; \$x += 120) { imageline(\$img, \$x, 0, \$x, \$h - 1, \$red); }
+for (\$y = 0; \$y < \$h; \$y += 120) { imageline(\$img, 0, \$y, \$w - 1, \$y, \$red); }
+
+// Resolution label
+\$white = imagecolorallocate(\$img, 255, 255, 255);
+\$label = \$w . 'x' . \$h . ' pictureino';
+imagestring(\$img, 5, (int)(\$w / 2) - 60, (int)(\$h / 2) - 8, \$label, \$white);
+
+// Diagonal lines (show aliasing/interpolation)
+\$green = imagecolorallocate(\$img, 0, 200, 80);
+imageline(\$img, 0, 0, \$w - 1, \$h - 1, \$green);
+imageline(\$img, \$w - 1, 0, 0, \$h - 1, \$green);
+
+imagejpeg(\$img, '/var/www/html/.build/public/fileadmin/test-image.jpg', 92);
+imagedestroy(\$img);
+"
+
+# Register in FAL and create content
+mysql -h db -u root -proot db << 'SQL'
+INSERT INTO sys_file (uid, storage, identifier, identifier_hash, folder_hash, name, extension, mime_type, size, sha1, tstamp, creation_date, modification_date)
+  VALUES (1, 1, '/test-image.jpg', SHA1('/test-image.jpg'), SHA1('/'), 'test-image.jpg', 'jpg', 'image/jpeg', 50000, SHA1('test-image'), UNIX_TIMESTAMP(), UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
+
+INSERT INTO sys_file_reference (uid, pid, uid_local, uid_foreign, tablenames, fieldname, sorting_foreign, tstamp, crdate)
+  VALUES (1, 2, 1, 1, 'tt_content', 'image', 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
+
+INSERT INTO tt_content (uid, pid, CType, header, image, tstamp, crdate, sorting)
+  VALUES (1, 2, 'textmedia', 'Image Test', 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP(), 256);
+SQL
+ok "Test image created and registered in FAL"
+
+# ─── Step 5: Finalize ─────────────────────────────────────────────────────────
+header "Step 5: Finalize"
+"$TYPO3_BIN" extension:setup 2>/dev/null || true
+"$TYPO3_BIN" asset:publish 2>/dev/null || true
+"$TYPO3_BIN" cache:flush
+ok "Assets published, caches flushed"
+
+echo ""
+echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo -e "${GREEN}✓ Initialization complete!${NC}"
+echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo ""
+echo -e "  Frontend:  ${BLUE}https://pictureino.ddev.site/${NC}"
+echo -e "  Backend:   ${BLUE}https://pictureino.ddev.site/typo3${NC}"
+echo -e "  User:      ${YELLOW}admin / Admin1234!${NC}"
+echo ""

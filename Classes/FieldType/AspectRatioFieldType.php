@@ -9,21 +9,20 @@ use TYPO3\CMS\ContentBlocks\FieldType\FieldType;
 use TYPO3\CMS\ContentBlocks\FieldType\WithCommonProperties;
 use Zeroseven\Pictureino\Backend\Form\Element\AspectRatioElement;
 
-#[FieldType(name: 'AspectRatio', tcaType: 'user', searchable: false)]
+#[FieldType(name: 'AspectRatio', tcaType: 'user')]
 final class AspectRatioFieldType extends AbstractFieldType
 {
     use WithCommonProperties;
 
     /**
      * @param array<string,mixed> $settings
-     * @return $this
      */
-    public function createFromArray(array $settings): self
+    public function createFromArray(array $settings): static
     {
         // Clone the service instance, so that state for name, tcaType and searchable is carried over.
-        $self = clone $this;
-        $self->setCommonProperties($settings);
-        return $self;
+        $clone = clone $this;
+        $clone->setCommonProperties($settings);
+        return $clone;
     }
 
     /**

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Zeroseven\Pictureino\Utility;
 
+use Exception;
 use TYPO3\CMS\Core\Imaging\GraphicalFunctions;
 use TYPO3\CMS\Core\Imaging\ImageManipulation\Area;
 use TYPO3\CMS\Core\Imaging\ImageManipulation\CropVariantCollection;
@@ -42,11 +43,11 @@ class ImageUtility
         return $this->file;
     }
 
-    /** @throws \Exception */
+    /** @throws Exception */
     public function setFile(?string $src = null, mixed $image = null, ?bool $treatIdAsReference = null): self
     {
         if (('' === $src && null === $image) || ('' !== $src && null !== $image)) {
-            throw new \Exception('You must either specify a string src or a File object.', 1382284104);
+            throw new Exception('You must either specify a string src or a File object.', 1382284104);
         }
 
         $this->file = $this->imageService->getImage($src, $image, $treatIdAsReference);
@@ -120,19 +121,19 @@ class ImageUtility
         return $this->processedFiles[] = $this->imageService->applyProcessingInstructions($this->file, $processingInstructions);
     }
 
-    /** @throws \Exception */
+    /** @throws Exception */
     public function getUrl(?ProcessedFile $processedFile = null): string
     {
         $processedFile ??= $this->getLastProcessedFile();
 
         if (null === $processedFile) {
-            throw new \Exception('No processed file. Please call "processImage" method, to process an image file', 1382284106);
+            throw new Exception('No processed file. Please call "processImage" method, to process an image file', 1382284106);
         }
 
         return $this->imageService->getImageUri($processedFile, true);
     }
 
-    /** @throws \Exception */
+    /** @throws Exception */
     public function getProperty(string $property, ?ProcessedFile $processedFile = null): ?string
     {
         $processedFile ??= $this->getLastProcessedFile();

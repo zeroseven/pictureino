@@ -10,15 +10,24 @@
         }
     ],
     "require": {
-        "typo3/cms-core": "^12.4 || ^13.0",
+        "typo3/cms-core": "^12.4 || ^13.0 || ^14.0",
         "typo3/cms-backend": "*",
         "typo3/cms-extbase": "*",
+        "typo3/cms-frontend": "*",
         "symfony/rate-limiter": "^6.4 || ^7.0",
-        "php": ">=8.1"
+        "php": ">=8.2"
+    },
+    "suggest": {
+        "friendsoftypo3/content-blocks": "Enables the AspectRatio custom FieldType for Content Blocks"
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^3.51",
-        "phpstan/phpstan": "^2.1"
+        "friendsoftypo3/content-blocks": "^1.0 || ^2.0",
+        "phpstan/phpstan": "^2.1",
+        "phpunit/phpunit": "^11.0",
+        "ssch/typo3-rector": "^3.0",
+        "typo3/cms-install": "^13.4 || ^14.0",
+        "typo3/testing-framework": "^8.3 || ^9.0"
     },
     "autoload": {
         "psr-4": {
@@ -31,9 +40,18 @@
         "stan": "phpstan analyse -c phpstan.neon",
         "stan-baseline": "phpstan analyse -c phpstan.neon --generate-baseline"
     },
+    "config": {
+        "bin-dir": ".build/bin",
+        "vendor-dir": ".build/vendor",
+        "allow-plugins": {
+            "typo3/cms-composer-installers": true,
+            "typo3/class-alias-loader": true
+        }
+    },
     "extra": {
         "typo3/cms": {
-            "extension-key": "pictureino"
+            "extension-key": "pictureino",
+            "web-dir": ".build/public"
         }
     }
 }

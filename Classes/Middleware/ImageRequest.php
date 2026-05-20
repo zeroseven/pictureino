@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Zeroseven\Pictureino\Middleware;
 
+use InvalidArgumentException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
@@ -112,7 +113,7 @@ class ImageRequest implements MiddlewareInterface
 
                 return new JsonResponse($data, 200, static::REQUEST_HEADERS);
             }
-        } catch (\InvalidArgumentException $e) {
+        } catch (InvalidArgumentException $e) {
             return $this->returnErrorResponse($e->getMessage(), $e->getCode());
         }
 

@@ -1,3 +1,8 @@
 /node_modules
 /vendor
 /public
+.build/
+config/
+var/
+.php-cs-fixer.cache
+test-results/

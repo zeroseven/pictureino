@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Zeroseven\Pictureino\Utility;
 
+use Exception;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\MathUtility;
 use Zeroseven\Pictureino\Entity\AspectRatio;
@@ -19,7 +20,7 @@ class AspectRatioUtility
         $this->breakpointMap = GeneralUtility::makeInstance(SettingsUtility::class)->getBreakpoints();
     }
 
-    /** @throws \Exception */
+    /** @throws Exception */
     protected function mapBreakpoint(mixed $view): int
     {
         if (MathUtility::canBeInterpretedAsInteger($view)) {
@@ -30,7 +31,7 @@ class AspectRatioUtility
             return $this->breakpointMap[$view];
         }
 
-        throw new \Exception('Invalid breakpoint: "' . $view . '". Must be an integer or one of the registered strings (' . implode(', ', array_map(static fn ($s) => '"' . $s . '"', array_keys($this->breakpointMap))) . ')');
+        throw new Exception('Invalid breakpoint: "' . $view . '". Must be an integer or one of the registered strings (' . implode(', ', array_map(static fn ($s) => '"' . $s . '"', array_keys($this->breakpointMap))) . ')');
     }
 
     public function sortAspectRatios(): self
@@ -78,7 +79,7 @@ class AspectRatioUtility
         return $lastAspectRatio;
     }
 
-    /** @throws \Exception */
+    /** @throws Exception */
     public function addList(mixed $input): self
     {
         if (is_array($input) && count($input) > 0) {
@@ -96,7 +97,7 @@ class AspectRatioUtility
         return $this->add($input, 0);
     }
 
-    /** @throws \Exception */
+    /** @throws Exception */
     public function add(mixed $asepectRatio, mixed $view = null, bool $sortAspectRatios = true): self
     {
         if (!empty($asepectRatio)) {
